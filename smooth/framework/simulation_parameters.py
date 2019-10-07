@@ -1,4 +1,4 @@
-import smooth.framework.functions as func
+import smooth.framework.functions.functions as func
 
 class SimulationParameters:
 

@@ -1,7 +1,7 @@
 import os
 import oemof.solph as solph
 from smooth.components.component import Component
-import smooth.framework.functions as func
+import smooth.framework.functions.functions as func
 
 class EnergySourceFromCsv (Component):
     """ General energy sources are created through this class by importing csv files """

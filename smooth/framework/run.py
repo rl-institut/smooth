@@ -95,9 +95,12 @@ def run(model):
             # Update the costs and artificial costs.
             this_comp.update_costs(results, sim_params)
 
-    """ VIEWING RESULTS """
+    """ COMPUTING/VIEWING RESULTS """
+
     # can be deleted but displays results for flows/states of components
     for this_comp in components:
+        # Calculate the annuity for each component.
+        this_comp.generate_results()
         print('Comp: {}: flow: {}'.format(this_comp.name, this_comp.flows))
 
     print('Simulation done')

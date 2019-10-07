@@ -17,7 +17,12 @@ components.append({
     'bus_el': 'bel',
     'bus_h2': 'bh2',
     'power_max': 1000000,
-    'temp_init': 293.15
+    'temp_init': 293.15,
+    'capex': {
+        'key': 'exp',
+        'fitting_value': [10, 5],
+        'dependant_value': 'power_max',
+    }
 })
 
 components.append({
@@ -82,7 +87,7 @@ components.append({
 sim_params = {
     'start_date': '1/1/2019',
     'frequency': 'H',
-    'n_intervals': 50,
+    'n_intervals': 2,
     'interval_time': 60
 }
 
