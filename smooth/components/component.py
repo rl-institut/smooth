@@ -1,10 +1,18 @@
 from oemof.outputlib import views
 from smooth.framework.functions.update_financials import update_financials
-
+from smooth.framework.functions.update_annuities import update_annuities
 
 class Component:
 
     def __init__(self):
+        # PARAMETERS
+        # Define the component type (e.g. "electrolyzer" means component_electrolyzer.py)
+        self.component = None
+        # Define a name (needs to different from the other names of components in this energy system).
+        self.name = None
+        # Life time [a].
+        self.life_time = None
+
         # INITIALIZE VARIABLES EACH COMPONENT WILL HAVE.
         # Initializing results and states as empty dicts.
         self.results = {}
@@ -18,40 +26,6 @@ class Component:
         # FINANCIALS (CAPEX AND OPEX)
         self.opex = dict()
         self.capex = dict()
-        # Initializing CAPEX costs.
-        # The CAPEX costs can be either fix [EUR] or dependant [EUR/???]. For more details see capex_cost_key.
-        self.capex['cost'] = 0
-        # Investment costs can either be a fixed price or they can be dependant on a
-        # parameter of the component. If the capex costs are a fixed price, the capex_cost_key has to be set to fix
-        # (which is the default value). Other options of the capex_cost_key are:
-        #
-        # "fix"      --> already the fix value, nothing has to be done
-        # "spec"     --> cost value needs to be multiplied with the dependant value
-        # "exp"      --> exponential cost fitting
-        # "poly"     --> polynomial cost fitting
-        # "free"     --> polynomial cost fitting with free choosable exponents
-        #
-        # A description for each fitting function can be found in smooth.framework.functions.update_financials.py
-        #
-        # NOTE ON MULTIPLE KEYS:
-        # Sometimes the a fitting method is used to get a specific value, in this case multiple keys and fitting values
-        # can be given. The dependant value will only be used for the first key, after that, the costs from the last
-        # cost calculation is used as the dependant value.
-
-        self.capex['key'] = 'fix'
-        # If the key is not fixed, the actual cost depend on a dependant value, that is defined here.
-        self.capex['dependant_value'] = None
-        # Depending on the method the costs depend on, fitting values might be needed.
-        self.capex['fitting_value'] = None
-        # Initializing OPEX costs.
-        # The OPEX costs can be either fix [EUR/a] or dependant [EUR/(a*???)]. For more details see opex_cost_key.
-        self.opex['cost'] = 0
-        # Same as key description for the capex key (see above).
-        self.opex['key'] = 'fix'
-        # If the key is not fixed, the actual cost depend on a dependant value, that is defined here.
-        self.opex['dependant_value'] = None
-        # Depending on the method the costs depend on, fitting values might be needed.
-        self.opex['fitting_value'] = None
 
         # FOREIGN STATES
         # Initializing foreign state component name and attribute name, if set both need to be strings.
@@ -150,7 +124,13 @@ class Component:
 
     def generate_results(self):
         # Generate the results after the simulation.
-        update_financials(self)
+
+        # Compute the CAPEX and then the OPEX results.
+        update_financials(self, self.capex)
+        update_financials(self, self.opex)
+        # Calculate the annuities of the CAPEX and the variable costs.
+        update_annuities(self)
+
 
 
 

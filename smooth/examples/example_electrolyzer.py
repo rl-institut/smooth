@@ -16,12 +16,17 @@ components.append({
     'name': 'this_ely',
     'bus_el': 'bel',
     'bus_h2': 'bh2',
-    'power_max': 1000000,
+    'power_max': 1000e3,
     'temp_init': 293.15,
     'capex': {
-        'key': 'exp',
-        'fitting_value': [10, 5],
-        'dependant_value': 'power_max',
+        'key': ['free', 'spec'],
+        'fitting_value': [[193, -0.366], 'cost'],
+        'dependant_value': ['power_max', 'power_max']
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.04,
+        'dependant_value': 'capex',
     }
 })
 
@@ -77,18 +82,31 @@ components.append({
 })
 
 components.append({
-    'component': 'storage',
+    'component': 'storage_h2',
     'name': 'h2_storage',
     'bus_in_and_out': 'bh2',
+    'p_min': 5,
+    'p_max': 450,
     'storage_capacity': 1000,
-    'storage_level_init': 300
+    'storage_level_init': 300,
+    'capex': {
+        'key': ['poly', 'spec'],
+        'fitting_value': [[604.6, 0.5393], 'cost'],
+        'dependant_value': ['p_max', 'storage_capacity']
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.01,
+        'dependant_value': 'capex'
+    }
 })
 
 sim_params = {
     'start_date': '1/1/2019',
     'frequency': 'H',
-    'n_intervals': 2,
-    'interval_time': 60
+    'n_intervals': 200,
+    'interval_time': 60,
+    'interest_rate': 0.03
 }
 
 mymodel = {

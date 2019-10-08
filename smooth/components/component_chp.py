@@ -11,7 +11,7 @@ class Chp (Component):
 
         """ PARAMETERS """
         self.name = 'CHP_default_name'
-        self.component = 'CHP'
+
         self.h2_energy_density = 33.3
         self.electrical_efficiency = 0.35
         self.thermal_efficiency = 0.8

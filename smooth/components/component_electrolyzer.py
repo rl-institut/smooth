@@ -14,7 +14,6 @@ class Electrolyzer (Component):
 
         """ PARAMETERS """
         self.name = 'Electrolyzer_default_name'
-        self.component = 'Electrolyzer'
 
         # Max. power [W].
         self.power_max = 100000

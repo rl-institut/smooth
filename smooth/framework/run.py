@@ -30,6 +30,8 @@ def run(model):
     for this_comp in model['components']:
         # Add the simulation step size to the component info [min].
         this_comp['interval_time'] = sim_params.interval_time
+        # Add the interest rate to the component info [-].
+        this_comp['interest_rate'] = sim_params.interest_rate
         # Loop through all components of the model and load the component classes.
         this_comp_name = this_comp['component']
         # Import the module of the component.

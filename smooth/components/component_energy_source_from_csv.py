@@ -12,7 +12,7 @@ class EnergySourceFromCsv (Component):
 
         """ PARAMETERS """
         self.name = 'General_energy_source'
-        self.component = 'Energy_source_from_csv'
+
         self.nominal_value = 1
         self.csv_filename = None
         self.csv_separator = ';'

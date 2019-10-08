@@ -22,8 +22,7 @@ def read_data_file(path, filename, csv_separator, column_title):
 ## freq = the frequency the time period is evaluated in e.g. 'H' for hours, 'M' for min etc.
 
 def set_date_time_index(start_date, n_intervals, freq):
-    date_time_index = pd.date_range(start_date, periods=n_intervals + 1,
-                                    freq = freq)
+    date_time_index = pd.date_range(start_date, periods=n_intervals + 1, freq=freq)
     return date_time_index
 
 ########################################################################################

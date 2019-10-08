@@ -10,9 +10,14 @@ class SimulationParameters:
         self.n_intervals = 24*7
         # Interval time [min].
         self.interval_time = 60
+        # Interest rate for calculating annuity out of CAPEX (e.g. 0.03 --> 3 %) [-].
+        self.interest_rate = 0.03
 
         """ UPDATE PARAMETER DEFAULT VALUES """
         self.set_parameters(params)
+
+        # Calculate the simulation duration [d].
+
 
         self.date_time_index = func.set_date_time_index(self.start_date, self.n_intervals - 1, self.frequency)
 

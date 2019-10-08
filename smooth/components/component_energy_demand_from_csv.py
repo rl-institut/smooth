@@ -12,7 +12,7 @@ class EnergyDemandFromCsv(Component):
         Component.__init__(self)
         """ PARAMETERS """
         self.name = 'Demand_default_name'
-        self.component = 'Energy_demand_from_csv'
+
         self.nominal_value = 1
         self.csv_filename = None
         self.csv_separator = ','

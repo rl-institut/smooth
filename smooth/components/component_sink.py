@@ -11,7 +11,6 @@ class Sink(Component):
         Component.__init__(self)
         """ PARAMETERS """
         self.name = 'Grid_default_name'
-        self.component = 'to_grid'
 
         # Max. power that can be taken by the sink [W]
         self.power_max = 800000000
