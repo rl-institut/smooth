@@ -10,7 +10,7 @@ busses = ['bel', 'bh2']
 
 
 """ Define components """
-components = []
+components = list()
 components.append({
     'component': 'electrolyzer',
     'name': 'this_ely',
@@ -18,6 +18,7 @@ components.append({
     'bus_h2': 'bh2',
     'power_max': 1000e3,
     'temp_init': 293.15,
+    'life_time': 20,
     'capex': {
         'key': ['free', 'spec'],
         'fitting_value': [[193, -0.366], 'cost'],
@@ -89,6 +90,7 @@ components.append({
     'p_max': 450,
     'storage_capacity': 1000,
     'storage_level_init': 300,
+    'life_time': 30,
     'capex': {
         'key': ['poly', 'spec'],
         'fitting_value': [[604.6, 0.5393], 'cost'],
@@ -104,7 +106,7 @@ components.append({
 sim_params = {
     'start_date': '1/1/2019',
     'frequency': 'H',
-    'n_intervals': 200,
+    'n_intervals': 100,
     'interval_time': 60,
     'interest_rate': 0.03
 }

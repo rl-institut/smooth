@@ -1,0 +1,5 @@
+install_requires=[
+    'matplotlib',
+    'pandas',
+    'numpy',
+}

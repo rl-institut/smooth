@@ -12,6 +12,8 @@ class Component:
         self.name = None
         # Life time [a].
         self.life_time = None
+        # Simulation parameters, like interval time and interest rate.
+        self.sim_params = None
 
         # INITIALIZE VARIABLES EACH COMPONENT WILL HAVE.
         # Initializing results and states as empty dicts.
@@ -34,7 +36,7 @@ class Component:
 
     def set_parameters(self, params):
         for this_param in params:
-            if not hasattr(self, this_param) and this_param is not 'interval_time':
+            if not hasattr(self, this_param):
                 # Raise an error if the given parameter is not part of the component (interval time is an exception).
                 raise ValueError('The parameter "{}" is not part of the component'.format(this_param))
 
@@ -78,15 +80,15 @@ class Component:
         #    grid in Wh, then the values variable_costs and variable_artificial_costs need to be in EUR/Wh)
 
         # First create an empty cost and art. cost array for this component, if it hasn't been created before.
-        if 'costs' not in self.results:
+        if 'variable_costs' not in self.results:
             # If this function is not overwritten in the component, then costs and art. costs are not part of the
             # component and therefore set to 0.
-            self.results['costs'] = [0] * sim_params.n_intervals
+            self.results['variable_costs'] = [0] * sim_params.n_intervals
             self.results['art_costs'] = [0] * sim_params.n_intervals
 
         # Update the costs for this time step [EUR].
         if self.variable_costs is not None:
-            self.results['costs'][sim_params.i_interval] = this_dependant_value * self.variable_costs
+            self.results['variable_costs'][sim_params.i_interval] = this_dependant_value * self.variable_costs
         # Update the artificial costs for this time step [EUR].
         if self.variable_artificial_costs is not None:
             self.results['art_costs'][sim_params.i_interval] = this_dependant_value * self.variable_artificial_costs
@@ -130,6 +132,19 @@ class Component:
         update_financials(self, self.opex)
         # Calculate the annuities of the CAPEX and the variable costs.
         update_annuities(self)
+
+    def check_validity(self):
+        # This function is called immediately after the component object is created and checks if the component
+        # attributes are valid.
+
+        # Check if a life time is given when there are CAPEX given.
+        if self.capex:
+            if self.life_time is None or self.life_time <= 0:
+                raise ValueError('In component {} CAPEX are given but the life_time is either None or not '
+                                 'greater than zero. Please choose another life_time value!'.format(self.name))
+
+
+
 
 
 

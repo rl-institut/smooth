@@ -4,7 +4,6 @@ from oemof.outputlib import views
 
 
 class StorageH2 (Component):
-    """ Storage agents are created through this class """
     def __init__(self, params):
 
         # Call the init function of the mother class.
@@ -22,6 +21,8 @@ class StorageH2 (Component):
         self.storage_capacity = 500
         # Initial storage level [kg].
         self.storage_level_init = 200
+        # Life time [a].
+        self.life_time = 20
 
         """ PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) """
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].

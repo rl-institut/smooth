@@ -21,8 +21,10 @@ class Electrolyzer (Component):
 
         # pressure of hydrogen in the system in [Pa]
         self.pressure = 40 * 10**5
-
+        # Initial temperature [K].
         self.temp_init = 273.15 + 25
+        # Life time [a].
+        self.life_time = 20
 
         self.bus_el = None
         self.bus_h2 = None
@@ -44,8 +46,9 @@ class Electrolyzer (Component):
         self.area_cell = 1500
 
         """ UPDATE PARAMETER DEFAULT VALUES """
-        self.interval_time = None
         self.set_parameters(params)
+        # Interval time [min].
+        self.interval_time = self.sim_params.interval_time
         # Calculate the max. energy the electrolyzer can use in one time step [Wh].
         self.energy_max = self.power_max * self.interval_time/60
 
