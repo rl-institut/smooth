@@ -17,7 +17,7 @@ class Electrolyzer (Component):
 
         # Max. power [W].
         self.power_max = 100000
-        self.variable_artificial_costs = None
+        self.artificial_costs = None
 
         # pressure of hydrogen in the system in [Pa]
         self.pressure = 40 * 10**5
@@ -91,7 +91,7 @@ class Electrolyzer (Component):
         # Tracking supporting points to calculate temperature later on.
         self.supporting_points = {}
 
-    def create_oemof_model(self, busses, sim_params):
+    def create_oemof_model(self, busses):
         # Get the non-linear behaviour.
         [breakpoints, conversion_fun] = self.get_nonlinear_behaviour()
 

@@ -76,7 +76,7 @@ def run(model):
             # Execute the prepare simulation step (if this component has one).
             this_comp.prepare_simulation(components)
             # Add the component to the oemof model.
-            oemof_model.add(this_comp.create_oemof_model(busses, sim_params))
+            oemof_model.add(this_comp.create_oemof_model(busses))
 
         """ RUN THE SIMULATION """
         # Do the simulation for this time step.
@@ -100,6 +100,7 @@ def run(model):
             # Update the costs and artificial costs.
             this_comp.update_costs(results, sim_params)
 
+    
     """ COMPUTING/VIEWING RESULTS """
     print("\n++++++++")
     print('RESULTS:')
@@ -118,6 +119,7 @@ def run(model):
         # print('Comp: {}: flow: {}'.format(this_comp.name, this_comp.flows))
 
     print('\nSimulation done')
+    return components
 
 
 

@@ -56,6 +56,8 @@ class StorageH2 (Component):
         """ STATES """
         # Storage level [kg of h2]
         self.storage_level = self.storage_level_init
+        # Storage pressure [bar].
+        self.pressure = self.get_pressure(self.storage_level)
 
         """ VARIABLE ARTIFICIAL COSTS """
         # Store the current artificial costs for input and output [EUR/kg].
@@ -73,7 +75,7 @@ class StorageH2 (Component):
 
         self.current_vac = [vac_in, vac_out]
 
-    def create_oemof_model(self, busses, sim_params):
+    def create_oemof_model(self, busses):
         storage = solph.components.GenericStorage(
             label=self.name,
             outputs={busses[self.bus_in_and_out]: solph.Flow(variable_costs=self.current_vac[1])},
@@ -94,9 +96,14 @@ class StorageH2 (Component):
                 if 'storage_level' not in self.states:
                     # Initialize an array that tracks the state stored mass.
                     self.states['storage_level'] = [None] * sim_params.n_intervals
+                    self.states['pressure'] = [None] * sim_params.n_intervals
                 # Check if this result is the storage capacity.
-                self.states['storage_level'][sim_params.i_interval] = df_storage[i_result][0]
                 self.storage_level = df_storage[i_result][0]
+                self.states['storage_level'][sim_params.i_interval] = self.storage_level
+                # Get the storage pressure [bar].
+                self.pressure = self.get_pressure(self.storage_level)
+                self.states['pressure'][sim_params.i_interval] = self.pressure
+
 
     def get_mass(self, p, V=None):
         # Calculate the mass of the storage at a certain pressure.
@@ -128,7 +135,7 @@ class StorageH2 (Component):
         # Calculate the volume needed to fit a certain mass at given pressure.
         # Parameters:
         #  p: pressure [bar].
-        #  m: mass [kg]
+        #  m: mass [kg].
 
         # Storage temperature [K].
         T = 273.15 + 25
@@ -143,6 +150,20 @@ class StorageH2 (Component):
         V = m * v_spec / self.Mr
         return V
 
+    def get_pressure(self, m):
+        # Calculate the storage pressure for a given mass.
+        # Parameters:
+        #  m: mass [kg].
+
+        # Storage volume [m³].
+        V = self.V
+        # Storage temperature [K].
+        T = 273.15 + 25
+        # Calculate the storage pressure [Pa].
+        p = self.R * T / (V * self.Mr / m - self.rk_b) - \
+            self.rk_a / (T**0.5 * V * self.Mr / m * (V * self.Mr / m + self.rk_b))
+        # Return pressure in bar [bar].
+        return p / 1e5
 
 
 

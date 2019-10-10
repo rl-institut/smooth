@@ -3,6 +3,7 @@ import oemof.solph as solph
 from smooth.components.component import Component
 import smooth.framework.functions.functions as func
 
+
 class EnergySourceFromCsv (Component):
     """ General energy sources are created through this class by importing csv files """
     def __init__(self, params):
@@ -28,11 +29,11 @@ class EnergySourceFromCsv (Component):
 
         """ STATES """
 
-    def create_oemof_model(self, busses, sim_params):
+    def create_oemof_model(self, busses):
         energy_source_from_csv = solph.Source(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(
-                actual_value=self.data.iloc[sim_params.i_interval],
+                actual_value=self.data.iloc[self.sim_params.i_interval],
                 nominal_value=self.nominal_value,
                 fixed=True)})
         return energy_source_from_csv
