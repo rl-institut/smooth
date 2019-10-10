@@ -11,7 +11,6 @@ class Sink(Component):
         Component.__init__(self)
         """ PARAMETERS """
         self.name = 'Grid_default_name'
-        self.component = 'to_grid'
 
         # Max. power that can be taken by the sink [W]
         self.power_max = 800000000
@@ -25,7 +24,7 @@ class Sink(Component):
         # Define the costs for electricity (negative means earning money) [EUR/Wh].
         self.electricity_costs = self.get_costs_and_art_costs()
 
-    def create_oemof_model(self, busses, sim_params):
+    def create_oemof_model(self, busses):
         sink = solph.Sink(
             label=self.name,
             inputs={busses[self.bus_in]: solph.Flow(

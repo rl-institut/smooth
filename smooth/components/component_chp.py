@@ -11,7 +11,7 @@ class Chp (Component):
 
         """ PARAMETERS """
         self.name = 'CHP_default_name'
-        self.component = 'CHP'
+
         self.h2_energy_density = 33.3
         self.electrical_efficiency = 0.35
         self.thermal_efficiency = 0.8
@@ -19,7 +19,7 @@ class Chp (Component):
         # self.annual_operating_time = 5000
         self.electricity_output_max = 3000000000 * 20 # unit is [W]
         self.thermal_output_max = 5000000000 * 20 # unit is [W]
-        self.variable_artificial_costs = None
+        self.artificial_costs = None
 
         self.bus_h2 = None
         self.bus_el = None
@@ -30,7 +30,7 @@ class Chp (Component):
 
         """ STATES """
 
-    def create_oemof_model(self, busses, sim_params):
+    def create_oemof_model(self, busses):
         chp = solph.Transformer(
             label=self.name,
             inputs={busses[self.bus_h2]: solph.Flow()},

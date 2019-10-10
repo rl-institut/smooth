@@ -1,7 +1,7 @@
 import os
 import oemof.solph as solph
 from smooth.components.component import Component
-import smooth.framework.functions as func
+import smooth.framework.functions.functions as func
 
 class EnergyDemandFromCsv(Component):
     """ Energy demand created through this class from a csv file """
@@ -12,7 +12,7 @@ class EnergyDemandFromCsv(Component):
         Component.__init__(self)
         """ PARAMETERS """
         self.name = 'Demand_default_name'
-        self.component = 'Energy_demand_from_csv'
+
         self.nominal_value = 1
         self.csv_filename = None
         self.csv_separator = ','
@@ -29,11 +29,11 @@ class EnergyDemandFromCsv(Component):
 
         """ STATES """
 
-    def create_oemof_model(self, busses, sim_params):
+    def create_oemof_model(self, busses):
         energy_demand_from_csv = solph.Sink(
             label=self.name,
             inputs={busses[self.bus_in]: solph.Flow(
-                actual_value=self.data.iloc[sim_params.i_interval],
+                actual_value=self.data.iloc[self.sim_params.i_interval],
                 nominal_value=self.nominal_value,
                 fixed=True)})
         return energy_demand_from_csv

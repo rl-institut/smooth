@@ -14,16 +14,17 @@ class Electrolyzer (Component):
 
         """ PARAMETERS """
         self.name = 'Electrolyzer_default_name'
-        self.component = 'Electrolyzer'
 
         # Max. power [W].
         self.power_max = 100000
-        self.variable_artificial_costs = None
+        self.artificial_costs = None
 
         # pressure of hydrogen in the system in [Pa]
         self.pressure = 40 * 10**5
-
+        # Initial temperature [K].
         self.temp_init = 273.15 + 25
+        # Life time [a].
+        self.life_time = 20
 
         self.bus_el = None
         self.bus_h2 = None
@@ -45,8 +46,9 @@ class Electrolyzer (Component):
         self.area_cell = 1500
 
         """ UPDATE PARAMETER DEFAULT VALUES """
-        self.interval_time = None
         self.set_parameters(params)
+        # Interval time [min].
+        self.interval_time = self.sim_params.interval_time
         # Calculate the max. energy the electrolyzer can use in one time step [Wh].
         self.energy_max = self.power_max * self.interval_time/60
 
@@ -89,7 +91,7 @@ class Electrolyzer (Component):
         # Tracking supporting points to calculate temperature later on.
         self.supporting_points = {}
 
-    def create_oemof_model(self, busses, sim_params):
+    def create_oemof_model(self, busses):
         # Get the non-linear behaviour.
         [breakpoints, conversion_fun] = self.get_nonlinear_behaviour()
 

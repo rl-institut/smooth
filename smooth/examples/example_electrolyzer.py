@@ -6,18 +6,29 @@ my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
 """ Create busses """
 # create hydrogen bus
-busses = ['bel', 'bh2']
+busses = ['bel', 'bh2_lp', 'bh2_hp']
 
 
 """ Define components """
-components = []
+components = list()
 components.append({
     'component': 'electrolyzer',
     'name': 'this_ely',
     'bus_el': 'bel',
-    'bus_h2': 'bh2',
-    'power_max': 1000000,
-    'temp_init': 293.15
+    'bus_h2': 'bh2_lp',
+    'power_max': 1000e3,
+    'temp_init': 293.15,
+    'life_time': 20,
+    'capex': {
+        'key': ['free', 'spec'],
+        'fitting_value': [[193, -0.366], 'cost'],
+        'dependant_value': ['power_max', 'power_max']
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.04,
+        'dependant_value': 'capex',
+    }
 })
 
 components.append({
@@ -44,7 +55,7 @@ components.append({
 components.append({
     'component': 'energy_demand_from_csv',
     'name': 'h2_demand',
-    'bus_in': 'bh2',
+    'bus_in': 'bh2_hp',
     'csv_filename': 'ts_demand_h2.csv',
     'nominal_value': 1,
     'column_title': 'Hydrogen load',
@@ -68,22 +79,63 @@ components.append({
     'component': 'sink',
     'name': 'to_grid',
     'bus_in': 'bel',
-    'variable_artificial_costs': 10
+    'artificial_costs': 10
 })
 
 components.append({
-    'component': 'storage',
+    'component': 'storage_h2',
     'name': 'h2_storage',
-    'bus_in_and_out': 'bh2',
+    'bus_in_and_out': 'bh2_lp',
+    'p_min': 5,
+    'p_max': 450,
     'storage_capacity': 1000,
-    'storage_level_init': 300
+    'storage_level_init': 300,
+    'life_time': 30,
+    'capex': {
+        'key': ['poly', 'spec'],
+        'fitting_value': [[604.6, 0.5393], 'cost'],
+        'dependant_value': ['p_max', 'storage_capacity']
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.01,
+        'dependant_value': 'capex'
+    }
+})
+
+components.append({
+    'component': 'compressor_h2',
+    'name': 'h2_compressor',
+    # Busses
+    'bus_h2_in': 'bh2_lp',
+    'bus_h2_out': 'bh2_hp',
+    # Parameters
+    'bus_el': 'bel',
+    'm_flow_max': 33.6 * 2,
+    'life_time': 20,
+    # Foreign states
+    'fs_component_name': ['h2_storage', None],
+    'fs_attribute_name': ['pressure', 700],
+    # Financials
+    'capex': {
+        'key': 'free',
+        'fitting_value': [34592, 0.6468],
+        'dependant_value': 'm_flow_max'
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.04,
+        'dependant_value': 'capex'
+    }
+
 })
 
 sim_params = {
     'start_date': '1/1/2019',
     'frequency': 'H',
     'n_intervals': 50,
-    'interval_time': 60
+    'interval_time': 60,
+    'interest_rate': 0.03
 }
 
 mymodel = {

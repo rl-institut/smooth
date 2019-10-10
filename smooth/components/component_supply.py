@@ -11,7 +11,7 @@ class Supply (Component):
 
         """ PARAMETERS """
         self.name = 'Grid_default_name'
-        self.component = 'grid_supply'
+
         self.power_max = 8000000
 
         self.bus_out = None
@@ -40,14 +40,14 @@ class Supply (Component):
         if self.fs_component_name is not None:
             foreign_state_value = self.get_foreign_state_value(components)
             if foreign_state_value < self.fs_threshold:
-                self.variable_artificial_costs = self.fs_low_art_cost
+                self.artificial_costs = self.fs_low_art_cost
             else:
-                self.variable_artificial_costs = self.fs_high_art_cost
+                self.artificial_costs = self.fs_high_art_cost
 
         # Set the total costs for electricity this time step (costs + art. costs) [EUR/Wh].
         self.current_ac = self.get_costs_and_art_costs()
 
-    def create_oemof_model(self, busses, sim_params):
+    def create_oemof_model(self, busses):
         from_grid = solph.Source(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(

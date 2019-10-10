@@ -1,4 +1,5 @@
 import importlib
+import math
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
@@ -28,8 +29,8 @@ def run(model):
     # CREATE COMPONENT OBJECTS
     components = []
     for this_comp in model['components']:
-        # Add the simulation step size to the component info [min].
-        this_comp['interval_time'] = sim_params.interval_time
+        # Add simulation parameters to the components so they can be used
+        this_comp['sim_params'] = sim_params
         # Loop through all components of the model and load the component classes.
         this_comp_name = this_comp['component']
         # Import the module of the component.
@@ -45,7 +46,11 @@ def run(model):
         # Load the class (which by convention has a name with a capital first letter and camel case).
         this_comp_class = getattr(this_comp_module, class_name)
         # Initialize the component.
-        components.append(this_comp_class(this_comp))
+        this_comp_obj = this_comp_class(this_comp)
+        # Check if this component is valid.
+        this_comp_obj.check_validity()
+        # Add this component to the list containing all components.
+        components.append(this_comp_obj)
 
     """ SIMULATION """
     for i_interval in range(sim_params.n_intervals):
@@ -71,7 +76,7 @@ def run(model):
             # Execute the prepare simulation step (if this component has one).
             this_comp.prepare_simulation(components)
             # Add the component to the oemof model.
-            oemof_model.add(this_comp.create_oemof_model(busses, sim_params))
+            oemof_model.add(this_comp.create_oemof_model(busses))
 
         """ RUN THE SIMULATION """
         # Do the simulation for this time step.
@@ -95,12 +100,26 @@ def run(model):
             # Update the costs and artificial costs.
             this_comp.update_costs(results, sim_params)
 
-    """ VIEWING RESULTS """
+    
+    """ COMPUTING/VIEWING RESULTS """
+    print("\n++++++++")
+    print('RESULTS:')
+    print("++++++++\n")
     # can be deleted but displays results for flows/states of components
+    print('{:20s} {:20s} {:20s} {:20s} {:20s}'.format(
+        'component name', 'annutiy capex', 'annuity opex', 'annuity var. cost', 'annuity total'))
     for this_comp in components:
-        print('Comp: {}: flow: {}'.format(this_comp.name, this_comp.flows))
+        # Calculate the annuity for each component.
+        this_comp.generate_results()
+        # Print the annuity costs for each component.
+        print('{:20s} {:<20d} {:<20d} {:<20d} {:<20d}'.format(
+            this_comp.name, math.floor(this_comp.results['annuity_capex']),
+            math.floor(this_comp.results['annuity_opex']), math.floor(this_comp.results['annuity_variable_costs']),
+            math.floor(this_comp.results['annuity_total'])))
+        # print('Comp: {}: flow: {}'.format(this_comp.name, this_comp.flows))
 
-    print('Simulation done')
+    print('\nSimulation done')
+    return components
 
 
 
