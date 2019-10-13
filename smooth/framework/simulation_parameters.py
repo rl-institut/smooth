@@ -1,5 +1,6 @@
 import smooth.framework.functions.functions as func
 
+
 class SimulationParameters:
 
     def __init__(self, params):
