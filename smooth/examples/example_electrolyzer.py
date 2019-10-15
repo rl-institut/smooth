@@ -143,10 +143,10 @@ components.append({
 
 sim_params = {
     'start_date': '1/1/2019',
-    'frequency': 'H',
     'n_intervals': 10,
     'interval_time': 60,
-    'interest_rate': 0.03
+    'interest_rate': 0.03,
+    'print_progress': False
 }
 
 mymodel = {

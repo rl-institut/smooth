@@ -7,11 +7,12 @@ import multiprocessing
 import copy
 import math
 from smooth.optimization.optimization_parameters import OptimizationParameters
-from smooth.framework.run import run as run_smooth
+from smooth import run_smooth
 from deap import base, creator, tools
 
 
 is_plot_wanted = False
+
 
 def fitness_function(_i_individual, _individual, model, opt_params):
     # The fitness function evaluates one gen combination of one individual.
@@ -38,12 +39,9 @@ def fitness_function(_i_individual, _individual, model, opt_params):
                 # Change the value of that component according to the current gens.
                 this_comp[this_attribute.comp_attribute] = this_value
 
-    # _individual.fitness.valid = True
-    # _individual.fitness.values = sum(_individual.gen),
-    # return [_i_individual, _individual]
     # Now that the model is updated according to the genes given by the GA, smooth can be run.
     try:
-        smooth_result = run_smooth(this_model, False)
+        smooth_result = run_smooth(this_model)
         # As a fitness value, give back the summed up total annuity (which will be minimized) [EUR/a].
         annuity_tot = 0
         for this_comp in smooth_result:
@@ -182,6 +180,7 @@ def run_optimization(opt_config, _model):
     # Parameter:
     #  opt_config: Configuration of the optimization [dict].
     #  model: smooth model [dict].
+    #  result_file_name: If given, the results will be saved to the file preceded by the current time [str].
 
     # Create an object containing all the relevant information for the genetic algorithm.
     opt_params = OptimizationParameters()
@@ -318,6 +317,7 @@ def run_optimization(opt_config, _model):
 
     print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
+    # PLOT RESULTS
     if is_plot_wanted:
         # Plot the progress.
         import seaborn as sns
@@ -339,4 +339,4 @@ def run_optimization(opt_config, _model):
         sorted([(i, to_int(''.join((str(xi) for xi in individual)))) for i, individual in enumerate(population)][:10],
                key=lambda x: x[1], reverse=False)
 
-
+    return track_individuals

@@ -1,6 +1,8 @@
 from smooth.examples.example_electrolyzer import mymodel
-from smooth.optimization.run_optimization import run_optimization
+from smooth import run_optimization
+import smooth
 from multiprocessing import freeze_support
+
 
 def main():
     # Define the optimization parameter. This dict needs the following information:
@@ -12,8 +14,8 @@ def main():
     #  n_gen: Number of generations that will be evaluated [-].
     #  n_core: Number of cores used in the optimization ('max' will use all of them) [-].
     opt_params['ga_params'] = {
-        'population_size': 10,
-        'n_generation': 20,
+        'population_size': 4,
+        'n_generation': 4,
         'n_core': 'max'
     }
     # Define the attribute variation information that will be used by the genetic algorithm.
@@ -42,9 +44,10 @@ def main():
     opt_params['attribute_variation'] = [var_ely_power, var_storage_capacity]
 
     # Run an optimization example.
-    run_optimization(opt_params, mymodel)
+    return run_optimization(opt_params, mymodel)
 
 
 if __name__ == '__main__':
     freeze_support()
-    main()
+    optimization_results = main()
+    smooth.save_results('optimization_result', optimization_results)
