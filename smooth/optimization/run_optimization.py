@@ -11,6 +11,8 @@ from smooth.framework.run import run as run_smooth
 from deap import base, creator, tools
 
 
+is_plot_wanted = False
+
 def fitness_function(_i_individual, _individual, model, opt_params):
     # The fitness function evaluates one gen combination of one individual.
     # Parameter:
@@ -315,24 +317,26 @@ def run_optimization(opt_config, _model):
             this_attribute.comp_name, this_attribute.comp_attribute, best_attribute_vals.pop(0)))
 
     print('+++++++++++++++++++++++++++++++++++++++++++\n')
-    # Plot the progress.
-    import seaborn as sns
-    import matplotlib.pyplot as plt
 
-    sns.set()
+    if is_plot_wanted:
+        # Plot the progress.
+        import seaborn as sns
+        import matplotlib.pyplot as plt
 
-    _ = plt.scatter(range(1, len(stats) + 1), [s['mu'] for s in stats], marker='.')
+        sns.set()
 
-    _ = plt.title('average fitness per iteration')
-    _ = plt.xlabel('iterations')
-    _ = plt.ylabel('fitness')
+        _ = plt.scatter(range(1, len(stats) + 1), [s['mu'] for s in stats], marker='.')
 
-    plt.show()
+        _ = plt.title('average fitness per iteration')
+        _ = plt.xlabel('iterations')
+        _ = plt.ylabel('fitness')
 
-    def to_int(b):
-        return int(b, 2)
+        plt.show()
 
-    sorted([(i, to_int(''.join((str(xi) for xi in individual)))) for i, individual in enumerate(population)][:10],
-           key=lambda x: x[1], reverse=False)
+        def to_int(b):
+            return int(b, 2)
+
+        sorted([(i, to_int(''.join((str(xi) for xi in individual)))) for i, individual in enumerate(population)][:10],
+               key=lambda x: x[1], reverse=False)
 
 
