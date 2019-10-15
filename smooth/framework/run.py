@@ -117,11 +117,12 @@ def run(model, is_print_wanted=True):
         print('{:20s} {:20s} {:20s} {:20s} {:20s}'.format(
             'component name', 'annutiy capex', 'annuity opex', 'annuity var. cost', 'annuity total'))
 
+    # Calculate the sum of all total annuities [EUR/a].
+    sum_of_tot_annuity = 0
+
     for this_comp in components:
         # Calculate the annuity for each component.
         this_comp.generate_results()
-        # Calculate the sum of all total annuities [EUR/a].
-        sum_of_tot_annuity = 0
         if is_print_wanted:
             # Print the annuity costs for each component.
             print('{:20s} {:<20d} {:<20d} {:<20d} {:<20d}'.format(
