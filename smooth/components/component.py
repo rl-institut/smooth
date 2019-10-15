@@ -43,12 +43,16 @@ class Component:
             setattr(self, this_param, params[this_param])
 
     """ UPDATE THE FLOWS FOR EACH COMPONENT """
-    def update_flows(self, results, sim_params):
+    def update_flows(self, results, sim_params, comp_name=None):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
         if not hasattr(self, 'flows'):
             self.flows = {}
 
-        this_comp_node = views.node(results, self.name)
+        # While components can generate more than one oemof model, they sometimes need to give a custom name.
+        if comp_name is None:
+            comp_name = self.name
+
+        this_comp_node = views.node(results, comp_name)
         this_df = this_comp_node['sequences']
         for i_result in this_df:
             # Check if this result is a flow

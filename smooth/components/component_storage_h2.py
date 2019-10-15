@@ -55,7 +55,7 @@ class StorageH2 (Component):
 
         """ STATES """
         # Storage level [kg of h2]
-        self.storage_level = self.storage_level_init
+        self.storage_level = min(self.storage_level_init, self.storage_capacity)
         # Storage pressure [bar].
         self.pressure = self.get_pressure(self.storage_level)
 
@@ -75,7 +75,7 @@ class StorageH2 (Component):
 
         self.current_vac = [vac_in, vac_out]
 
-    def create_oemof_model(self, busses):
+    def create_oemof_model(self, busses, _):
         storage = solph.components.GenericStorage(
             label=self.name,
             outputs={busses[self.bus_in_and_out]: solph.Flow(variable_costs=self.current_vac[1])},

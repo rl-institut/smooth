@@ -6,7 +6,7 @@ my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
 """ Create busses """
 # create hydrogen bus
-busses = ['bel', 'bh2_lp', 'bh2_hp']
+busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
 
 
 """ Define components """
@@ -16,7 +16,7 @@ components.append({
     'name': 'this_ely',
     'bus_el': 'bel',
     'bus_h2': 'bh2_lp',
-    'power_max': 1000e3,
+    'power_max': 100e3,
     'temp_init': 293.15,
     'life_time': 20,
     'capex': {
@@ -88,7 +88,7 @@ components.append({
     'bus_in_and_out': 'bh2_lp',
     'p_min': 5,
     'p_max': 450,
-    'storage_capacity': 1000,
+    'storage_capacity': 100,
     'storage_level_init': 300,
     'life_time': 30,
     'capex': {
@@ -130,10 +130,21 @@ components.append({
 
 })
 
+"""
+components.append({
+    'component': 'fuel_cell_chp',
+    'name': 'fuel_cell_chp',
+    'bus_el': 'bel',
+    'bus_h2': 'bh2_hp',
+    'bus_th': 'bth',
+    'power_max': 500e3
+})
+"""
+
 sim_params = {
     'start_date': '1/1/2019',
     'frequency': 'H',
-    'n_intervals': 50,
+    'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03
 }

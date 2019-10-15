@@ -29,7 +29,7 @@ class EnergyDemandFromCsv(Component):
 
         """ STATES """
 
-    def create_oemof_model(self, busses):
+    def create_oemof_model(self, busses, _):
         energy_demand_from_csv = solph.Sink(
             label=self.name,
             inputs={busses[self.bus_in]: solph.Flow(

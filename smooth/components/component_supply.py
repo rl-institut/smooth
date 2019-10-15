@@ -47,7 +47,7 @@ class Supply (Component):
         # Set the total costs for electricity this time step (costs + art. costs) [EUR/Wh].
         self.current_ac = self.get_costs_and_art_costs()
 
-    def create_oemof_model(self, busses):
+    def create_oemof_model(self, busses, _):
         from_grid = solph.Source(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(

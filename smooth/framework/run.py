@@ -5,7 +5,7 @@ from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
 
 
-def run(model):
+def run(model, is_print_wanted=True):
     # Run the smooth simulation framework.
     # Parameters:
     #  model: smooth model object containing parameters for components, simulation and busses.
@@ -56,7 +56,9 @@ def run(model):
     for i_interval in range(sim_params.n_intervals):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
-        print('Simulating interval {}/{}'.format(i_interval, sim_params.n_intervals))
+        if is_print_wanted:
+            print('Simulating interval {}/{}'.format(i_interval, sim_params.n_intervals))
+
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
         oemof_model = solph.EnergySystem(timeindex=this_time_index, freq='H')
@@ -75,8 +77,14 @@ def run(model):
         for this_comp in components:
             # Execute the prepare simulation step (if this component has one).
             this_comp.prepare_simulation(components)
-            # Add the component to the oemof model.
-            oemof_model.add(this_comp.create_oemof_model(busses))
+            # Get the oemof representation of this component.
+            this_oemof_model = this_comp.create_oemof_model(busses, oemof_model)
+            if this_oemof_model is not None:
+                # Add the component to the oemof model.
+                oemof_model.add(this_oemof_model)
+            else:
+                # If None is given back, no model is supposed to be added.
+                pass
 
         """ RUN THE SIMULATION """
         # Do the simulation for this time step.
@@ -100,25 +108,33 @@ def run(model):
             # Update the costs and artificial costs.
             this_comp.update_costs(results, sim_params)
 
-    
-    """ COMPUTING/VIEWING RESULTS """
-    print("\n++++++++")
-    print('RESULTS:')
-    print("++++++++\n")
-    # can be deleted but displays results for flows/states of components
-    print('{:20s} {:20s} {:20s} {:20s} {:20s}'.format(
-        'component name', 'annutiy capex', 'annuity opex', 'annuity var. cost', 'annuity total'))
+    if is_print_wanted:
+        """ COMPUTING/VIEWING RESULTS """
+        print("\n++++++++")
+        print('RESULTS:')
+        print("++++++++\n")
+        # can be deleted but displays results for flows/states of components
+        print('{:20s} {:20s} {:20s} {:20s} {:20s}'.format(
+            'component name', 'annutiy capex', 'annuity opex', 'annuity var. cost', 'annuity total'))
+
     for this_comp in components:
         # Calculate the annuity for each component.
         this_comp.generate_results()
-        # Print the annuity costs for each component.
-        print('{:20s} {:<20d} {:<20d} {:<20d} {:<20d}'.format(
-            this_comp.name, math.floor(this_comp.results['annuity_capex']),
-            math.floor(this_comp.results['annuity_opex']), math.floor(this_comp.results['annuity_variable_costs']),
-            math.floor(this_comp.results['annuity_total'])))
-        # print('Comp: {}: flow: {}'.format(this_comp.name, this_comp.flows))
+        # Calculate the sum of all total annuities [EUR/a].
+        sum_of_tot_annuity = 0
+        if is_print_wanted:
+            # Print the annuity costs for each component.
+            print('{:20s} {:<20d} {:<20d} {:<20d} {:<20d}'.format(
+                this_comp.name, math.floor(this_comp.results['annuity_capex']),
+                math.floor(this_comp.results['annuity_opex']), math.floor(this_comp.results['annuity_variable_costs']),
+                math.floor(this_comp.results['annuity_total'])))
+            # print('Comp: {}: flow: {}'.format(this_comp.name, this_comp.flows))
+            sum_of_tot_annuity += this_comp.results['annuity_total']
 
-    print('\nSimulation done')
+    if is_print_wanted:
+        print('\nSum of total annuity is {} EUR/a'.format(math.floor(sum_of_tot_annuity)))
+        print('\nSimulation done')
+
     return components
 
 

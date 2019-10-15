@@ -28,7 +28,7 @@ class CompressorH2(Component):
         # Specific compression energy (electrical energy needed per kg H2) [Wh/kg].
         self.spec_compression_energy = None
 
-    def create_oemof_model(self, busses):
+    def create_oemof_model(self, busses, _):
         compressor = solph.Transformer(
             label=self.name,
             inputs={busses[self.bus_h2_in]: solph.Flow(nominal_value=self.m_flow_max*self.sim_params.interval_time/60),

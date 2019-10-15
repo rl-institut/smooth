@@ -30,7 +30,7 @@ class Chp (Component):
 
         """ STATES """
 
-    def create_oemof_model(self, busses):
+    def create_oemof_model(self, busses, _):
         chp = solph.Transformer(
             label=self.name,
             inputs={busses[self.bus_h2]: solph.Flow()},

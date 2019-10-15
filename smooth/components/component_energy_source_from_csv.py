@@ -29,7 +29,7 @@ class EnergySourceFromCsv (Component):
 
         """ STATES """
 
-    def create_oemof_model(self, busses):
+    def create_oemof_model(self, busses, _):
         energy_source_from_csv = solph.Source(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(

@@ -24,7 +24,7 @@ class Sink(Component):
         # Define the costs for electricity (negative means earning money) [EUR/Wh].
         self.electricity_costs = self.get_costs_and_art_costs()
 
-    def create_oemof_model(self, busses):
+    def create_oemof_model(self, busses, _):
         sink = solph.Sink(
             label=self.name,
             inputs={busses[self.bus_in]: solph.Flow(

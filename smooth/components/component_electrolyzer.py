@@ -15,9 +15,12 @@ class Electrolyzer (Component):
         """ PARAMETERS """
         self.name = 'Electrolyzer_default_name'
 
+        # Define the busses.
+        self.bus_el = None
+        self.bus_h2 = None
+
         # Max. power [W].
         self.power_max = 100000
-        self.artificial_costs = None
 
         # pressure of hydrogen in the system in [Pa]
         self.pressure = 40 * 10**5
@@ -25,9 +28,6 @@ class Electrolyzer (Component):
         self.temp_init = 273.15 + 25
         # Life time [a].
         self.life_time = 20
-
-        self.bus_el = None
-        self.bus_h2 = None
 
         """ PARAMETERS (SPECIFIC) """
         # The fitting parameter exchange current density [A/cm²].
@@ -91,7 +91,7 @@ class Electrolyzer (Component):
         # Tracking supporting points to calculate temperature later on.
         self.supporting_points = {}
 
-    def create_oemof_model(self, busses):
+    def create_oemof_model(self, busses, _):
         # Get the non-linear behaviour.
         [breakpoints, conversion_fun] = self.get_nonlinear_behaviour()
 
@@ -108,34 +108,34 @@ class Electrolyzer (Component):
         return electrolyzer
 
     def get_nonlinear_behaviour(self):
-        # Set up the supporting points for the electrolyzer conversion of electricity to hydrogen.
+        # Set up the breakpoints for the electrolyzer conversion of electricity to hydrogen.
         n_supporting_point = 10
-        # Get the supporting point values for electric energy [Wh] and produced hydrogen [kg].
-        sp_ely_energy = []
-        sp_ely_h2 = []
-        sp_ely_temp = []
+        # Get the breakpoint values for electric energy [Wh] and produced hydrogen [kg].
+        bp_ely_energy = []
+        bp_ely_h2 = []
+        bp_ely_temp = []
         for i_supporting_point in range(n_supporting_point + 1):
-            # Calculate the energy for this supporting point [Wh].
+            # Calculate the energy for this breakpoint [Wh].
             this_energy = i_supporting_point / n_supporting_point * self.energy_max
-            sp_ely_energy.append(this_energy)
-            # Calculate the hydrogen produced [kg] and resulting temperature [K] with the energy of this supporting
-            # point and at the current temperature.
+            bp_ely_energy.append(this_energy)
+            # Calculate the hydrogen produced [kg] and resulting temperature [K] with the energy of this breakpoint
+            # and at the current temperature.
             [this_mass, this_temp] = self.get_mass_and_temp(this_energy / 1000)
-            sp_ely_h2.append(this_mass)
-            sp_ely_temp.append(this_temp)
+            bp_ely_h2.append(this_mass)
+            bp_ely_temp.append(this_temp)
 
-        # Create a function that will give out the mass values for the energy values at the supporting points.
+        # Create a function that will give out the mass values for the energy values at the breakpoints.
         def conversion_fun(ely_energy):
             # Check the index of this ely_energy entry.
-            this_index = sp_ely_energy.index(ely_energy)
+            this_index = bp_ely_energy.index(ely_energy)
             # Return the according hydrogen production value [kg].
-            return sp_ely_h2[this_index]
+            return bp_ely_h2[this_index]
 
-        self.supporting_points['temperature'] = sp_ely_temp
-        self.supporting_points['h2_produced'] = sp_ely_h2
-        self.supporting_points['energy'] = sp_ely_energy
+        self.supporting_points['temperature'] = bp_ely_temp
+        self.supporting_points['h2_produced'] = bp_ely_h2
+        self.supporting_points['energy'] = bp_ely_energy
 
-        return sp_ely_energy, conversion_fun
+        return bp_ely_energy, conversion_fun
 
     def get_mass_and_temp(self, energy_used):
         # Calculate the mass produced and the resulting electrolyzer for a certain energy.

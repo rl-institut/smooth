@@ -112,6 +112,9 @@ class AttributeVariation:
 
         self.set_gens()
 
+    def get_val_fun(self, binary_val):
+        return min(self.val_min + binary_val * self.val_step, self.val_max)
+
     def set_gens(self):
         # Convert all attribute variable information into bytes. The bytes will be used as the genes of one individual.
         # Parameters:
@@ -122,7 +125,7 @@ class AttributeVariation:
         # Get the min. number of bits needed to represent that number [int].
         self.n_gen = math.ceil(math.log(n_step, 2))
         # Define a function that gives back the actual value when the number of the binary genes is given.
-        self.get_val = lambda binary_val: min(self.val_min + binary_val * self.val_step, self.val_max)
+        self.get_val = self.get_val_fun
 
 
 
