@@ -1,5 +1,6 @@
 install_requires=[
     'matplotlib',
+    'seaborn',
     'pandas',
     'numpy',
     'deap'

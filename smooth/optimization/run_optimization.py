@@ -11,9 +11,6 @@ from smooth import run_smooth
 from deap import base, creator, tools
 
 
-is_plot_wanted = False
-
-
 def fitness_function(_i_individual, _individual, model, opt_params):
     # The fitness function evaluates one gen combination of one individual.
     # Parameter:
@@ -36,6 +33,8 @@ def fitness_function(_i_individual, _individual, model, opt_params):
             if this_comp['name'] == this_attribute.comp_name:
                 # Get the attribute value for this attribute and delete it from the list of all attribute values.
                 this_value = attribute_values.pop(0)
+                # Save the value in this component for later use.
+                this_attribute.this_val = this_value
                 # Change the value of that component according to the current gens.
                 this_comp[this_attribute.comp_attribute] = this_value
 
@@ -51,15 +50,19 @@ def fitness_function(_i_individual, _individual, model, opt_params):
         print('------------------------------------------------------------------------------------Evaluation canceled')
         # Case: Smooth couldn't run through, thus a bad fitness value has to be assigned.
         annuity_tot = float('inf')
+        smooth_result = None
 
     # For the DEAP package, the fitness value needs to be a tuple, thus the comma.
     _individual.fitness.valid = True
     _individual.fitness.values = annuity_tot,
+    _individual.smooth_result = smooth_result
+    _individual.attribute_variation = opt_params.attribute_var
     return [_i_individual, _individual]
 
 
 class TrackIndividuals:
-    # Track all individuals that ever have been calculated to prevent double calculations.
+    # Track all individuals that ever have been calculated to prevent double calculations. An object of this class will
+    # be the output of the optimization run.
     def __init__(self):
         # Dict of all results that have been done calculated so far. The key of one individual is the decimal number of
         # its binary gens (e.g. 0 0 1 0 1 --> key is 5)
@@ -70,6 +73,8 @@ class TrackIndividuals:
         self.i_best_fit_val = None
         # Gens of the individual with the best fitness value.
         self.best_gens = None
+        # Safe the stats of a run.
+        self.stats = None
 
     def set_fitness_value(self, individual):
         # Set the fitness value of an individual if that individual was already evaluated.
@@ -83,22 +88,27 @@ class TrackIndividuals:
             # Return the fitness value.
             individual.fitness.values = self.individuals_evaluated[int_val].fitness.values
 
+    def set_stats(self, stats):
+        # After an optimization run the states are saved to the tracked individuals (which are then given out).
+        self.stats = stats
+
     def add_individual(self, individual):
         # Add an individual to the dictionary of evaluated individuals if it wasn't evaluated yet.
         # Parameters:
         #  individual: An individual object from deap [individual]
 
         # Get the integer value of the gens.
-        int_val = self.get_int(list(individual))
+        int_val = self.get_int(individual.gen)
 
         if int_val not in self.individuals_evaluated:
             # Add the individual to the list of evaluated individuals.
-            self.individuals_evaluated[int_val] = IndividualShadow(list(individual), individual.fitness.values)
+            self.individuals_evaluated[int_val] = IndividualShadow(
+                individual.gen, individual.fitness.values, individual.smooth_result, individual.attribute_variation)
             # If this individual has the best fitness value, save the value and index.
             if self.best_fit_val is None or self.individuals_evaluated[int_val].fitness.values < self.best_fit_val:
                 self.best_fit_val = self.individuals_evaluated[int_val].fitness.values
                 self.i_best_fit_val = int_val
-                self.best_gens = list(individual)
+                self.best_gens = individual.gen
 
     def get_int(self, gen):
         # Calculate an integer by a given list of binary values.
@@ -114,12 +124,19 @@ class TrackIndividuals:
 class IndividualShadow:
     # While there are problems with pickling the "Individual" class from deap, a shadow for an individual can be created
     # in order to use multiprocessing (which uses pickling).
-    def __init__(self, gen, fitness_val):
+    def __init__(self, gen, fitness_val, smooth_result=None, attribute_var=None):
+        # The gen of the individual as list of binary values [list].
         self.gen = gen
+        # The fitness value [Fitness object].
         self.fitness = Fitness(fitness_val)
+        # The results of the smooth run [list].
+        self.smooth_result = smooth_result
+        # The parameter that were varied by the genetic algorithm [].
+        self.attribute_variation = attribute_var
 
 
 class Fitness:
+    # Track the fitness values in the style the "Individual" class from deap does.
     def __init__(self, fitness_val):
         self.values = fitness_val
         if fitness_val is None:
@@ -129,10 +146,12 @@ class Fitness:
 
 
 class GenerationEvaluationResult:
+    # This class tracks all the fitness evaluation results that are calculated in parallel.
     def __init__(self, n_individuals):
         self.individuals = [None] * n_individuals
 
     def update_result(self, result):
+        # This function is the callback function to the parallel call of the fitness function.
         self.individuals[result[0]] = result[1]
 
 
@@ -168,11 +187,6 @@ def compute_fitness_values(_population, model, opt_params):
 
     # Return the evaluated individuals.
     return individuals_evaluated
-
-
-#def evaluate_individual(_i_individual, _individual, _fitness_values, tbx):
-#    this_fit_val = tbx.evaluate(_individual)
-#    _fitness_values[_i_individual] = this_fit_val
 
 
 def run_optimization(opt_config, _model):
@@ -232,9 +246,8 @@ def run_optimization(opt_config, _model):
             _population[i_individual].fitness.values = tbx.evaluate(individuals_evaluated.individuals[i_individual])
 
         # Add all evaluated tracked individuals to track_individuals.
-        for this_individual in _population:
-            track_individuals.add_individual(this_individual)
-
+        for _this_individual in individuals_evaluated.individuals:
+            track_individuals.add_individual(_this_individual)
 
     def pull_stats(_population, _iteration=1):
         fitnesses = [individual.fitness.values[0] for individual in _population]
@@ -247,7 +260,6 @@ def run_optimization(opt_config, _model):
         }
 
     # Crate a random initial population.
-
     population = tbx.population(n=opt_params.ga_params.population_size)
 
     print('\n+++++++ START GENETIC ALGORITHM +++++++')
@@ -317,26 +329,7 @@ def run_optimization(opt_config, _model):
 
     print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
-    # PLOT RESULTS
-    if is_plot_wanted:
-        # Plot the progress.
-        import seaborn as sns
-        import matplotlib.pyplot as plt
-
-        sns.set()
-
-        _ = plt.scatter(range(1, len(stats) + 1), [s['mu'] for s in stats], marker='.')
-
-        _ = plt.title('average fitness per iteration')
-        _ = plt.xlabel('iterations')
-        _ = plt.ylabel('fitness')
-
-        plt.show()
-
-        def to_int(b):
-            return int(b, 2)
-
-        sorted([(i, to_int(''.join((str(xi) for xi in individual)))) for i, individual in enumerate(population)][:10],
-               key=lambda x: x[1], reverse=False)
+    # Save the stats in the output.
+    track_individuals.set_stats(stats)
 
     return track_individuals

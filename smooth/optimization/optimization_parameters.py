@@ -96,6 +96,8 @@ class AttributeVariation:
         self.val_max = None
         # Step size of the variations of this attribute.
         self.val_step = None
+        # The actual value for a certain run [int/float].
+        self.this_val = None
 
         # INTERNAL PARAMETERS (NOT DEFINED BY USER)
         # Gen number (number of bits each individual has).

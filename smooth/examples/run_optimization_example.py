@@ -51,3 +51,4 @@ if __name__ == '__main__':
     freeze_support()
     optimization_results = main()
     smooth.save_results('optimization_result', optimization_results)
+    smooth.plot_optimization_results(optimization_results)
