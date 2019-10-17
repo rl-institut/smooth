@@ -11,6 +11,12 @@ from smooth import run_smooth
 from deap import base, creator, tools
 
 
+# Define if you want to save all smooth results of each individual evaluated. This can lead to big result files, in a
+# test run, the results of 100 individuals was ~500 MB, while the result file with only the smooth result saved for the
+# best individual was ~5 MB.
+save_all_smooth_results = False
+
+
 def fitness_function(_i_individual, _individual, model, opt_params):
     # The fitness function evaluates one gen combination of one individual.
     # Parameter:
@@ -47,6 +53,9 @@ def fitness_function(_i_individual, _individual, model, opt_params):
             annuity_tot += this_comp.results['annuity_total']
 
     except:
+        # The smooth run failed. Therefore the fitness value is set to infinity.
+        # ToDo: Check if setting the fitness value to infinity is a good way to handle bad individuals. Maybe this could
+        # ToDo: be handled in a way where the genetic algorithm can extract information out of the failed result.
         print('------------------------------------------------------------------------------------Evaluation canceled')
         # Case: Smooth couldn't run through, thus a bad fitness value has to be assigned.
         annuity_tot = float('inf')
@@ -73,6 +82,8 @@ class TrackIndividuals:
         self.i_best_fit_val = None
         # Gens of the individual with the best fitness value.
         self.best_gens = None
+        # Smooth result of the individual with the best fitness value.
+        self.best_smooth_result = None
         # Safe the stats of a run.
         self.stats = None
 
@@ -101,14 +112,22 @@ class TrackIndividuals:
         int_val = self.get_int(individual.gen)
 
         if int_val not in self.individuals_evaluated:
+            # If this individual has the best fitness value so far, save it as the best.
+            if self.best_fit_val is None or individual.fitness.values < self.best_fit_val:
+                self.best_fit_val = individual.fitness.values
+                self.i_best_fit_val = int_val
+                self.best_gens = individual.gen
+                self.best_smooth_result = individual.smooth_result
+
+            # Then save the individual as an individual evaluated. If not all smooth results are supposed to be saved,
+            # delete the smooth result first (this drastically reduces the size of the result file).
+            if not save_all_smooth_results:
+                individual.smooth_result = None
+
             # Add the individual to the list of evaluated individuals.
             self.individuals_evaluated[int_val] = IndividualShadow(
                 individual.gen, individual.fitness.values, individual.smooth_result, individual.attribute_variation)
-            # If this individual has the best fitness value, save the value and index.
-            if self.best_fit_val is None or self.individuals_evaluated[int_val].fitness.values < self.best_fit_val:
-                self.best_fit_val = self.individuals_evaluated[int_val].fitness.values
-                self.i_best_fit_val = int_val
-                self.best_gens = individual.gen
+
 
     def get_int(self, gen):
         # Calculate an integer by a given list of binary values.

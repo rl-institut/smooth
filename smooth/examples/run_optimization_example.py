@@ -1,4 +1,4 @@
-from smooth.examples.example_electrolyzer import mymodel
+from smooth.examples.example_model import mymodel
 from smooth import run_optimization
 import smooth
 from multiprocessing import freeze_support

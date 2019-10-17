@@ -89,12 +89,16 @@ class FuelCellChp(Component):
         # Create the non-linear oemof component. The CHP has to be modelled as two components, while the piecewise
         # linear transformer does not accept 2 outputs yet.
 
+
+        flow_electric = solph.Flow(
+                nominal_value=self.bp_h2_consumed_electric_half[-1],
+                variable_costs=0)
+        flow_thermal = solph.Flow(nominal_value=self.bp_h2_consumed_electric_half[-1])
+
         # First create the electrical oemof component.
         fuel_cell_chp_electric = solph.custom.PiecewiseLinearTransformer(
             label=self.name+'_electric',
-            inputs={busses[self.bus_h2]: solph.Flow(
-                nominal_value=self.bp_h2_consumed_electric_half[-1],
-                variable_costs=0)},
+            inputs={busses[self.bus_h2]: flow_electric},
             outputs={busses[self.bus_el]: solph.Flow()},
             in_breakpoints=self.bp_h2_consumed_electric_half,
             conversion_function=self.get_electrical_energy_by_h2,
@@ -103,9 +107,7 @@ class FuelCellChp(Component):
         # Then create the thermal oemof component.
         fuel_cell_chp_thermal = solph.custom.PiecewiseLinearTransformer(
             label=self.name+'_thermal',
-            inputs={busses[self.bus_h2]: solph.Flow(
-                nominal_value=self.bp_h2_consumed_thermal_half[-1],
-                variable_costs=0)},
+            inputs={busses[self.bus_h2]: flow_thermal},
             outputs={busses[self.bus_th]: solph.Flow()},
             in_breakpoints=self.bp_h2_consumed_thermal_half,
             conversion_function=self.get_thermal_energy_by_h2,
@@ -114,6 +116,7 @@ class FuelCellChp(Component):
         # Add the two components to the model.
         model.add(fuel_cell_chp_electric, fuel_cell_chp_thermal)
 
+        """
         # Get the input H2 flows of both oemof components that need to be set equal.
         flow_electric = model.nodes[len(model.nodes)-2].inputs[busses[self.bus_h2]]
         flow_thermal = model.nodes[len(model.nodes) - 1].inputs[busses[self.bus_h2]]
@@ -121,9 +124,9 @@ class FuelCellChp(Component):
         # Get
         fl_el = model.groups[self.name + '_electric'].inputs[busses[self.bus_h2]]
         fl_th = model.groups[self.name + '_thermal'].inputs[busses[self.bus_h2]]
-
+        """
         # Now set the two inflows of H2 in the electrical in the thermal CHP component to be the same.
-        solph.constraints.equate_variables(model, fl_el, fl_th)
+        solph.constraints.equate_variables(model, flow_electric, flow_thermal)
 
         return None
 
