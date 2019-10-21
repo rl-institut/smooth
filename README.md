@@ -49,6 +49,25 @@ which contains the component, to a new branch BRANCHNAME of your choice.
 [this](https://oemof.readthedocs.io/en/stable/installation_and_setup.html#installation-and-setup-label)
 documentation page.
 
+## Framework Functions
+The following functions can be used directly for the framework. Next to running smooth or an optimization, there are
+functions to print results, plot results and to save or load results. The following gives a brief description: 
+
+### run_smooth
+
+### run_optimization
+
+### load_results
+
+### save_results
+
+### print_smooth_results
+
+### plot_smooth_results
+
+### plot_optimization_results
+
+
 ## Simulation Model 
 
 
