@@ -89,11 +89,19 @@ def run_smooth(model):
         """ RUN THE SIMULATION """
         # Do the simulation for this time step.
         model_to_solve = solph.Model(oemof_model)
+
+        for this_comp in components:
+            this_comp.update_constraints(busses, model_to_solve)
+
+        if i_interval == 0:
+            # Save the set of linear equations for the first interval.
+            model_to_solve.write('./oemof_model.lp', io_options={'symbolic_solver_labels': True})
+
         model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
         """ CHECK IF SOLVING WAS SUCCESSFUL """
         # Get the meta results.
-        meta_results = processing.meta_results(model_to_solve)
+        # meta_results = processing.meta_results(model_to_solve)
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.

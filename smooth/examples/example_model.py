@@ -6,7 +6,7 @@ my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
 """ Create busses """
 # create hydrogen bus
-busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
+busses = ['bel', 'bh2_lp', 'bh2_hp']
 
 
 """ Define components """
@@ -88,7 +88,7 @@ components.append({
     'bus_in_and_out': 'bh2_lp',
     'p_min': 5,
     'p_max': 450,
-    'storage_capacity': 100,
+    'storage_capacity': 500,
     'storage_level_init': 300,
     'life_time': 30,
     'capex': {
@@ -102,6 +102,8 @@ components.append({
         'dependant_value': 'capex'
     }
 })
+
+
 
 components.append({
     'component': 'compressor_h2',
@@ -129,8 +131,18 @@ components.append({
     }
 
 })
-
 """
+components.append({
+    'component': 'energy_demand_from_csv',
+    'name': 'thermal_demand',
+    'bus_in': 'bth',
+    'csv_filename': 'ts_demand_h2.csv',
+    'nominal_value': 1,
+    'column_title': 'Hydrogen load',
+    'path': my_path
+})
+
+
 components.append({
     'component': 'fuel_cell_chp',
     'name': 'fuel_cell_chp',
@@ -146,7 +158,7 @@ sim_params = {
     'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03,
-    'print_progress': False
+    'print_progress': True
 }
 
 mymodel = {

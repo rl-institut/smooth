@@ -1,5 +1,6 @@
 from smooth.components.component import Component
 import oemof.solph as solph
+import pyomo.environ as po
 
 
 class FuelCellChp(Component):
@@ -73,6 +74,10 @@ class FuelCellChp(Component):
         self.bp_h2_consumed_electric_half = [this_bp / 2 for this_bp in self.bp_h2_consumed_electric]
         self.bp_h2_consumed_thermal_half = [this_bp / 2 for this_bp in self.bp_h2_consumed_thermal]
 
+        # Save the two models to set constraints later.
+        self.model_el = None
+        self.model_th = None
+
     def get_electrical_energy_by_h2(self, h2_consumption):
         # Check the index of this load point.
         this_index = self.bp_h2_consumed_electric_half.index(h2_consumption)
@@ -116,6 +121,9 @@ class FuelCellChp(Component):
         # Add the two components to the model.
         model.add(fuel_cell_chp_electric, fuel_cell_chp_thermal)
 
+        self.model_el = fuel_cell_chp_electric
+        self.model_th = fuel_cell_chp_thermal
+
         """
         # Get the input H2 flows of both oemof components that need to be set equal.
         flow_electric = model.nodes[len(model.nodes)-2].inputs[busses[self.bus_h2]]
@@ -126,9 +134,23 @@ class FuelCellChp(Component):
         fl_th = model.groups[self.name + '_thermal'].inputs[busses[self.bus_h2]]
         """
         # Now set the two inflows of H2 in the electrical in the thermal CHP component to be the same.
-        solph.constraints.equate_variables(model, flow_electric, flow_thermal)
+        # solph.constraints.equate_variables(model, flow_electric, flow_thermal)
 
         return None
+
+    def update_constraints(self, busses, model_to_solve):
+        # Set a constraint so that the hydrogen inflow of the electrical and the thermal part are always the same (which
+        # is necessary while the piecewise linear transformer cannot have two outputs yet and therefore the two parts
+        # need to be separate components).
+        def chp_ratio_rule(model, t):
+            # Inverter flow
+            expr = 0
+            expr += model.flow[busses[self.bus_h2], self.model_th, t]
+            # force discharge to zero when grid available
+            expr += - model.flow[busses[self.bus_h2], self.model_el, t]
+            return (expr == 0)
+
+        model_to_solve.chp_flow_ratio_fix = po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.

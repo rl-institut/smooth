@@ -191,7 +191,13 @@ life time (lt) of the component and the interest rate (ir). The equation is show
 - OPEX: The OPEX are already yearly costs and don't have to be transformed. 
 
 
+## Optimization
 
+In smooth, there is a build in support for optimization component parameters with a genetic algorithm, the Python 
+package [*deap*](https://deap.readthedocs.io/en/master/) is used for that. The following gives an overview on how to set
+up a smooth optimization run.
+
+### Optimization Parameters 
 
 
 

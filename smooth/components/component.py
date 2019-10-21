@@ -74,6 +74,10 @@ class Component:
         # If a component has states, this update_states function is overwritten in that component
         pass
 
+    def update_constraints(self, busses, model_to_solve):
+        # Sometimes special contraints are needed, these can be written here.
+        pass
+
     """ UPDATE THE COSTS """
     def update_costs(self, results, sim_params, this_dependant_value=0):
         # Track the costs and artificial costs of a component for each time step.

@@ -3,4 +3,5 @@ test/*
 *.png
 *.pickle
 *.egg-info
+*.lp
 __pycache__
