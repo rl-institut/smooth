@@ -333,8 +333,14 @@ def run_optimization(opt_config, _model):
         stats.append(
             pull_stats(population, iteration))
 
-        print('Iteration {} finished. Best fit. val: {} Avg. fit. val: {}'.format(
-            iteration, math.floor(stats[-1]['min']), math.floor(stats[-1]['mu'])))
+        # Print optimization progress info.
+        try:
+            print('Iteration {} finished. Best fit. val: {} Avg. fit. val: {}'.format(
+                iteration, math.floor(stats[-1]['min']), math.floor(stats[-1]['mu'])))
+        except:
+            # There are cases, when the average stat is infinity, therefor the floor command is failing.
+            print('Iteration {} finished. Best fit. val: {} Avg. fit. val: {}'.format(
+                iteration, stats[-1]['min'], stats[-1]['mu']))
 
         iteration += 1
 
