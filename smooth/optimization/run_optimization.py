@@ -189,6 +189,13 @@ def compute_fitness_values(_population, model, opt_params):
 
         population_shadow.append(IndividualShadow(this_gens, fitness_value))
 
+    def err_callback(err_msg):
+        # Define an error callback function, that will be called if something goes wrong calling the normal callback
+        # function with the parallel pool. This happened before because of a pickle issue.
+        print('Callback error at parallel computing! The error message is: ')
+        print(err_msg)
+
+
     # Generate a result object that will catch the results of the function evaluation.
     individuals_evaluated = GenerationEvaluationResult(len(_population))
     # Generate a pool for using multiple cores.
@@ -198,7 +205,7 @@ def compute_fitness_values(_population, model, opt_params):
         # Asynchronously call the fitness function for each individual. The results are saved by calling the callback
         # function.
         pool.apply_async(fitness_function, (i_individual, this_individual, model, opt_params),
-                         callback=individuals_evaluated.update_result)
+                         callback=individuals_evaluated.update_result, error_callback=err_callback)
 
     # Close and join the pool make sure that the code is not continuing before each evaluation is finished.
     pool.close()

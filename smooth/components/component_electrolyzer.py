@@ -91,9 +91,17 @@ class Electrolyzer (Component):
         # Tracking supporting points to calculate temperature later on.
         self.supporting_points = {}
 
+    def conversion_fun_ely(self, ely_energy):
+        # Create a function that will give out the mass values for the energy values at the breakpoints.
+
+        # Check the index of this ely_energy entry.
+        this_index = self.supporting_points['energy'].index(ely_energy)
+        # Return the according hydrogen production value [kg].
+        return self.supporting_points['h2_produced'][this_index]
+
     def create_oemof_model(self, busses, _):
         # Get the non-linear behaviour.
-        [breakpoints, conversion_fun] = self.get_nonlinear_behaviour()
+        self.update_nonlinear_behaviour()
 
         # Create the non-linear oemof component.
         electrolyzer = solph.custom.PiecewiseLinearTransformer(
@@ -102,12 +110,12 @@ class Electrolyzer (Component):
                nominal_value=self.energy_max,
                variable_costs=0)},
             outputs={busses[self.bus_h2]: solph.Flow()},
-            in_breakpoints=breakpoints,
-            conversion_function=conversion_fun,
+            in_breakpoints=self.supporting_points['energy'],
+            conversion_function=self.conversion_fun_ely,
             pw_repn='CC')
         return electrolyzer
 
-    def get_nonlinear_behaviour(self):
+    def update_nonlinear_behaviour(self):
         # Set up the breakpoints for the electrolyzer conversion of electricity to hydrogen.
         n_supporting_point = 10
         # Get the breakpoint values for electric energy [Wh] and produced hydrogen [kg].
@@ -124,18 +132,9 @@ class Electrolyzer (Component):
             bp_ely_h2.append(this_mass)
             bp_ely_temp.append(this_temp)
 
-        # Create a function that will give out the mass values for the energy values at the breakpoints.
-        def conversion_fun(ely_energy):
-            # Check the index of this ely_energy entry.
-            this_index = bp_ely_energy.index(ely_energy)
-            # Return the according hydrogen production value [kg].
-            return bp_ely_h2[this_index]
-
         self.supporting_points['temperature'] = bp_ely_temp
         self.supporting_points['h2_produced'] = bp_ely_h2
         self.supporting_points['energy'] = bp_ely_energy
-
-        return bp_ely_energy, conversion_fun
 
     def get_mass_and_temp(self, energy_used):
         # Calculate the mass produced and the resulting electrolyzer for a certain energy.
