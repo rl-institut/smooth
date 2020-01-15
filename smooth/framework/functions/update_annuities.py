@@ -37,12 +37,15 @@ def update_annuities(component):
     # Get the annuity of the variable cost [EUR/a].
     variable_cost_annuity = variable_cost_tot / time_ratio
 
+    # Get the total amount of variable emissions [g].
+    variable_emissions_tot = sum(component.results['variable_emissions'])
+    # Get the annuity of the variable emissions [g/a].
+    variable_emissions_annuity = variable_emissions_tot / time_ratio
+
     # Save the cost results.
     component.results['annuity_capex'] = capex_annuity
     component.results['annuity_opex'] = opex
     component.results['annuity_variable_costs'] = variable_cost_annuity
     component.results['annuity_total'] = capex_annuity + opex + variable_cost_annuity
 
-
-
-
+    component.results['annuity_variable_emissions'] = variable_emissions_annuity

@@ -156,3 +156,11 @@ class FuelCellChp(Component):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
         Component.update_flows(self, results, sim_params, self.name + '_electric')
         Component.update_flows(self, results, sim_params, self.name + '_thermal')
+
+    def update_costs(self, results, sim_params):
+        # Get the name of the flow of this component.
+        flow_name = list(self.flows)
+        # Get the amount of electric energy supplied by the chp this interval time step [Wh].
+        this_energy_supplied_electric = self.flows[flow_name[1]][sim_params.i_interval]
+        # Call the function of the mother component to save costs and art. costs for this run.
+        Component.update_costs(self, results, sim_params, this_energy_supplied_electric)
