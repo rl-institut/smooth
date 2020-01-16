@@ -162,7 +162,7 @@ class Component:
 
         # Compute the emissions due to installation and operation.
         update_emissions(self, self.cap_emissions)
-        # update_emissions(self, self.op_emissions)
+        update_emissions(self, self.op_emissions)
         # Compute the CAPEX and then the OPEX results.
         update_financials(self, self.capex)
         update_financials(self, self.opex)
@@ -176,5 +176,5 @@ class Component:
         # Check if a life time is given when there are CAPEX given.
         if self.capex or self.cap_emissions:
             if self.life_time is None or self.life_time <= 0:
-                raise ValueError('In component {} CAPEX are given but the life_time is either None or not '
-                                 'greater than zero. Please choose another life_time value!'.format(self.name))
+                raise ValueError('In component {} CAPEX or cap_emissions are given but the life_time is either None or '
+                                 'not greater than zero. Please choose another life_time value!'.format(self.name))
