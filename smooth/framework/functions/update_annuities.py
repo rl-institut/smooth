@@ -70,5 +70,6 @@ def update_annuities(component):
     component.results['annuity_total'] = capex_annuity + opex + variable_cost_annuity
 
     component.results['annuity_cap_emissions'] = cap_emissions_annuity
+    component.results['annuity_op_emissions'] = op_emissions
     component.results['annuity_variable_emissions'] = variable_emissions_annuity
-    component.results['annuity_total'] = cap_emissions_annuity + op_emissions + variable_emissions_annuity
+    component.results['annuity_total_emissions'] = cap_emissions_annuity + op_emissions + variable_emissions_annuity
