@@ -3,8 +3,8 @@ def update_annuities(component):
     # Parameter:
     #  component: object of one component.
 
-    # First calculate the annuities for the CAPEX.
-    # If there are no CAPEX (dict is empty), the annuity is 0 [EUR/a],
+    # First calculate the annuities for the CAPEX in EUR/a.
+    # If there are no CAPEX (dict is empty), the annuity is 0 EUR/a,
     # otherwise it is a product of capex and capital recovery factor [-].
     capex_annuity = calc_annuity(component, component.capex)
     # Check if OPEX were calculated, if so they are directly in annuity format.
@@ -13,8 +13,8 @@ def update_annuities(component):
     else:
         opex = component.opex['cost']
 
-    # Calculate the emission annuity for the installation [g/a].
-    # If the emissions are not given (dict is empty), the annuity is 0 [g/a],
+    # Calculate the emission annuity for the installation in g/a.
+    # If the emissions are not given (dict is empty), the annuity is 0 g/a,
     # otherwise it is a product of cap_emissions and capital recovery factor [-].
     cap_emissions_annuity = calc_annuity(component, component.cap_emissions)
     # Check if operational emissions were calculated, if so they are directly in annuity format.
