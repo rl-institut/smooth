@@ -26,6 +26,27 @@ def update_annuities(component):
     else:
         opex = component.opex['cost']
 
+    # First calculate the emissions annuities for the installation.
+    cap_emissions = component.cap_emissions
+    # When the cap_emissions dict is empty, the annuity is zero, otherwise it has to be calculated.
+    if not cap_emissions:
+        # There are no emissions, so the annuity is 0 [EUR/a].
+        cap_emissions_annuity = 0
+    else:
+        # Interest rate [-].
+        interest_rate = component.sim_params.interest_rate
+        # Calculate the capital recovery factor [-].
+        capital_recovery_factor = (interest_rate * (1 + interest_rate) ** component.life_time) / \
+                                  (((1 + interest_rate) ** component.life_time) - 1)
+        # Calculate the emission annuity of the installation [g/a].
+        cap_emissions_annuity = cap_emissions['cost'] * capital_recovery_factor
+
+    # Check if OPEX were calculated, if so they are directly in annuity format.
+    if not component.op_emissions:
+        op_emissions = 0
+    else:
+        op_emissions = component.op_emissions['cost']
+
     # Then calculate the annuity of the variable costs. This is only needed if the simulation did not take a whole year.
     # In case it was a different time period, the costs per year have to be estimated by assuming the variable costs of
     # the simulation period can be used as an average over the simulation time.
@@ -48,4 +69,6 @@ def update_annuities(component):
     component.results['annuity_variable_costs'] = variable_cost_annuity
     component.results['annuity_total'] = capex_annuity + opex + variable_cost_annuity
 
+    component.results['annuity_cap_emissions'] = cap_emissions_annuity
     component.results['annuity_variable_emissions'] = variable_emissions_annuity
+    component.results['annuity_total'] = cap_emissions_annuity + op_emissions + variable_emissions_annuity

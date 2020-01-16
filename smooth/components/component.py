@@ -1,5 +1,6 @@
 from oemof.outputlib import views
 from smooth.framework.functions.update_financials import update_financials
+from smooth.framework.functions.update_emissions import update_emissions
 from smooth.framework.functions.update_annuities import update_annuities
 
 class Component:
@@ -31,8 +32,8 @@ class Component:
 
         # Emissions values for consumption and installation in [g/Wh]
         self.variable_emissions = None
-        self.op_emission = dict()
-        self.cap_emission = dict()
+        self.op_emissions = dict()
+        self.cap_emissions = dict()
 
         # FOREIGN STATES
         # Initializing foreign state component name and attribute name, if set both need to be strings.
@@ -160,7 +161,7 @@ class Component:
         # Generate the results after the simulation.
 
         # Compute the emissions due to installation and operation.
-        # update_emissions(self, self.cap_emissions)
+        update_emissions(self, self.cap_emissions)
         # update_emissions(self, self.op_emissions)
         # Compute the CAPEX and then the OPEX results.
         update_financials(self, self.capex)
@@ -173,7 +174,7 @@ class Component:
         # attributes are valid.
 
         # Check if a life time is given when there are CAPEX given.
-        if self.capex:
+        if self.capex or self.cap_emissions:
             if self.life_time is None or self.life_time <= 0:
                 raise ValueError('In component {} CAPEX are given but the life_time is either None or not '
                                  'greater than zero. Please choose another life_time value!'.format(self.name))

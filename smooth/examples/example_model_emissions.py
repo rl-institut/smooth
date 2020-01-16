@@ -18,7 +18,6 @@ components.append({
     'bus_h2': 'bh2_lp',
     'power_max': 100e3,
     'temp_init': 293.15,
-    'variable_emissions': 0.341,
     'life_time': 20,
     'capex': {
         'key': ['free', 'spec'],
@@ -160,7 +159,13 @@ components.append({
     'bus_h2': 'bh2_hp',
     'bus_th': 'bth',
     'power_max': 500e3,
-    'variable_emissions': 0.778
+    'variable_emissions': 0.778,
+    'life_time': 20,
+    'cap_emissions': {
+        'key': ['free', 'spec'],
+        'fitting_value': [[193, -0.366], 'cost'],
+        'dependant_value': ['power_max', 'power_max']
+    },
 })
 
 
