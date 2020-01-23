@@ -36,4 +36,4 @@ def print_smooth_results(smooth_results):
 
 
     print('\nSum of total annuity is {} EUR/a'.format(math.floor(sum_of_tot_annuity)))
-    print('\nSum of total emission annuity is {} g/a'.format(math.floor(sum_of_tot_emissions_annuity)))
+    print('\nSum of total emission annuity is {} kg/a'.format(math.floor(sum_of_tot_emissions_annuity)))
