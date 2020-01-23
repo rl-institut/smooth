@@ -4,7 +4,7 @@ def update_emissions(component, emissions):
     # Calculate OPEX or CAPEX for this component.
     # Params:
     #  component: object of this component
-    #  emissions: emission object of this component. This can be either the "cap_emissions" or the "opex" dict.
+    #  emissions: emission object of this component. This can be either the "fix_emissions" or the "op_emissions" dict.
     #
     # This function is calculating a fix CAPEX and OPEX value for components where CAPEX and OPEX are dependant on
     # certain values. The following list shows possible fitting methods. The fitting method is chosen by the CAPEX and
@@ -139,8 +139,8 @@ def update_free(component, emissions, index):
 def get_dependant_value(component, emissions, index):
     # Get an attribute of the component as the dependant value.
     dependant_value = getattr(component, emissions['dependant_value'][index])
-    if emissions['dependant_value'][index] == 'cap_emissions':
-        # If the cap_emissions are chosen as the dependant value, the cap_emissions costs are meant.
+    if emissions['dependant_value'][index] == 'fix_emissions':
+        # If the fix_emissions are chosen as the dependant value, the fix_emissions costs are meant.
         dependant_value = dependant_value['cost']
 
     return dependant_value

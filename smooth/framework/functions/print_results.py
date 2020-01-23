@@ -14,7 +14,7 @@ def print_smooth_results(smooth_results):
     print("++++++++\n")
     print('{:20s} {:20s} {:20s} {:20s} {:20s} {:20s} {:20s} {:20s}'.format(
         'component name', 'annutiy capex', 'annuity opex', 'annuity var. cost', 'annuity total',
-        'annutiy cap. GGE', 'annuity var. GGE', 'annuity total GGE'
+        'annutiy fix GGE', 'annuity var. GGE', 'annuity total GGE'
     ))
 
     for this_comp in smooth_results:
@@ -24,7 +24,7 @@ def print_smooth_results(smooth_results):
             math.floor(this_comp.results['annuity_opex']),
             math.floor(this_comp.results['annuity_variable_costs']),
             math.floor(this_comp.results['annuity_total']),
-            math.floor(this_comp.results['annuity_cap_emissions']),
+            math.floor(this_comp.results['annuity_fix_emissions']),
             math.floor(this_comp.results['annuity_variable_emissions']),
             math.floor(this_comp.results['annuity_total_emissions'])
         ))

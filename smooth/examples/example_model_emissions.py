@@ -59,7 +59,7 @@ components.append({
     # Foreign states
     # Financials
     # Emissions
-    'cap_emissions': {
+    'fix_emissions': {
         'key': ['free', 'spec'],
         'fitting_value': [[193, -0.366], 'cost'],
         'dependant_value': ['nominal_value', 'nominal_value']
@@ -75,7 +75,7 @@ components.append({
     'column_title': 'Power output',
     'path': my_path,
     'life_time': 20,
-    'cap_emissions': {
+    'fix_emissions': {
         'key': ['free', 'spec'],
         'fitting_value': [[19300, -0.366], 'cost'],
         'dependant_value': ['nominal_value', 'nominal_value']
@@ -91,7 +91,7 @@ components.append({
     'power_max': 500e3,
     'variable_emissions': 0.778,
     'life_time': 20,
-    'cap_emissions': {
+    'fix_emissions': {
         'key': ['free', 'spec'],
         'fitting_value': [[193, -0.366], 'cost'],
         'dependant_value': ['power_max', 'power_max']
@@ -122,7 +122,7 @@ components.append({
         'dependant_value': 'capex',
     },
     # Emissions
-    'cap_emissions': {
+    'fix_emissions': {
         'key': ['free', 'spec'],
         'fitting_value': [[193, -0.366], 'cost'],
         'dependant_value': ['power_max', 'power_max']
@@ -154,7 +154,7 @@ components.append({
         'dependant_value': 'capex'
     },
     # Emissions
-    'cap_emissions': {
+    'fix_emissions': {
         'key': ['free', 'spec'],
         'fitting_value': [[193, -0.366], 'cost'],
         'dependant_value': ['m_flow_max', 'm_flow_max']
@@ -162,7 +162,7 @@ components.append({
     # 'op_emissions': {
     #     'key': 'spec',
     #     'fitting_value': 0.04,
-    #     'dependant_value': 'cap_emissions'
+    #     'dependant_value': 'fix_emissions'
     # },
 })
 
@@ -190,7 +190,7 @@ components.append({
         'dependant_value': 'capex'
     },
     # Emissions
-    'cap_emissions': {
+    'fix_emissions': {
         'key': ['free', 'spec'],
         'fitting_value': [[193, -0.366], 'cost'],
         'dependant_value': ['p_max', 'storage_capacity']

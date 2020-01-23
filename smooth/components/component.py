@@ -33,7 +33,7 @@ class Component:
         # Emissions values for consumption and installation in [g/Wh]
         self.variable_emissions = None
         self.op_emissions = dict()
-        self.cap_emissions = dict()
+        self.fix_emissions = dict()
 
         # FOREIGN STATES
         # Initializing foreign state component name and attribute name, if set both need to be strings.
@@ -161,7 +161,7 @@ class Component:
         # Generate the results after the simulation.
 
         # Compute the emissions due to installation and operation.
-        update_emissions(self, self.cap_emissions)
+        update_emissions(self, self.fix_emissions)
         update_emissions(self, self.op_emissions)
         # Compute the CAPEX and then the OPEX results.
         update_financials(self, self.capex)
@@ -174,7 +174,7 @@ class Component:
         # attributes are valid.
 
         # Check if a life time is given when there are CAPEX given.
-        if self.capex or self.cap_emissions:
+        if self.capex or self.fix_emissions:
             if self.life_time is None or self.life_time <= 0:
-                raise ValueError('In component {} CAPEX or cap_emissions are given but the life_time is either None or '
+                raise ValueError('In component {} CAPEX or fix_emissions are given but the life_time is either None or '
                                  'not greater than zero. Please choose another life_time value!'.format(self.name))
