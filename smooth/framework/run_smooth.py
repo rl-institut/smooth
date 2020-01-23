@@ -4,7 +4,6 @@ from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
 
-
 def run_smooth(model):
     # Run the smooth simulation framework.
     # Parameters:
@@ -115,6 +114,8 @@ def run_smooth(model):
             this_comp.update_states(results, sim_params)
             # Update the costs and artificial costs.
             this_comp.update_costs(results, sim_params)
+            # Update the costs and artificial costs.
+            this_comp.update_var_emissions(results, sim_params)
 
     # Calculate the annuity for each component.
     for this_comp in components:

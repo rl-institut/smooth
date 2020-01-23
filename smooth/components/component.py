@@ -30,7 +30,7 @@ class Component:
         self.opex = dict()
         self.capex = dict()
 
-        # Emissions values for consumption and installation in [g/Wh]
+        # Emissions values for consumption and installation in [kg/Wh]
         self.variable_emissions = None
         self.op_emissions = dict()
         self.fix_emissions = dict()
@@ -86,7 +86,7 @@ class Component:
 
     """ UPDATE THE COSTS """
     def update_costs(self, results, sim_params, this_dependant_value=0):
-        # Track the costs, artificial costs and emissions of a component for each time step.
+        # Track the costs and artificial costs of a component for each time step.
         # Parameters:
         #  results: oemof result object for this time step.
         #  sim_params: simulation parameters defined by the user.
@@ -99,7 +99,6 @@ class Component:
             # component and therefore set to 0.
             self.results['variable_costs'] = [0] * sim_params.n_intervals
             self.results['art_costs'] = [0] * sim_params.n_intervals
-            self.results['variable_emissions'] = [0] * sim_params.n_intervals
 
         # Update the costs for this time step [EUR].
         if self.variable_costs is not None:
@@ -107,7 +106,22 @@ class Component:
         # Update the artificial costs for this time step [EUR].
         if self.artificial_costs is not None:
             self.results['art_costs'][sim_params.i_interval] = this_dependant_value * self.artificial_costs
-        # Update the emissions for this time step [g].
+
+    def update_var_emissions(self, results, sim_params, this_dependant_value=0):
+        # Track the emissions of a component for each time step.
+        # Parameters:
+        #  results: oemof result object for this time step.
+        #  sim_params: simulation parameters defined by the user.
+        #  this_dependant_value: Value the emissions depend on for this time step (e.g. this might be electricity sold by a
+        #    grid in Wh, then the value variable_emissions needs to be in kg/Wh)
+
+        # First create an empty emission array for this component, if it hasn't been created before.
+        if 'variable_emissions' not in self.results:
+            # If this function is not overwritten in the component, then emissions are not part of the
+            # component and therefore set to 0.
+            self.results['variable_emissions'] = [0] * sim_params.n_intervals
+
+        # Update the emissions for this time step [kg].
         if self.variable_emissions is not None:
             self.results['variable_emissions'][sim_params.i_interval] = this_dependant_value * self.variable_emissions
 

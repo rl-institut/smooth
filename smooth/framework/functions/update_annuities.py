@@ -13,8 +13,8 @@ def update_annuities(component):
     else:
         opex = component.opex['cost']
 
-    # Calculate the emission annuity for the installation in g/a.
-    # If the emissions are not given (dict is empty), the annuity is 0 g/a,
+    # Calculate the emission annuity for the installation in kg/a.
+    # If the emissions are not given (dict is empty), the annuity is 0 kg/a,
     # otherwise it is a product of fix_emissions and capital recovery factor [-].
     fix_emissions_annuity = calc_annuity(component, component.fix_emissions)
     # Check if operational emissions were calculated, if so they are directly in annuity format.
@@ -34,9 +34,9 @@ def update_annuities(component):
     # Get the annuity of the variable cost [EUR/a].
     variable_cost_annuity = variable_cost_tot / time_ratio
 
-    # Get the total amount of variable emissions [g].
+    # Get the total amount of variable emissions [kg].
     variable_emissions_tot = sum(component.results['variable_emissions'])
-    # Get the annuity of the variable emissions [g/a].
+    # Get the annuity of the variable emissions [kg/a].
     variable_emissions_annuity = variable_emissions_tot / time_ratio
 
     # Save the cost results.
