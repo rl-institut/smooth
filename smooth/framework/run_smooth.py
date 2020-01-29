@@ -107,7 +107,7 @@ def run_smooth(model):
         termination_condition = \
             oemof_results["Solver"][0]["Termination condition"].key
         if status != "ok" and termination_condition != "optimal":
-            return components
+            return components, status
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.
@@ -128,7 +128,7 @@ def run_smooth(model):
     for this_comp in components:
         this_comp.generate_results()
 
-    return components
+    return components, status
 
 
 
