@@ -43,9 +43,9 @@ def update_emissions(component, emissions):
     #  component: object of this component
     #  emissions: emission object of this component. This can be either the "fix_emissions" or the "op_emissions" dict.
     #
-    # This function is calculating a fix CAPEX and OPEX value for components where CAPEX and OPEX are dependant on
-    # certain values. The following list shows possible fitting methods. The fitting method is chosen by the CAPEX and
-    # OPEX key:
+    # This function is calculating a fix and operational value for components where "fix_emissions" or"op_emissions"
+    # are dependant on certain values. The following list shows possible fitting methods.
+    # The fitting method is chosen by the "key" value given in the "emissions" dictionary:
     #
     # "fix"      --> already the fix value, nothing has to be done
     # "spec"     --> cost value needs to be multiplied with the dependant value
