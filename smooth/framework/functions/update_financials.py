@@ -34,7 +34,7 @@ def update_financials(component, financials):
         # Get the dependant value (either if given as a component parameter of else it is the previous cost value).
         dependant_value = get_dependant_value(component, financials, this_index, 'capex')
         # Update cost
-        update_cost(component, financials, this_index, dependant_value)
+        update_cost(component, financials, this_index, dependant_value, 'CAPEX/OPEX')
 
 
 def update_emissions(component, emissions):
@@ -70,10 +70,10 @@ def update_emissions(component, emissions):
         # Get the dependant value (either if given as a component parameter of else it is the previous cost value).
         dependant_value = get_dependant_value(component, emissions, this_index, 'fix_emissions')
         # Update cost
-        update_cost(component, emissions, this_index, dependant_value)
+        update_cost(component, emissions, this_index, dependant_value, 'Emissions')
 
 
-def update_cost(component, fitting_dict, index, dependant_value):
+def update_cost(component, fitting_dict, index, dependant_value, type):
     this_key = fitting_dict['key'][index]
     if this_key == 'fix':
         # Fixed costs do not have to be processed further.
@@ -87,7 +87,7 @@ def update_cost(component, fitting_dict, index, dependant_value):
     elif this_key == 'free':
         fitting_dict['cost'] = update_free(component, fitting_dict, index, dependant_value)
     else:
-        raise ValueError('CAPEX or OPEX key {} not recognized. Please choose a valid key.'.format(this_key))
+        raise ValueError('{} key \'{}\' not recognized. Please choose a valid key.'.format(type, this_key))
 
 
 def update_spec(component, fitting_dict, index, dependant_value):
