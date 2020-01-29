@@ -1,6 +1,5 @@
 from oemof.outputlib import views
-from smooth.framework.functions.update_financials import update_financials
-from smooth.framework.functions.update_emissions import update_emissions
+from smooth.framework.functions.update_financials import update_financials, update_emissions
 from smooth.framework.functions.update_annuities import update_annuities
 
 class Component:
@@ -30,10 +29,10 @@ class Component:
         self.opex = dict()
         self.capex = dict()
 
-        # Emissions values for consumption and installation in [g/Wh]
+        # Emissions values for consumption and installation in [kg/Wh]
         self.variable_emissions = None
         self.op_emissions = dict()
-        self.cap_emissions = dict()
+        self.fix_emissions = dict()
 
         # FOREIGN STATES
         # Initializing foreign state component name and attribute name, if set both need to be strings.
@@ -86,7 +85,7 @@ class Component:
 
     """ UPDATE THE COSTS """
     def update_costs(self, results, sim_params, this_dependant_value=0):
-        # Track the costs, artificial costs and emissions of a component for each time step.
+        # Track the costs and artificial costs of a component for each time step.
         # Parameters:
         #  results: oemof result object for this time step.
         #  sim_params: simulation parameters defined by the user.
@@ -99,7 +98,6 @@ class Component:
             # component and therefore set to 0.
             self.results['variable_costs'] = [0] * sim_params.n_intervals
             self.results['art_costs'] = [0] * sim_params.n_intervals
-            self.results['variable_emissions'] = [0] * sim_params.n_intervals
 
         # Update the costs for this time step [EUR].
         if self.variable_costs is not None:
@@ -107,7 +105,22 @@ class Component:
         # Update the artificial costs for this time step [EUR].
         if self.artificial_costs is not None:
             self.results['art_costs'][sim_params.i_interval] = this_dependant_value * self.artificial_costs
-        # Update the emissions for this time step [g].
+
+    def update_var_emissions(self, results, sim_params, this_dependant_value=0):
+        # Track the emissions of a component for each time step.
+        # Parameters:
+        #  results: oemof result object for this time step.
+        #  sim_params: simulation parameters defined by the user.
+        #  this_dependant_value: Value the emissions depend on for this time step (e.g. this might be electricity sold by a
+        #    grid in Wh, then the value variable_emissions needs to be in kg/Wh)
+
+        # First create an empty emission array for this component, if it hasn't been created before.
+        if 'variable_emissions' not in self.results:
+            # If this function is not overwritten in the component, then emissions are not part of the
+            # component and therefore set to 0.
+            self.results['variable_emissions'] = [0] * sim_params.n_intervals
+
+        # Update the emissions for this time step [kg].
         if self.variable_emissions is not None:
             self.results['variable_emissions'][sim_params.i_interval] = this_dependant_value * self.variable_emissions
 
@@ -161,7 +174,7 @@ class Component:
         # Generate the results after the simulation.
 
         # Compute the emissions due to installation and operation.
-        update_emissions(self, self.cap_emissions)
+        update_emissions(self, self.fix_emissions)
         update_emissions(self, self.op_emissions)
         # Compute the CAPEX and then the OPEX results.
         update_financials(self, self.capex)
@@ -174,7 +187,7 @@ class Component:
         # attributes are valid.
 
         # Check if a life time is given when there are CAPEX given.
-        if self.capex or self.cap_emissions:
+        if self.capex or self.fix_emissions:
             if self.life_time is None or self.life_time <= 0:
-                raise ValueError('In component {} CAPEX or cap_emissions are given but the life_time is either None or '
+                raise ValueError('In component {} CAPEX or fix_emissions are given but the life_time is either None or '
                                  'not greater than zero. Please choose another life_time value!'.format(self.name))
