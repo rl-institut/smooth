@@ -15,7 +15,8 @@ def plot_smooth_results(smooth_result):
                 this_flow_name = flow[6:]
                 this_flow_name_split = this_flow_name.split('-->')
                 # Identify the number of trailing None values in case the optimization stopped before termination
-                nb_trailing_none = len(component_flows[flow])
+                nb_intervals = len(component_flows[flow])
+                nb_trailing_none = nb_intervals
                 for flow_val in component_flows[flow]:
                     if flow_val is not None:
                         nb_trailing_none -= 1
@@ -35,7 +36,7 @@ def plot_smooth_results(smooth_result):
                         this_comp_flows[bus] = updated_bus_list
                     else:
                         # Case: Component has no flow with this bus yet.
-                        this_comp_flows[bus] = component_flows[flow][:-nb_trailing_none]
+                        this_comp_flows[bus] = component_flows[flow][:nb_intervals-nb_trailing_none]
 
                 else:
                     # Case: Component takes from bus.
@@ -51,7 +52,8 @@ def plot_smooth_results(smooth_result):
                         this_comp_flows[bus] = updated_bus_list
                     else:
                         # Case: Component has no flow with this bus yet.
-                        this_comp_flows[bus] = [-this_val for this_val in component_flows[flow][:-nb_trailing_none]]
+                        this_comp_flows[bus] = [-this_val for this_val in
+                                                component_flows[flow][:nb_intervals-nb_trailing_none]]
 
             for this_bus in this_comp_flows:
                 if this_bus not in busses_to_plot:

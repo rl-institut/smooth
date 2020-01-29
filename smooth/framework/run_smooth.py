@@ -97,11 +97,17 @@ def run_smooth(model):
             # Save the set of linear equations for the first interval.
             model_to_solve.write('./oemof_model.lp', io_options={'symbolic_solver_labels': True})
 
-        model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
+        oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
         """ CHECK IF SOLVING WAS SUCCESSFUL """
         # Get the meta results.
         # meta_results = processing.meta_results(model_to_solve)
+        # print(meta_results['solver']['Status'])
+        status = oemof_results["Solver"][0]["Status"].key
+        termination_condition = \
+            oemof_results["Solver"][0]["Termination condition"].key
+        if status != "ok" and termination_condition != "optimal":
+            return components
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.
