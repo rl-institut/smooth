@@ -38,7 +38,7 @@ def update_financials(component, financials):
 
 
 def update_emissions(component, emissions):
-    # Calculate OPEX or CAPEX for this component.
+    # Calculate fixed and operational emissions for this component.
     # Params:
     #  component: object of this component
     #  emissions: emission object of this component. This can be either the "fix_emissions" or the "op_emissions" dict.
