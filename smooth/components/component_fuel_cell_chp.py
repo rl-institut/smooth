@@ -14,6 +14,10 @@ class FuelCellChp(Component):
         # PARAMETERS TO CHANGE BY THE USER
         self.name = 'Fuel cell CHP default name'
 
+        # run on MPC
+        self.operate_on_mpc = False
+        self.mpc_data = 0
+
         # Busses (H2 in, electrical out, thermal out).
         self.bus_h2 = None
         self.bus_el = None
@@ -94,11 +98,23 @@ class FuelCellChp(Component):
         # Create the non-linear oemof component. The CHP has to be modelled as two components, while the piecewise
         # linear transformer does not accept 2 outputs yet.
 
-
-        flow_electric = solph.Flow(
+        # when operating on mpc flows are fixed
+        if self.operate_on_mpc:
+            flow_electric = solph.Flow(
+                actual_value=self.mpc_data,
+                fixed=True,
+                nominal_value=self.bp_h2_consumed_electric_half[-1]) # maybe more readable: self.h2_input_max/2
+            flow_thermal = solph.Flow(
+                actual_value=self.mpc_data,
+                fixed=True,
+                nominal_value=self.bp_h2_consumed_electric_half[-1])
+        # otherwise flows are solved by oemof
+        else:
+            flow_electric = solph.Flow(
                 nominal_value=self.bp_h2_consumed_electric_half[-1],
                 variable_costs=0)
-        flow_thermal = solph.Flow(nominal_value=self.bp_h2_consumed_electric_half[-1])
+            flow_thermal = solph.Flow(nominal_value=self.bp_h2_consumed_electric_half[-1])
+
 
         # First create the electrical oemof component.
         fuel_cell_chp_electric = solph.custom.PiecewiseLinearTransformer(

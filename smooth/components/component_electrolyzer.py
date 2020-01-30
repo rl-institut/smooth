@@ -4,6 +4,7 @@ from .component import Component
 import math
 import numpy as np
 import warnings
+import smooth.framework.functions.functions as func
 
 class Electrolyzer (Component):
     """ Electrolyzer agents are created through this class """
@@ -14,6 +15,10 @@ class Electrolyzer (Component):
 
         """ PARAMETERS """
         self.name = 'Electrolyzer_default_name'
+
+        # run on MPC
+        self.operate_on_mpc = False
+        self.mpc_data = 0
 
         # Define the busses.
         self.bus_el = None
@@ -99,20 +104,34 @@ class Electrolyzer (Component):
         # Return the according hydrogen production value [kg].
         return self.supporting_points['h2_produced'][this_index]
 
+
     def create_oemof_model(self, busses, _):
         # Get the non-linear behaviour.
         self.update_nonlinear_behaviour()
 
         # Create the non-linear oemof component.
-        electrolyzer = solph.custom.PiecewiseLinearTransformer(
-            label=self.name,
-            inputs={busses[self.bus_el]: solph.Flow(
-               nominal_value=self.energy_max,
-               variable_costs=0)},
-            outputs={busses[self.bus_h2]: solph.Flow()},
-            in_breakpoints=self.supporting_points['energy'],
-            conversion_function=self.conversion_fun_ely,
-            pw_repn='CC')
+        if self.operate_on_mpc:
+            # self.mpc_data = func.run_mpc_dummy()
+            electrolyzer = solph.custom.PiecewiseLinearTransformer(
+                label=self.name,
+                inputs={busses[self.bus_el]: solph.Flow(
+                    actual_value=self.mpc_data,
+                    fixed=True,
+                    nominal_value=self.power_max)},
+                outputs={busses[self.bus_h2]: solph.Flow()},
+                in_breakpoints=self.supporting_points['energy'],
+                conversion_function=self.conversion_fun_ely,
+                pw_repn='CC')
+        else:
+            electrolyzer = solph.custom.PiecewiseLinearTransformer(
+                label=self.name,
+                inputs={busses[self.bus_el]: solph.Flow(
+                   nominal_value=self.energy_max,
+                   variable_costs=0)},
+                outputs={busses[self.bus_h2]: solph.Flow()},
+                in_breakpoints=self.supporting_points['energy'],
+                conversion_function=self.conversion_fun_ely,
+                pw_repn='CC')
         return electrolyzer
 
     def update_nonlinear_behaviour(self):
