@@ -3,6 +3,8 @@ import math
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
+import smooth.framework.functions.functions as func
+
 
 
 def run_smooth(model):
@@ -52,12 +54,18 @@ def run_smooth(model):
         # Add this component to the list containing all components.
         components.append(this_comp_obj)
 
+        # initialisation of system_outputs
+        system_outputs = []
+
     """ SIMULATION """
     for i_interval in range(sim_params.n_intervals):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
         if sim_params.print_progress:
             print('Simulating interval {}/{}'.format(i_interval, sim_params.n_intervals))
+
+        # run mpc
+        func.run_mpc_dummy(model,components,system_outputs,i_interval)
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
@@ -106,6 +114,9 @@ def run_smooth(model):
         """ HANDLE RESULTS """
         # Get the results of this oemof run.
         results = processing.results(model_to_solve)
+
+        # track system outputs for mpc
+        system_outputs = func.get_system_output_mpc(results)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:
