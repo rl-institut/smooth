@@ -19,7 +19,7 @@ def run_smooth(model):
 
     # Then check if all component names are unique.
     for this_comp_name in comp_names:
-        if comp_names.count(this_comp_name) is not 1:
+        if comp_names.count(this_comp_name) != 1:
             raise ValueError('Component name "{}" is not unique, please name components unique.'.format(this_comp_name))
 
     # GET SIMULATION PARAMETERS
