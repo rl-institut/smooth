@@ -26,12 +26,12 @@ class GasEngineChpBiogas(Component):
         self.ch4_share = 0.5
         self.co2_share = 0.5
 
-        if self.ch4_share + self.co2_share != 1:
-            raise ValueError("addition of all shares must be 1")
-
         # Update the input parameters by the user.
         self.set_parameters(params)
 
+        if self.ch4_share + self.co2_share != 1:
+            raise ValueError("addition of all shares must be 1")
+        
         # INTERNAL PARAMETERS
         # Heating value of methane [kWh/kg].
         self.heating_value_ch4 = 13.9  # [kWh/kg] https://www.linde-gas.at/de/images/1007_rechnen_sie_mit_wasserstoff_v110_tcm550-169419.pdf
@@ -109,7 +109,7 @@ class GasEngineChpBiogas(Component):
     def create_oemof_model(self, busses, model):
         # Create the non-linear oemof component. The CHP has to be modelled as two components, while the piecewise
         # linear transformer does not accept 2 outputs yet.
-
+        # ToDo: adjust once the piecewise linear transformer allows 2 outputs
 
         flow_electric = solph.Flow(
                 nominal_value=self.bp_ch4_consumed_electric_half[-1],
