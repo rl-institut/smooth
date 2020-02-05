@@ -48,7 +48,7 @@ def plot_smooth_results(smooth_result):
 
             for this_bus in this_comp_flows:
                 if this_bus not in busses_to_plot:
-                    # If bus name didnt't appear so far, add it to the list of busses.
+                    # If bus name didn't appear so far, add it to the list of busses.
                     busses_to_plot[this_bus] = dict()
 
                 # Add the flow of this component to this bus.
@@ -62,3 +62,5 @@ def plot_smooth_results(smooth_result):
         plt.legend()
         plt.title('bus: ' + this_bus)
         plt.show()
+
+
