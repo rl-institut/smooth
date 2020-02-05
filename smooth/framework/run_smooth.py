@@ -1,5 +1,6 @@
 import importlib
 import math
+import pandas as pd
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
@@ -109,9 +110,15 @@ def run_smooth(model):
         if status != "ok" and termination_condition != "optimal":
             #df_results = processing.create_dataframe(model_to_solve)
             # nominal values from last iteration
-            print([x['scalars']['nominal_value'] for x in results_dict.values() if 'nominal_value' in x['scalars']])
+            #print([x for x in results_dict.keys()[1]])
+            fixed_vals = [[k, x['scalars']['fixed']] for k, x in results_dict.items() if 'nominal_value' in x['scalars']]
+            #print(fixed_vals)
+            nom_val = [x['scalars']['nominal_value'] for x in results_dict.values() if 'nominal_value' in x['scalars']]
+            nom_min_max = [[x['scalars']['min'], x['scalars']['max']] for x in results_dict.values() if 'nominal_value' in x['scalars']]
+            min_max = [[m * n for m in mm] for n, mm in zip(nom_val, nom_min_max)]
+            #print(pd.DataFrame(min_max, columns=['min', 'max']))
             # dataframe from last iteration
-            print(df_results[:][['value', 'variable_name', 'oemof_tuple']])
+            #print(df_results[:][['value', 'variable_name', 'oemof_tuple']])
             return components, status
 
         """ HANDLE RESULTS """
