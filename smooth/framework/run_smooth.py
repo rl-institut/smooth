@@ -4,6 +4,7 @@ import pandas as pd
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
+from smooth.framework.functions.debug import get_df_debug
 
 
 def run_smooth(model):
@@ -108,18 +109,17 @@ def run_smooth(model):
         termination_condition = \
             oemof_results["Solver"][0]["Termination condition"].key
         if status != "ok" and termination_condition != "optimal":
-            #df_results = processing.create_dataframe(model_to_solve)
-            # nominal values from last iteration
-            #print([x for x in results_dict.keys()[1]])
-            fixed_vals = [[k, x['scalars']['fixed']] for k, x in results_dict.items() if 'nominal_value' in x['scalars']]
-            #print(fixed_vals)
-            nom_val = [x['scalars']['nominal_value'] for x in results_dict.values() if 'nominal_value' in x['scalars']]
-            nom_min_max = [[x['scalars']['min'], x['scalars']['max']] for x in results_dict.values() if 'nominal_value' in x['scalars']]
-            min_max = [[m * n for m in mm] for n, mm in zip(nom_val, nom_min_max)]
-            #print(pd.DataFrame(min_max, columns=['min', 'max']))
-            # dataframe from last iteration
-            #print(df_results[:][['value', 'variable_name', 'oemof_tuple']])
+            new_df_results = processing.create_dataframe(model_to_solve)
+            df_debug = get_df_debug(df_results, results_dict, new_df_results)
+            print("------------------------------------------------------------------------------")
+            with pd.option_context("display.max_rows", 99, "display.max_columns", 12):
+                print(df_debug)
+            print("------------------------------------------------------------------------------")
+            # Save to csv file
+            df_debug.loc[:, df_debug.columns != 'oemof_tuple'].to_csv("debugDataframe.csv")
+            # TODO raise Exception('status: ' + status)
             return components, status
+
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.
@@ -147,10 +147,3 @@ def run_smooth(model):
         this_comp.generate_results()
 
     return components, status
-
-
-
-
-
-
-
