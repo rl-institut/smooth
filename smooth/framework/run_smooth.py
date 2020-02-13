@@ -103,21 +103,18 @@ def run_smooth(model):
 
         """ CHECK IF SOLVING WAS SUCCESSFUL """
         # Get the meta results.
-        # meta_results = processing.meta_results(model_to_solve)
-        # print(meta_results['solver']['Status'])
         status = oemof_results["Solver"][0]["Status"].key
         termination_condition = \
             oemof_results["Solver"][0]["Termination condition"].key
         if status != "ok" and termination_condition != "optimal":
-            new_df_results = processing.create_dataframe(model_to_solve)
-            df_debug = get_df_debug(df_results, results_dict, new_df_results)
+            df_debug = get_df_debug(df_results, results_dict)
             print("------------------------------------------------------------------------------")
             with pd.option_context("display.max_rows", 99, "display.max_columns", 12):
                 print(df_debug)
             print("------------------------------------------------------------------------------")
             # Save to csv file
             df_debug.loc[:, df_debug.columns != 'oemof_tuple'].to_csv("debugDataframe.csv")
-            # TODO raise Exception('status: ' + status)
+            # TODO log or raise Exception('status: ' + status)
             return components, status
 
 
