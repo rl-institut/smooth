@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import re
 
 def get_df_debug(df_results, results_dict):
     # TODO delete experimental print(...)
@@ -28,6 +29,11 @@ def get_df_debug(df_results, results_dict):
         ]
         for k, x in results_dict.items()  if 'nominal_value' in x['scalars'] or 'nominal_storage_capacity' in x['scalars']
     ]
+
+    [[[i, x['scalars'][i]] for i, item in x['scalars'].items() if i.endswith('conversion_factor')] for k, x in results_dict.items()]
+    r = re.compile('.*conversion_factor.*')
+    print(np.array([[[i, x['scalars'][i]] for i, item in x['scalars'].items() if r.match(i)] for k, x in results_dict.items()]))
+
     operation_vals = pd.DataFrame(operation_vals, columns=['oemof_tuple', 'fixed', 'balanced', 'min', 'max'])
     operation_vals['oemof_tuple'] = [tuple if tuple[1] != None else (tuple[0],) for tuple in
                                      operation_vals['oemof_tuple']]
