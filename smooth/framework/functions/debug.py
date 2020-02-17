@@ -33,7 +33,6 @@ def get_df_debug(df_results, results_dict, new_df_results):
     ]
 
     # TODO, currently unimportant Extract conversion factors
-    [[[i, x['scalars'][i]] for i, item in x['scalars'].items() if i.endswith('conversion_factor')] for k, x in results_dict.items()]
     r = re.compile('.*conversion_factor.*')
     conversion_factors = np.array([[[k, i, x['scalars'][i]] for i, item in x['scalars'].items() if r.match(i)] for k, x in results_dict.items()])
 
@@ -46,24 +45,20 @@ def get_df_debug(df_results, results_dict, new_df_results):
     df_debug = pd.merge(left=df_debug, right=operation_vals, how='left', left_on='oemof_tuple',
                         right_on='oemof_tuple')
 
-    # TODO include next values
     # Merging of different instances of tuples oemof object not working, simply concatenate
-    cols = new_df_results.columns.to_list()
-    cols[1] = 'next_value'
-    cols[3] = 'next_oemof_tuple'
-    new_df_results.columns = cols
-    new_df_results = new_df_results[['next_value', 'next_oemof_tuple']]
-    df_debug = pd.concat([df_debug, new_df_results], axis=1)
+    new_df_results[['from', 'to']] = pd.DataFrame(new_df_results['oemof_tuple'].tolist(), index=new_df_results.index)
+    new_df_debug = pd.DataFrame(new_df_results[:][['value', 'from', 'to']], columns=['value', 'from', 'to'])
+    df_debug = pd.concat([df_debug, new_df_debug], axis=0)
 
     # Move columns for better readability
-    sel_cols = ['from', 'to', 'variable_name', 'fixed', 'min', 'value', 'max', 'next_value', 'next_oemof_tuple']
+    sel_cols = ['from', 'to', 'variable_name', 'fixed', 'min', 'value', 'max'] #, 'next_value', 'next_oemof_tuple']
     df_debug = df_debug[sel_cols]
 
     return df_debug
 
 def show_debug(df_debug, components):
     print("------------------------------------------------------------------------------")
-    with pd.option_context("display.max_rows", 99, "display.max_columns", 8):
+    with pd.option_context("display.max_rows", 99, "display.max_columns", 12, 'display.max_colwidth', 0):
         print(df_debug)
     print("------------------------------------------------------------------------------")
     # Save to csv file
