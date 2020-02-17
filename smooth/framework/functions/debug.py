@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import re
+from smooth.framework.functions.plot_results import plot_smooth_results
 
 def get_df_debug(df_results, results_dict):
     # TODO delete experimental print(...)
@@ -45,3 +46,13 @@ def get_df_debug(df_results, results_dict):
     df_debug = df_debug[sel_cols]
 
     return df_debug
+
+def show_debug(df_debug, components):
+    print("------------------------------------------------------------------------------")
+    with pd.option_context("display.max_rows", 99, "display.max_columns", 8):
+        print(df_debug)
+    print("------------------------------------------------------------------------------")
+    # Save to csv file
+    df_debug.loc[:, df_debug.columns != 'oemof_tuple'].to_csv("debugDataframe.csv")
+
+    plot_smooth_results(components)

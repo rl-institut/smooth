@@ -1,10 +1,8 @@
 import importlib
-import math
-import pandas as pd
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
-from smooth.framework.functions.debug import get_df_debug
+from smooth.framework.functions.debug import get_df_debug, show_debug
 
 
 def run_smooth(model):
@@ -102,18 +100,13 @@ def run_smooth(model):
         oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
         """ CHECK IF SOLVING WAS SUCCESSFUL """
-        # Get the meta results.
+        # If the status and temination condition is not ok/optimal print
         status = oemof_results["Solver"][0]["Status"].key
         termination_condition = \
             oemof_results["Solver"][0]["Termination condition"].key
         if status != "ok" and termination_condition != "optimal":
             df_debug = get_df_debug(df_results, results_dict)
-            print("------------------------------------------------------------------------------")
-            with pd.option_context("display.max_rows", 99, "display.max_columns", 12):
-                print(df_debug)
-            print("------------------------------------------------------------------------------")
-            # Save to csv file
-            df_debug.loc[:, df_debug.columns != 'oemof_tuple'].to_csv("debugDataframe.csv")
+            show_debug(df_debug, components)
             # TODO log or raise Exception('status: ' + status)
             return components, status
 
