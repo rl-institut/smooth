@@ -108,9 +108,10 @@ def run_smooth(model):
         status = oemof_results["Solver"][0]["Status"].key
         termination_condition = oemof_results["Solver"][0]["Termination condition"].key
         if status != "ok" and termination_condition != "optimal":
-            df_debug = get_df_debug(df_results, results_dict)
+            new_df_results = processing.create_dataframe(model_to_solve)
+            df_debug = get_df_debug(df_results, results_dict, new_df_results)
             show_debug(df_debug, components)
-            raise Exception('status: ' + status + "and termination condition: " + termination_condition)
+            raise RuntimeError('status: ' + status + " / termination condition: " + termination_condition)
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.
