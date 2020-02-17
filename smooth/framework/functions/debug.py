@@ -16,14 +16,12 @@ def get_df_debug(df_results, results_dict):
         [
             k,
             x['scalars']['fixed'],
-            None,
             x['scalars']['min'] * x['scalars']['nominal_value'],
             x['scalars']['max'] * x['scalars']['nominal_value'],
         ] if 'nominal_value' in x['scalars'] else # if 'nominal_storage_capacity' in x['scalars']
         [
             k,
             None,
-            x['scalars']['balanced'],
             x['scalars']['min_storage_level'] * x['scalars']['nominal_storage_capacity'],
             x['scalars']['max_storage_level'] * x['scalars']['nominal_storage_capacity'],
         ]
@@ -32,9 +30,9 @@ def get_df_debug(df_results, results_dict):
 
     [[[i, x['scalars'][i]] for i, item in x['scalars'].items() if i.endswith('conversion_factor')] for k, x in results_dict.items()]
     r = re.compile('.*conversion_factor.*')
-    print(np.array([[[i, x['scalars'][i]] for i, item in x['scalars'].items() if r.match(i)] for k, x in results_dict.items()]))
+    conversion_factors = np.array([[[k, i, x['scalars'][i]] for i, item in x['scalars'].items() if r.match(i)] for k, x in results_dict.items()])
 
-    operation_vals = pd.DataFrame(operation_vals, columns=['oemof_tuple', 'fixed', 'balanced', 'min', 'max'])
+    operation_vals = pd.DataFrame(operation_vals, columns=['oemof_tuple', 'fixed', 'min', 'max'])
     operation_vals['oemof_tuple'] = [tuple if tuple[1] != None else (tuple[0],) for tuple in
                                      operation_vals['oemof_tuple']]
     # DataFrame from last iteration merged with values from results dictionary
@@ -43,7 +41,7 @@ def get_df_debug(df_results, results_dict):
     df_debug = pd.merge(left=df_debug, right=operation_vals, how='left', left_on='oemof_tuple',
                         right_on='oemof_tuple')
     # Move columns for better readability
-    sel_cols = ['from', 'to', 'variable_name', 'fixed', 'balanced', 'min', 'value', 'max']
+    sel_cols = ['from', 'to', 'variable_name', 'fixed', 'min', 'value', 'max']
     df_debug = df_debug[sel_cols]
 
     return df_debug
