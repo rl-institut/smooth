@@ -54,5 +54,6 @@ def show_debug(df_debug, components):
     print("------------------------------------------------------------------------------")
     # Save to csv file
     df_debug.loc[:, df_debug.columns != 'oemof_tuple'].to_csv("debugDataframe.csv")
+    print("Saved to debugDataframe.csv")
 
     plot_smooth_results(components)
