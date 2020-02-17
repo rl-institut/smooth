@@ -2,6 +2,7 @@ from bokeh.plotting import figure, output_file, show
 from bokeh.layouts import row
 from bokeh.palettes import Spectral11
 import pandas as pd
+from bokeh.io import export_png
 
 
 def plot_interactive_smooth_results(smooth_result):
@@ -15,14 +16,19 @@ def plot_interactive_smooth_results(smooth_result):
 
     for component_result in smooth_result:
         if hasattr(component_result, 'flows'):
-            # Track the flows of this component
+            # Track the flows of this component.
             this_comp_flows = dict()
             component_flows = component_result.flows
             for flow in component_flows:
                 # Get rid of "'flow: ".
                 this_flow_name = flow[6:]
-                # Splits the whole flow name into the component and bus
                 this_flow_name_split = this_flow_name.split('-->')
+                # check if it's a chp component which consists of two oemof models
+                # if so get rid of the ending '_electric' or '_thermal'
+                if this_flow_name_split[0][-9:] == '_electric':
+                    this_flow_name_split[0] = this_flow_name_split[0][:-9]
+                elif this_flow_name_split[0][-8:] == '_thermal':
+                    this_flow_name_split[0] = this_flow_name_split[0][:-8]
                 if this_flow_name_split[0] == component_result.name:
                     # Case: Component flows into bus.
                     bus = this_flow_name_split[1]
@@ -144,4 +150,5 @@ def plot_interactive_smooth_results(smooth_result):
     # Displays figures in a row (this can be changed to column).
     show(row(list_of_figures))
     # COMMENT: this could be made so that it is saved specifically for each results
-    output_file("plot_results.html", title="plot results for simulation/optimization")
+
+    export_png(list_of_figures, filename="plot.png")

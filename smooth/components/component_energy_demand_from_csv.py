@@ -15,8 +15,11 @@ class EnergyDemandFromCsv(Component):
 
         self.nominal_value = 1
         self.csv_filename = None
+        self.csv_filename_2 = None
         self.csv_separator = ','
+        self.csv_separator_2 = ','
         self.column_title = 0
+        self.column_title_2 = 0
         self.path = os.path.dirname(__file__)
 
         self.bus_in = None
@@ -26,6 +29,7 @@ class EnergyDemandFromCsv(Component):
 
         """ READ CSV FILES """
         self.data = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+        self.data_2 = func.read_data_file(self.path, self.csv_filename_2, self.csv_separator, self.column_title_2)
 
         """ STATES """
 
@@ -34,7 +38,7 @@ class EnergyDemandFromCsv(Component):
             label=self.name,
             inputs={busses[self.bus_in]: solph.Flow(
                 actual_value=self.data.iloc[self.sim_params.i_interval],
-                nominal_value=self.nominal_value,
+                nominal_value=1/(self.data_2.iloc[self.sim_params.i_interval]),
                 fixed=True)})
         return energy_demand_from_csv
 
