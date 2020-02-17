@@ -52,6 +52,10 @@ def run_smooth(model):
         # Add this component to the list containing all components.
         components.append(this_comp_obj)
 
+    # There are no results yet.
+    df_results = None
+    results_dict = None
+
     """ SIMULATION """
     for i_interval in range(sim_params.n_intervals):
         # Save the interval index of this run to the sim_params to make it usable later on.
@@ -100,26 +104,19 @@ def run_smooth(model):
         oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
         """ CHECK IF SOLVING WAS SUCCESSFUL """
-        # If the status and temination condition is not ok/optimal print
+        # If the status and temination condition is not ok/optimal, get and print the current flows and status
         status = oemof_results["Solver"][0]["Status"].key
-        termination_condition = \
-            oemof_results["Solver"][0]["Termination condition"].key
+        termination_condition = oemof_results["Solver"][0]["Termination condition"].key
         if status != "ok" and termination_condition != "optimal":
             df_debug = get_df_debug(df_results, results_dict)
             show_debug(df_debug, components)
-            # TODO log or raise Exception('status: ' + status)
-            return components, status
-
+            raise Exception('status: ' + status + "and termination condition: " + termination_condition)
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.
         results = processing.results(model_to_solve)
-
         results_dict = processing.parameter_as_dict(model_to_solve)
         df_results = processing.create_dataframe(model_to_solve)
-        # print(results_dict.keys())
-        # print([x for x in results_dict.values() if 'nominal_value' in x['scalars']])
-        # convert_to_multiindex()
 
         # Loop through every component and call the result handling functions
         for this_comp in components:

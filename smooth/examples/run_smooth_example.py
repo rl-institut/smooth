@@ -6,7 +6,6 @@ from smooth import plot_smooth_results
 
 # Run an example.
 smooth_result, status = run_smooth(mymodel)
-if status == "ok":
-    plot_smooth_results(smooth_result)
-    print_smooth_results(smooth_result)
+plot_smooth_results(smooth_result)
+print_smooth_results(smooth_result)
 

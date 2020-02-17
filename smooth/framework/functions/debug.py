@@ -4,6 +4,9 @@ import re
 from smooth.framework.functions.plot_results import plot_smooth_results
 
 def get_df_debug(df_results, results_dict):
+    if(df_results is None or results_dict is None):
+        raise TypeError
+
     # TODO delete experimental print(...)
     # EXMPERIMENTAL
     # print(results_dict)
