@@ -4,7 +4,7 @@ from smooth.framework.functions.plot_results import plot_smooth_results
 
 def get_df_debug(df_results, results_dict, new_df_results):
     # If no results were calculated yet, raise an exception
-    if(df_results is None or results_dict is None):
+    if df_results is None or results_dict is None:
         raise TypeError
 
     # Extract oemof tuple, fixed (bool), min/max flow or storage-level values
@@ -15,18 +15,19 @@ def get_df_debug(df_results, results_dict, new_df_results):
             x['scalars']['fixed'],
             x['scalars']['min'] * x['scalars']['nominal_value'],
             x['scalars']['max'] * x['scalars']['nominal_value'],
-        ] if 'nominal_value' in x['scalars'] else # if 'nominal_storage_capacity' in x['scalars']
+        ] if 'nominal_value' in x['scalars'] else
         [
             k,
             None,
             x['scalars']['min_storage_level'] * x['scalars']['nominal_storage_capacity'],
             x['scalars']['max_storage_level'] * x['scalars']['nominal_storage_capacity'],
         ]
-        for k, x in results_dict.items()  if 'nominal_value' in x['scalars'] or 'nominal_storage_capacity' in x['scalars']
+        for k, x in results_dict.items() if 'nominal_value' in x['scalars'] or
+                                            'nominal_storage_capacity' in x['scalars']
     ]
 
     operation_vals = pd.DataFrame(operation_vals, columns=['oemof_tuple', 'fixed', 'min', 'max'])
-    operation_vals['oemof_tuple'] = [tuple if tuple[1] != None else (tuple[0],) for tuple in
+    operation_vals['oemof_tuple'] = [ot if ot[1] is not None else (ot[0],) for ot in
                                      operation_vals['oemof_tuple']]
     # Merge results DataFrame from last iteration with scalar values from results dictionary
     df_debug = df_results[:][['value', 'variable_name', 'oemof_tuple']]
