@@ -32,10 +32,6 @@ def get_df_debug(df_results, results_dict, new_df_results):
         for k, x in results_dict.items()  if 'nominal_value' in x['scalars'] or 'nominal_storage_capacity' in x['scalars']
     ]
 
-    # TODO, currently unimportant Extract conversion factors
-    r = re.compile('.*conversion_factor.*')
-    conversion_factors = np.array([[[k, i, x['scalars'][i]] for i, item in x['scalars'].items() if r.match(i)] for k, x in results_dict.items()])
-
     operation_vals = pd.DataFrame(operation_vals, columns=['oemof_tuple', 'fixed', 'min', 'max'])
     operation_vals['oemof_tuple'] = [tuple if tuple[1] != None else (tuple[0],) for tuple in
                                      operation_vals['oemof_tuple']]
