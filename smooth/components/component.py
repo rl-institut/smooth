@@ -1,6 +1,5 @@
 from oemof.outputlib import views
-from smooth.framework.functions.update_financials import update_financials
-from smooth.framework.functions.update_emissions import update_emissions
+from smooth.framework.functions.update_financials import update_financials, update_emissions
 from smooth.framework.functions.update_annuities import update_annuities
 
 class Component:
