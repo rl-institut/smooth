@@ -73,24 +73,24 @@ def update_emissions(component, emissions):
         update_cost(component, emissions, this_index, dependant_value, 'Emissions')
 
 
-def update_cost(component, fitting_dict, index, dependant_value, type):
+def update_cost(component, fitting_dict, index, dependant_value, name):
     this_key = fitting_dict['key'][index]
     if this_key == 'fix':
         # Fixed costs do not have to be processed further.
         pass
     elif this_key == 'spec':
-        fitting_dict['cost'] = update_spec(component, fitting_dict, index, dependant_value)
+        fitting_dict['cost'] = get_spec(component, fitting_dict, index, dependant_value)
     elif this_key == 'exp':
-        fitting_dict['cost'] = update_exp(component, fitting_dict, index, dependant_value)
+        fitting_dict['cost'] = get_exp(component, fitting_dict, index, dependant_value)
     elif this_key == 'poly':
-        fitting_dict['cost'] = update_poly(component, fitting_dict, index, dependant_value)
+        fitting_dict['cost'] = get_poly(component, fitting_dict, index, dependant_value)
     elif this_key == 'free':
-        fitting_dict['cost'] = update_free(component, fitting_dict, index, dependant_value)
+        fitting_dict['cost'] = get_free(component, fitting_dict, index, dependant_value)
     else:
-        raise ValueError('{} key \'{}\' not recognized. Please choose a valid key.'.format(type, this_key))
+        raise ValueError('{} key \'{}\' not recognized. Please choose a valid key.'.format(name, this_key))
 
 
-def update_spec(component, fitting_dict, index, dependant_value):
+def get_spec(component, fitting_dict, index, dependant_value):
     # Case: The fitting value is multiplied with the dependant value to get the costs.
 
     # Get the fitting value, which is the current cost if "cost" is chosen.
@@ -105,7 +105,7 @@ def update_spec(component, fitting_dict, index, dependant_value):
     return cost
 
 
-def update_exp(component, fitting_dict, index, dependant_value):
+def get_exp(component, fitting_dict, index, dependant_value):
     # Case: An exponential fitting of the cost function is wanted. Here 3 variables are used in the following order:
     # Function if 3 fitting parameters are given:
     # fv_1 + fv_2*exp(fv_3*Parameter)
@@ -125,7 +125,7 @@ def update_exp(component, fitting_dict, index, dependant_value):
     return cost
 
 
-def update_poly(component, fitting_dict, index, dependant_value):
+def get_poly(component, fitting_dict, index, dependant_value):
     # Case: An polynomial fitting of the cost function is wanted. In this case, an arbitrary number of fitting
     # parameters can be given. They will be used in the following order:
     # Fitting values fv_1, fv_2, fv_3, ..... fv_n.
@@ -146,7 +146,7 @@ def update_poly(component, fitting_dict, index, dependant_value):
     return cost
 
 
-def update_free(component, fitting_dict, index, dependant_value):
+def get_free(component, fitting_dict, index, dependant_value):
     # Case: An "free" fitting of the cost function is wanted. In this case, an arbitrary number of fitting parameters
     # can be given. They will be used in the following order:
     # Fitting values fv_1, fv_2, fv_3, ..... fv_n.
