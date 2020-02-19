@@ -4,18 +4,12 @@ import re
 from smooth.framework.functions.plot_results import plot_smooth_results
 
 def get_df_debug(df_results, results_dict, new_df_results):
+    # If no results were calculated yet, raise an exception
     if(df_results is None or results_dict is None):
         raise TypeError
 
-    # TODO delete experimental print(...)
-    # EXMPERIMENTAL
-    # print(results_dict)
-    # print("------------------------------------------------------------------------------")
-    # print([x for x in results_dict.keys()])
-    # print(pd.DataFrame(np.array([[k[0].label, k[1].label] if k[1] is not None else [k[0].label, None]
-    #                             for k, x in results_dict.items()])))
-    # Extract oemof tuple, fixed (bool), min/max values scaled with the nominal value in case it is present
-
+    # Extract oemof tuple, fixed (bool), min/max flow or storage-level values
+    # scaled with the nominal value in case it is present
     operation_vals = [
         [
             k,
@@ -41,13 +35,14 @@ def get_df_debug(df_results, results_dict, new_df_results):
     df_debug = pd.merge(left=df_debug, right=operation_vals, how='left', left_on='oemof_tuple',
                         right_on='oemof_tuple')
 
-    # Merging of different instances of tuples oemof object not working, simply concatenate
+    # Merging of different instances of tuples oemof object not working, so simply concatenate
     new_df_results[['from', 'to']] = pd.DataFrame(new_df_results['oemof_tuple'].tolist(), index=new_df_results.index)
     new_df_debug = pd.DataFrame(new_df_results[:][['value', 'from', 'to']], columns=['value', 'from', 'to'])
+    new_df_debug['variable_name'] = 'next'
     df_debug = pd.concat([df_debug, new_df_debug], axis=0)
 
     # Move columns for better readability
-    sel_cols = ['from', 'to', 'variable_name', 'fixed', 'min', 'value', 'max'] #, 'next_value', 'next_oemof_tuple']
+    sel_cols = ['from', 'to', 'variable_name', 'fixed', 'min', 'value', 'max']
     df_debug = df_debug[sel_cols]
 
     return df_debug
