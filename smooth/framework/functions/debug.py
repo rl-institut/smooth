@@ -3,6 +3,7 @@ import numpy as np
 import re
 from smooth.framework.functions.plot_results import plot_smooth_results
 
+
 def get_df_debug(df_results, results_dict, new_df_results):
     # If no results were calculated yet, raise an exception
     if(df_results is None or results_dict is None):
@@ -29,13 +30,14 @@ def get_df_debug(df_results, results_dict, new_df_results):
     operation_vals = pd.DataFrame(operation_vals, columns=['oemof_tuple', 'fixed', 'min', 'max'])
     operation_vals['oemof_tuple'] = [tuple if tuple[1] != None else (tuple[0],) for tuple in
                                      operation_vals['oemof_tuple']]
-    # DataFrame from last iteration merged with values from results dictionary
+    # Merge results DataFrame from last iteration with scalar values from results dictionary
     df_debug = df_results[:][['value', 'variable_name', 'oemof_tuple']]
     df_debug[['from', 'to']] = pd.DataFrame(df_debug['oemof_tuple'].tolist(), index=df_debug.index)
     df_debug = pd.merge(left=df_debug, right=operation_vals, how='left', left_on='oemof_tuple',
                         right_on='oemof_tuple')
 
-    # Merging of different instances of tuples oemof object not working, so simply concatenate
+    # Concatenate debug Dataframe with results of unfinished oemof iteration
+    # (merging of different instances of oemof objects not working)
     new_df_results[['from', 'to']] = pd.DataFrame(new_df_results['oemof_tuple'].tolist(), index=new_df_results.index)
     new_df_debug = pd.DataFrame(new_df_results[:][['value', 'from', 'to']], columns=['value', 'from', 'to'])
     new_df_debug['variable_name'] = 'next'
@@ -46,6 +48,7 @@ def get_df_debug(df_results, results_dict, new_df_results):
     df_debug = df_debug[sel_cols]
 
     return df_debug
+
 
 def show_debug(df_debug, components):
     print("------------------------------------------------------------------------------")
