@@ -23,9 +23,9 @@ class Battery(Component):
         # Initial State of charge [-].
         self.soc_init = 0.5
         # ToDo: set default value for efficiency
-        # Efficiency charge [%].
+        # Efficiency charge [-].
         self.efficiency_charge = 0.95
-        # Efficiency discharge [%].
+        # Efficiency discharge [-].
         self.efficiency_discharge = 0.95
         # ToDo: set default value loss rate
         # Loss rate [%/day]
