@@ -31,7 +31,8 @@ def update_financials(component, financials):
 
     # Loop through each CAPEX or OPEX key.
     for this_index in range(len(financials['key'])):
-        # Get the dependant value (either if given as a component parameter of else it is the previous cost value).
+        # Get the dependant value (either given as a component value
+        # or if dependant value key at this_index is cost 'capex' get the previously calculated cost value).
         dependant_value = get_dependant_value(component, financials, this_index, 'capex')
         # Update cost
         update_cost(component, financials, this_index, dependant_value, 'CAPEX/OPEX')
@@ -67,7 +68,8 @@ def update_emissions(component, emissions):
 
     # Loop through each key.
     for this_index in range(len(emissions['key'])):
-        # Get the dependant value (either if given as a component parameter of else it is the previous cost value).
+        # Get the dependant value (either given as a component value
+        # or if dependant value key at this_index is cost 'fix_emissions' get the previously calculated cost value).
         dependant_value = get_dependant_value(component, emissions, this_index, 'fix_emissions')
         # Update cost
         update_cost(component, emissions, this_index, dependant_value, 'Emissions')
