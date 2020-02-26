@@ -21,7 +21,7 @@ class Component:
         self.states = {}
 
         # VARIABLE COSTS
-        # Initializing variable cost and art. cost values [EUR/???].
+        # Initializing variable cost and art. cost values [EUR/*].
         self.variable_costs = None
         self.artificial_costs = None
 
@@ -29,7 +29,7 @@ class Component:
         self.opex = dict()
         self.capex = dict()
 
-        # Emissions values for consumption and installation in [kg/Wh]
+        # Emissions values for consumption and installation in [kg/*]
         self.variable_emissions = None
         self.op_emissions = dict()
         self.fix_emissions = dict()
