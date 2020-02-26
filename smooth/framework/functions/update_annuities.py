@@ -16,7 +16,7 @@ def update_annuities(component):
     # Calculate the emission annuity for the installation in kg/a.
     # If the emissions are not given (dict is empty), the annuity is 0 kg/a,
     # otherwise it is a product of fix_emissions and capital recovery factor [-].
-    fix_emissions_annuity = calc_annuity(component, component.fix_emissions)
+    fix_emissions_annuity = calc_annual_emissions(component, component.fix_emissions)
     # Check if operational emissions were calculated, if so they are directly in annuity format.
     if not component.op_emissions:
         op_emissions = 0
@@ -63,5 +63,16 @@ def calc_annuity(component, target):
                                   (((1 + interest_rate) ** component.life_time) - 1)
         # Calculate the annuity of the target in [target]/a.
         target_annuity = target['cost'] * capital_recovery_factor
+
+    return target_annuity
+
+def calc_annual_emissions(component, target):
+    # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
+    if not target:
+        # There are no target entries, so the annuity is 0 in [target]/a.
+        target_annuity = 0
+    else:
+        # Calculate the annuity of the target in [target]/a.
+        target_annuity = target['cost'] /component.life_time
 
     return target_annuity
