@@ -117,7 +117,7 @@ class Electrolyzer (Component):
                 inputs={busses[self.bus_el]: solph.Flow(
                     actual_value=self.mpc_data,
                     fixed=True,
-                    nominal_value=self.power_max)},
+                    nominal_value=self.energy_max)},
                 outputs={busses[self.bus_h2]: solph.Flow()},
                 in_breakpoints=self.supporting_points['energy'],
                 conversion_function=self.conversion_fun_ely,
