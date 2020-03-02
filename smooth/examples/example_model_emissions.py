@@ -27,6 +27,7 @@ components.append({
     'bus_out': 'bel',
     'power_max': 5000000,
     'variable_costs': 0.00016,
+    'dependency_flow_costs': 'flow: from_grid-->bel',
     'variable_emissions': 0.341,
     'dependency_flow_emissions': 'flow: from_grid-->bel',
     # Foreign states
@@ -42,6 +43,7 @@ components.append({
     'name': 'to_grid',
     'bus_in': 'bel',
     'artificial_costs': 10,
+    'dependency_flow_costs': 'flow: bel-->to_grid',
 })
 
 # Electicity generators

@@ -24,6 +24,7 @@ class Component:
         # Initializing variable cost and art. cost values [EUR/*].
         self.variable_costs = None
         self.artificial_costs = None
+        self.dependency_flow_costs = None
 
         # FINANCIALS (CAPEX AND OPEX)
         self.opex = dict()
@@ -49,8 +50,11 @@ class Component:
 
             setattr(self, this_param, params[this_param])
 
+        if self.variable_costs is not None  or self.artificial_costs is not None:
+            assert self.dependency_flow_costs is not None
         if self.variable_emissions is not None:
             assert self.dependency_flow_emissions is not None
+
 
     """ UPDATE THE FLOWS FOR EACH COMPONENT """
     def update_flows(self, results, sim_params, comp_name=None):
@@ -89,13 +93,11 @@ class Component:
         pass
 
     """ UPDATE THE COSTS """
-    def update_var_costs(self, results, sim_params, this_dependant_value=0):
+    def update_var_costs(self, results, sim_params):
         # Track the costs and artificial costs of a component for each time step.
         # Parameters:
         #  results: oemof result object for this time step.
         #  sim_params: simulation parameters defined by the user.
-        #  this_dependant_value: Value the costs depend on for this time step (e.g. this might be electricity sold by a
-        #    grid in Wh, then the values variable_costs and artificial_costs need to be in EUR/Wh)
 
         # First create an empty cost and art. cost array for this component, if it hasn't been created before.
         if 'variable_costs' not in self.results:
@@ -106,10 +108,12 @@ class Component:
 
         # Update the costs for this time step [EUR].
         if self.variable_costs is not None:
-            self.results['variable_costs'][sim_params.i_interval] = this_dependant_value * self.variable_costs
+            this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
+            self.results['variable_costs'][sim_params.i_interval] = this_dependency_value * self.variable_costs
         # Update the artificial costs for this time step [EUR].
         if self.artificial_costs is not None:
-            self.results['art_costs'][sim_params.i_interval] = this_dependant_value * self.artificial_costs
+            this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
+            self.results['art_costs'][sim_params.i_interval] = this_dependency_value * self.artificial_costs
 
     def update_var_emissions(self, results, sim_params):
         # Track the emissions of a component for each time step.
