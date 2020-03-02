@@ -28,6 +28,7 @@ components.append({
     'power_max': 5000000,
     'variable_costs': 0.00016,
     'variable_emissions': 0.341,
+    'dependency_flow_emissions': 'flow: from_grid-->bel',
     # Foreign states
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
@@ -90,6 +91,7 @@ components.append({
     'bus_th': 'bth',
     'power_max': 500e3,
     'variable_emissions': 0.778,
+    'dependency_flow_emissions': 'flow: fuel_cell_chp_electric-->bel',
     'life_time': 20,
     'fix_emissions': {
         'key': ['free', 'spec'],

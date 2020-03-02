@@ -63,11 +63,3 @@ class Supply (Component):
         this_energy_supplied = self.flows[flow_name[0]][sim_params.i_interval]
         # Call the function of the mother component to save costs and art. costs for this run.
         Component.update_costs(self, results, sim_params, this_energy_supplied)
-
-    def update_var_emissions(self, results, sim_params):
-        # Get the name of the flow of this component.
-        flow_name = list(self.flows)
-        # Get the amount of electric energy supplied by the grid this interval time step [Wh].
-        this_energy_supplied_electric = self.flows[flow_name[0]][sim_params.i_interval]
-        # Call the function of the mother component to save emissions for this run.
-        Component.update_var_emissions(self, results, sim_params, this_energy_supplied_electric)
