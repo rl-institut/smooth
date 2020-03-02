@@ -89,7 +89,7 @@ class Component:
         pass
 
     """ UPDATE THE COSTS """
-    def update_costs(self, results, sim_params, this_dependant_value=0):
+    def update_var_costs(self, results, sim_params, this_dependant_value=0):
         # Track the costs and artificial costs of a component for each time step.
         # Parameters:
         #  results: oemof result object for this time step.

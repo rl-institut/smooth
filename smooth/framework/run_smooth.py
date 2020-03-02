@@ -114,7 +114,7 @@ def run_smooth(model):
             # Update the states.
             this_comp.update_states(results, sim_params)
             # Update the costs and artificial costs.
-            this_comp.update_costs(results, sim_params)
+            this_comp.update_var_costs(results, sim_params)
             # Update the costs and artificial costs.
             this_comp.update_var_emissions(results, sim_params)
 
