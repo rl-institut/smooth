@@ -13,11 +13,11 @@ def update_annuities(component):
     else:
         opex = component.opex['cost']
 
-    # Calculate the emission annuity for the installation in kg/a.
-    # If the emissions are not given (dict is empty), the annuity is 0 kg/a,
-    # otherwise it is a product of fix_emissions and capital recovery factor [-].
-    fix_emissions_annuity = calc_annuity(component, component.fix_emissions)
-    # Check if operational emissions were calculated, if so they are directly in annuity format.
+    # Calculate the annual emissions for the installation in kg/a.
+    # If the emissions are not given (dict is empty), the annual emissions are 0 kg/a,
+    # otherwise it is a fraction of fix_emissions divided by the component's life-time in years.
+    fix_emissions_annual = calc_annual_emissions(component, component.fix_emissions)
+    # Check if operational emissions were calculated, if so they are directly in annual format.
     if not component.op_emissions:
         op_emissions = 0
     else:
@@ -36,8 +36,8 @@ def update_annuities(component):
 
     # Get the total amount of variable emissions [kg].
     variable_emissions_tot = sum(component.results['variable_emissions'])
-    # Get the annuity of the variable emissions [kg/a].
-    variable_emissions_annuity = variable_emissions_tot / time_ratio
+    # Get the annual emissions out of the variable emissions [kg/a].
+    variable_emissions_annual = variable_emissions_tot / time_ratio
 
     # Save the cost results.
     component.results['annuity_capex'] = capex_annuity
@@ -45,10 +45,10 @@ def update_annuities(component):
     component.results['annuity_variable_costs'] = variable_cost_annuity
     component.results['annuity_total'] = capex_annuity + opex + variable_cost_annuity
 
-    component.results['annuity_fix_emissions'] = fix_emissions_annuity
-    component.results['annuity_op_emissions'] = op_emissions
-    component.results['annuity_variable_emissions'] = variable_emissions_annuity
-    component.results['annuity_total_emissions'] = fix_emissions_annuity + op_emissions + variable_emissions_annuity
+    component.results['annual_fix_emissions'] = fix_emissions_annual
+    component.results['annual_op_emissions'] = op_emissions
+    component.results['annual_variable_emissions'] = variable_emissions_annual
+    component.results['annual_total_emissions'] = fix_emissions_annual + op_emissions + variable_emissions_annual
 
 def calc_annuity(component, target):
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
@@ -63,5 +63,16 @@ def calc_annuity(component, target):
                                   (((1 + interest_rate) ** component.life_time) - 1)
         # Calculate the annuity of the target in [target]/a.
         target_annuity = target['cost'] * capital_recovery_factor
+
+    return target_annuity
+
+def calc_annual_emissions(component, target):
+    # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
+    if not target:
+        # There are no target entries, so the annuity is 0 in [target]/a.
+        target_annuity = 0
+    else:
+        # Calculate the annuity of the target in [target]/a.
+        target_annuity = target['cost'] /component.life_time
 
     return target_annuity
