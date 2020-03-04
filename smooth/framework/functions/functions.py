@@ -43,7 +43,7 @@ def get_sim_time_span(n_interval, step_size):
     return n_interval * step_size
 
 
-def run_mpc_dummy(this_model,components,system_outputs,iteration):
+def run_mpc_dummy(this_model,components,system_outputs,iteration,n_intervals):
     # function calculating the system inputs (control variables) based on the system outputs
     # (controlled process variables) and a (dummy) mpc algorithm
 
@@ -56,10 +56,10 @@ def run_mpc_dummy(this_model,components,system_outputs,iteration):
     # system inputs
     system_inputs = define_system_inputs_mpc()
     # To Do: system_inputs[0]['attribute_value'] = f(system_outputs)
-    system_inputs[0]['attribute_value'] = step_input_mpc(0.85,0.1,0.75,iteration) # 0.85
-    system_inputs[1]['attribute_value'] = step_input_mpc(0.5,0.1,0.4,iteration) # 0.50
-    system_inputs[2]['attribute_value'] = step_input_mpc(0.75,0.1,0.6,iteration) # 0.75
-    system_inputs[3]['attribute_value'] = step_input_mpc(0.3,0.1,0.2,iteration) # 0.30
+    system_inputs[0]['attribute_value'] = step_input_mpc(0.85,0.1,0.75,20,iteration,n_intervals) # 0.85
+    system_inputs[1]['attribute_value'] = step_input_mpc(0.5,0.1,0.4,20,iteration,n_intervals) # 0.50
+    system_inputs[2]['attribute_value'] = step_input_mpc(0.75,0.1,0.6,20,iteration,n_intervals) # 0.75
+    system_inputs[3]['attribute_value'] = step_input_mpc(0.3,0.1,0.2,20,iteration,n_intervals) # 0.30
     for this_in in system_inputs:
         # Loop through all components of the model dict until the right component is found.
         for this_comp in this_model['components']:
@@ -145,9 +145,9 @@ def define_system_outputs_mpc():
     return system_outputs
 
 
-def step_input_mpc(operating_point,step_size_up,step_size_down,iteration):
+def step_input_mpc(operating_point,step_size_up,step_size_down,step_length,iteration,n_intervals):
     # function returning the current value of a step signal
     # start in operation point, step up and down with specified step size
-    step = [operating_point]*20+[operating_point+step_size_up]*20+[operating_point-step_size_down]*20+[operating_point]*36
+    step = [operating_point]*20+[operating_point+step_size_up]*20+[operating_point-step_size_down]*20+[operating_point]*(n_intervals-3*step_length)
     # TO DO: an beliebige Simulationszeiträume anpassen
     return step[iteration]

@@ -65,7 +65,7 @@ def run_smooth(model):
             print('Simulating interval {}/{}'.format(i_interval, sim_params.n_intervals))
 
         # run mpc
-        func.run_mpc_dummy(model,components,system_outputs,i_interval)
+        func.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params.n_intervals)
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
