@@ -109,15 +109,30 @@ class Electrolyzer (Component):
         # Get the non-linear behaviour.
         self.update_nonlinear_behaviour()
 
+        # when operating on mpc flows are fixed
+        if self.operate_on_mpc:
+            flow_electric = solph.Flow(
+                actual_value=self.mpc_data,
+                fixed=True,
+                nominal_value=self.energy_max,
+                # max=1,
+                min=0.2,
+                nonconvex=solph.NonConvex())
+        # otherwise flows are solved by oemof
+        else:
+            flow_electric = solph.Flow(
+                nominal_value=self.energy_max,
+                variable_costs=0,
+                # max=1,
+                min=0.2,
+                nonconvex=solph.NonConvex())
+
         # Create the non-linear oemof component.
         if self.operate_on_mpc:
             # self.mpc_data = func.run_mpc_dummy()
             electrolyzer = solph.custom.PiecewiseLinearTransformer(
                 label=self.name,
-                inputs={busses[self.bus_el]: solph.Flow(
-                    actual_value=self.mpc_data,
-                    fixed=True,
-                    nominal_value=self.energy_max)},
+                inputs={busses[self.bus_el]: flow_electric},
                 outputs={busses[self.bus_h2]: solph.Flow()},
                 in_breakpoints=self.supporting_points['energy'],
                 conversion_function=self.conversion_fun_ely,
@@ -125,9 +140,7 @@ class Electrolyzer (Component):
         else:
             electrolyzer = solph.custom.PiecewiseLinearTransformer(
                 label=self.name,
-                inputs={busses[self.bus_el]: solph.Flow(
-                   nominal_value=self.energy_max,
-                   variable_costs=0)},
+                inputs={busses[self.bus_el]: flow_electric},
                 outputs={busses[self.bus_h2]: solph.Flow()},
                 in_breakpoints=self.supporting_points['energy'],
                 conversion_function=self.conversion_fun_ely,
