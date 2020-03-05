@@ -5,7 +5,6 @@ from .component_functions.component_functions import calculate_compressibility_f
 
 
 class CompressorH2(Component):
-    """ Compressor agents are created through this class """
     def __init__(self, params):
         # Call the init function of th mother class.
         Component.__init__(self)
@@ -42,7 +41,7 @@ class CompressorH2(Component):
         # Mr_H2 = Molar mass of H2 [kg/mol], R = the gas constant (R) [J/(K*mol)]
         self.R = 8.314
         self.Mr_H2 = 2.016 * 1e-3
-        self.R_H2 = self.R/self.Mr_H2
+        self.R_H2 = self.R / self.Mr_H2
 
     def create_oemof_model(self, busses, _):
         compressor = solph.Transformer(
@@ -69,25 +68,28 @@ class CompressorH2(Component):
             spec_compression_work = 0
         else:
             # Get the compression ratio [-]
-            p_ratio = p_out/p_in
+            p_ratio = p_out / p_in
 
             # ISSUE: is this an assumption for the polytropic exponent??
             n_initial = 1.6
 
-            temp_out = min(max(self.temp_in, self.temp_in*p_ratio ** ((n_initial - 1)/n_initial)), self.temp_in + 60)
-            temp_ratio = temp_out/self.temp_in
+            temp_out = min(max(self.temp_in, self.temp_in * p_ratio ** ((n_initial - 1) / n_initial)),
+                           self.temp_in + 60)
+            temp_ratio = temp_out / self.temp_in
 
-            n = 1/(1 - (log(temp_ratio)/log(p_ratio)))
+            n = 1 / (1 - (log(temp_ratio) / log(p_ratio)))
 
-            [z_in, z_out] = calculate_compressibility_factor(self, p_in, p_out, temp_out)
+            [z_in, z_out] = calculate_compressibility_factor(p_in, p_out, self.temp_in, temp_out)
 
-            real_gas = (z_in + z_out)/2
+            real_gas = (z_in + z_out) / 2
 
             # Specific compression work [kJ/kg]
-            spec_compression_work = ((1/self.efficiency) * self.R_H2 * self.temp_in * (n/(n - 1)) * (((
-                        p_ratio ** (n - 1) / n)) - 1) * real_gas)/1000
+            spec_compression_work = ((1 / self.efficiency) * self.R_H2 * self.temp_in * (n / (n - 1)) * (((
+                    p_ratio ** (n - 1) / n)) - 1) * real_gas) / 1000
 
         # Convert specific compression work into electrical energy needed per kg H2 [Wh]
-        self.spec_compression_energy = spec_compression_work/3.6
+        self.spec_compression_energy = float(spec_compression_work / 3.6)
+
+        return
 
 

@@ -18,7 +18,7 @@ def calculate_compressibility_factor(p_in, p_out, temp_in, temp_out):
         [1.0002, 1.0021, 1.0042, 1.0084, 1.0126, 1.0168, 1.0209, 1.041, 1.080, 1.117, 1.153, 1.187],
         [1.0009, 1.0013, 1.0023, 1.0044, 1.0065, 1.0086, 1.0107, 1.021, 1.040, 1.057, 1.073, 1.088]]
 
-    interp_func = interpolate.interp2d(temp, p, z)
+    interp_func = interpolate.interp2d(p, temp, z)
 
     z_in = interp_func(p_in, temp_in)
     z_out = interp_func(p_out, temp_out)
