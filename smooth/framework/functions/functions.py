@@ -56,10 +56,12 @@ def run_mpc_dummy(this_model,components,system_outputs,iteration,n_intervals):
     # system inputs
     system_inputs = define_system_inputs_mpc()
     # To Do: system_inputs[0]['attribute_value'] = f(system_outputs)
-    system_inputs[0]['attribute_value'] = step_input_mpc(0.85,0.1,0.75,20,iteration,n_intervals) # 0.85
-    system_inputs[1]['attribute_value'] = step_input_mpc(0.5,0.1,0.4,20,iteration,n_intervals) # 0.50
-    system_inputs[2]['attribute_value'] = step_input_mpc(0.75,0.1,0.6,20,iteration,n_intervals) # 0.75
-    system_inputs[3]['attribute_value'] = step_input_mpc(0.3,0.1,0.2,20,iteration,n_intervals) # 0.30
+    system_inputs[0]['attribute_value'] = 0 # step_input_mpc(0.85,0.1,0.75,20,iteration,n_intervals) # 0.85
+    # if (system_inputs[0]['attribute_value'] < 0.2):
+    #     system_inputs[0]['attribute_value'] = 0
+    system_inputs[1]['attribute_value'] = 0.1 # step_input_mpc(0.5,0.1,0.4,20,iteration,n_intervals) # 0.50
+    system_inputs[2]['attribute_value'] = 0.1 # step_input_mpc(0.75,0.1,0.6,20,iteration,n_intervals) # 0.75
+    system_inputs[3]['attribute_value'] = 0.1 # step_input_mpc(0.3,0.1,0.2,20,iteration,n_intervals) # 0.30
     for this_in in system_inputs:
         # Loop through all components of the model dict until the right component is found.
         for this_comp in this_model['components']:

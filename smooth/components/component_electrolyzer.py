@@ -27,6 +27,9 @@ class Electrolyzer (Component):
         # Max. power [W].
         self.power_max = 100000
 
+        # lower operating limit (share of the nominal production capacity) [-]
+        self.lower_operating_limit = 0.2
+
         # pressure of hydrogen in the system in [Pa]
         self.pressure = 40 * 10**5
         # Initial temperature [K].
@@ -54,7 +57,7 @@ class Electrolyzer (Component):
         self.set_parameters(params)
         # Interval time [min].
         self.interval_time = self.sim_params.interval_time
-        # Calculate the max. energy the electrolyzer can use in one time step [Wh].
+        # Calculate the max. and min. energy the electrolyzer can use in one time step [Wh].
         self.energy_max = self.power_max * self.interval_time/60
 
         """  CONSTANT PARAMETERS (PHYSICS) """
@@ -116,7 +119,7 @@ class Electrolyzer (Component):
                 fixed=True,
                 nominal_value=self.energy_max,
                 # max=1,
-                min=0.2,
+                min=self.lower_operating_limit,
                 nonconvex=solph.NonConvex())
         # otherwise flows are solved by oemof
         else:
@@ -124,7 +127,7 @@ class Electrolyzer (Component):
                 nominal_value=self.energy_max,
                 variable_costs=0,
                 # max=1,
-                min=0.2,
+                min=self.lower_operating_limit,
                 nonconvex=solph.NonConvex())
 
         # Create the non-linear oemof component.
