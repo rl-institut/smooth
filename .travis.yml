@@ -4,8 +4,10 @@ python:
   - '3.6'
 
 install:
-  - sudo apt-get install coinor-cbc
   - pip install -r tests/test_requirements.txt
+
+  # Install CBC solver
+  - sudo apt-get install coinor-cbc
 
   # Install specific branch of oemof
   - git clone https://github.com/oemof/oemof.git
@@ -15,10 +17,12 @@ install:
   - pip install .
   - cd ..
 
+  # Install other smooth dependencies
   - pip install -r requirements.txt
 
 script:
-#TODO re-enable flake8
-#- flake8
-#- pylint */*.py
-  - echo "Done!"
+  # Run pytest in `tests` directory
+  - pytest tests
+
+  #TODO re-enable flake8
+  #- flake8
