@@ -14,9 +14,10 @@ def main():
     #  n_gen: Number of generations that will be evaluated [-].
     #  n_core: Number of cores used in the optimization ('max' will use all of them) [-].
     opt_params['ga_params'] = {
-        'population_size': 4,
-        'n_generation': 4,
-        'n_core': 'max'
+        'population_size': 10,
+        'n_generation': 10,
+        'n_core': 'max',
+        'generation': {"select": 2, "mutate": 5, "crossover": 3}
     }
     # Define the attribute variation information that will be used by the genetic algorithm.
     #  comp_name: Name of the component [string].
@@ -50,5 +51,5 @@ def main():
 if __name__ == '__main__':
     freeze_support()
     optimization_results = main()
-    smooth.save_results('optimization_result', optimization_results)
+    # smooth.save_results('optimization_result', optimization_results)
     smooth.plot_optimization_results(optimization_results)
