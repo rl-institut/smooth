@@ -1,5 +1,7 @@
 # SMOOTH - Simulation Model for Optimized Operation and Topology of Hybrid energy systems
 
+[![Build Status](https://travis-ci.com/rl-institut/smooth.svg?branch=dev)](https://travis-ci.com/rl-institut/smooth)
+
 ## Features
 The python simulation framework smooth allows modelling energy systems and optimizing their behaviour.
 The key features of smooth are:
