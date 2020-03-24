@@ -55,16 +55,16 @@ def plot_smooth_results(smooth_result):
             for this_bus in this_comp_flows:
                 if component_result.name == 'this_ely':
                     component_result.name = 'Elektrolyseur'
-                elif component_result.name == 'solar_output':
+                elif component_result.name == 'pv_output':
                     component_result.name = 'PV-Anlage'
                 elif component_result.name == 'wind_output':
-                   component_result.name = 'WE-Anlage'
+                    component_result.name = 'WE-Anlage'
                 elif component_result.name == 'th_demand':
                     component_result.name = 'Heizbedarf'
                 elif component_result.name == 'h2_demand':
                     component_result.name = 'Wasserstoffbedarf'
                 elif component_result.name == 'h2_compressor':
-                    component_result.name = 'Wasserstoffkompressor'
+                    component_result.name = 'Wasserstoffkompressor (350 bar)'
                 elif component_result.name == 'from_grid':
                     component_result.name = 'Strombezug'
                 elif component_result.name == 'to_grid':
@@ -77,6 +77,16 @@ def plot_smooth_results(smooth_result):
                     component_result.name = 'Biogas-BHKW'
                 elif component_result.name == 'ch4_grid':
                     component_result.name = 'Biogas-Zufuhr'
+                elif component_result.name == 'h2_compressor_from_ely':
+                    component_result.name = 'Wasserstoffkompressor (250 bar)'
+                elif component_result.name == 'dummy_2':
+                    component_result.name = 'Gebrauchte PV-Elektrizität'
+                elif component_result.name == 'dummy_1':
+                    component_result.name = 'Gebrauchte Wind-Elektrizität'
+                elif component_result.name == 'pv_to_grid':
+                    component_result.name = 'Überschüssige PV-Elektrizität'
+                elif component_result.name == 'wind_to_grid':
+                    component_result.name = 'Überschüssige Wind-Elektrizität'
 
                 if this_bus not in busses_to_plot:
                     # If bus name didnt't appear so far, add it to the list of busses.
@@ -96,6 +106,12 @@ def plot_smooth_results(smooth_result):
         if this_bus == 'bel':
             plt.title('Elektrische Energie')
             plt.ylabel('Energie in Wh')
+        elif this_bus == 'bel_wind':
+            plt.title('Wind Energie')
+            plt.ylabel('Energie in WH')
+        elif this_bus == 'bel_pv':
+            plt.title('PV Energie')
+            plt.ylabel('Energie in WH')
         elif this_bus == 'bth':
             plt.title('Thermische Energie')
             plt.ylabel('Energie in Wh')
