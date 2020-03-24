@@ -1,5 +1,7 @@
 .idea*
 test/*
+build/*
+dist/*
 *.png
 *.pickle
 *.egg-info
