@@ -1,5 +1,5 @@
 from oemof.outputlib import views
-from smooth.framework.functions.update_financials import update_financials
+from smooth.framework.functions.update_fitted_cost import update_financials, update_emissions
 from smooth.framework.functions.update_annuities import update_annuities
 
 class Component:
@@ -21,13 +21,21 @@ class Component:
         self.states = {}
 
         # VARIABLE COSTS
-        # Initializing variable cost and art. cost values [EUR/???].
+        # Initializing variable cost and art. cost values [EUR/*].
         self.variable_costs = None
         self.artificial_costs = None
+        self.dependency_flow_costs = None
 
         # FINANCIALS (CAPEX AND OPEX)
         self.opex = dict()
         self.capex = dict()
+
+        # Initializing variable emission values [kg/*] and the flow [*] it depends on.
+        self.variable_emissions = None
+        self.dependency_flow_emissions = None
+        # Initializing fixed and operational emission values.
+        self.op_emissions = dict()
+        self.fix_emissions = dict()
 
         # FOREIGN STATES
         # Initializing foreign state component name and attribute name, if set both need to be strings.
@@ -41,6 +49,12 @@ class Component:
                 raise ValueError('The parameter "{}" is not part of the component'.format(this_param))
 
             setattr(self, this_param, params[this_param])
+
+        if self.variable_costs is not None  or self.artificial_costs is not None:
+            assert self.dependency_flow_costs is not None
+        if self.variable_emissions is not None:
+            assert self.dependency_flow_emissions is not None
+
 
     """ UPDATE THE FLOWS FOR EACH COMPONENT """
     def update_flows(self, results, sim_params, comp_name=None):
@@ -79,13 +93,11 @@ class Component:
         pass
 
     """ UPDATE THE COSTS """
-    def update_costs(self, results, sim_params, this_dependant_value=0):
+    def update_var_costs(self, results, sim_params):
         # Track the costs and artificial costs of a component for each time step.
         # Parameters:
         #  results: oemof result object for this time step.
         #  sim_params: simulation parameters defined by the user.
-        #  this_dependant_value: Value the costs depend on for this time step (e.g. this might be electricity sold by a
-        #    grid in Wh, then the values variable_costs and artificial_costs need to be in EUR/Wh)
 
         # First create an empty cost and art. cost array for this component, if it hasn't been created before.
         if 'variable_costs' not in self.results:
@@ -96,10 +108,29 @@ class Component:
 
         # Update the costs for this time step [EUR].
         if self.variable_costs is not None:
-            self.results['variable_costs'][sim_params.i_interval] = this_dependant_value * self.variable_costs
+            this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
+            self.results['variable_costs'][sim_params.i_interval] = this_dependency_value * self.variable_costs
         # Update the artificial costs for this time step [EUR].
         if self.artificial_costs is not None:
-            self.results['art_costs'][sim_params.i_interval] = this_dependant_value * self.artificial_costs
+            this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
+            self.results['art_costs'][sim_params.i_interval] = this_dependency_value * self.artificial_costs
+
+    def update_var_emissions(self, results, sim_params):
+        # Track the emissions of a component for each time step.
+        # Parameters:
+        #  results: oemof result object for this time step.
+        #  sim_params: simulation parameters defined by the user.
+
+        # First create an empty emission array for this component, if it hasn't been created before.
+        if 'variable_emissions' not in self.results:
+            # If this function is not overwritten in the component, then emissions are not part of the
+            # component and therefore set to 0.
+            self.results['variable_emissions'] = [0] * sim_params.n_intervals
+
+        # Update the emissions for this time step [kg]. Before, verify if a flow name is given as emission dependency.
+        if self.variable_emissions is not None:
+            this_dependency_value = self.flows[self.dependency_flow_emissions][sim_params.i_interval]
+            self.results['variable_emissions'][sim_params.i_interval] = this_dependency_value * self.variable_emissions
 
     """ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMTER IF THEY ARE NOT NONE """
     def get_costs_and_art_costs(self):
@@ -150,10 +181,13 @@ class Component:
     def generate_results(self):
         # Generate the results after the simulation.
 
+        # Compute the emissions due to installation and operation.
+        update_emissions(self, self.fix_emissions)
+        update_emissions(self, self.op_emissions)
         # Compute the CAPEX and then the OPEX results.
         update_financials(self, self.capex)
         update_financials(self, self.opex)
-        # Calculate the annuities of the CAPEX and the variable costs.
+        # Calculate the annuities of the CAPEX and the variable costs; and of the emission values
         update_annuities(self)
 
     def check_validity(self):
@@ -161,18 +195,7 @@ class Component:
         # attributes are valid.
 
         # Check if a life time is given when there are CAPEX given.
-        if self.capex:
+        if self.capex or self.fix_emissions:
             if self.life_time is None or self.life_time <= 0:
-                raise ValueError('In component {} CAPEX are given but the life_time is either None or not '
-                                 'greater than zero. Please choose another life_time value!'.format(self.name))
-
-
-
-
-
-
-
-
-
-
-
+                raise ValueError('In component {} CAPEX or fix_emissions are given but the life_time is either None or '
+                                 'not greater than zero. Please choose another life_time value!'.format(self.name))

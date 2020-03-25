@@ -3,7 +3,7 @@ from .component import Component
 
 
 class Supply (Component):
-    """ Electricity supplied by the grid is created through this class """
+    """ Generic supply component is created through this class """
     def __init__(self, params):
 
         # Call the init function of the mother class.
@@ -11,8 +11,8 @@ class Supply (Component):
 
         """ PARAMETERS """
         self.name = 'Grid_default_name'
-
-        self.power_max = 8000000
+        # Maximum input per timestep: for the electricity grid [Wh], thermal grid [Wh], CH4 grid [kg/h]
+        self.input_max = 8000000
 
         self.bus_out = None
 
@@ -51,21 +51,7 @@ class Supply (Component):
         from_grid = solph.Source(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(
-                nominal_value=self.power_max,
+                nominal_value=self.input_max,
                 variable_costs=self.current_ac
             )})
         return from_grid
-
-    def update_costs(self, results, sim_params):
-        # Get the name of the flow of this component.
-        flow_name = list(self.flows)
-        # Get the amount of energy supplied by the grid this interval time step [Wh].
-        this_energy_supplied = self.flows[flow_name[0]][sim_params.i_interval]
-        # Call the function of the mother component to save costs and art. costs for this run.
-        Component.update_costs(self, results, sim_params, this_energy_supplied)
-
-
-
-
-
-
