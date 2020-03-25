@@ -24,6 +24,8 @@ class Electrolyzer (Component):
 
         # pressure of hydrogen in the system in [Pa]
         self.pressure = 40 * 10**5
+        # foreign state pressure parameter for compressor component [bar] (could be improved)
+        self.fs_pressure = self.pressure/10**5
         # Initial temperature [K].
         self.temp_init = 273.15 + 25
         # Life time [a].
