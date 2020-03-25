@@ -31,7 +31,7 @@ class Optimization:
         # defaults
         self.weights = (1.0,)
         self.generation = {"select": 2, "crossover": 3, "mutate": 3}
-        self.probabilities = {"crossover": 0.5, "mutate": 0.5}
+        self.probabilities = {"crossover": 0.5}
 
         # set from args
         self.__dict__.update(iterable, **kwargs)
@@ -58,14 +58,10 @@ class Optimization:
 
         # compute absolute values for generation distribution
         self.generation = dict(zip(self.generation.keys(), [round(v*self.population_size / sum(self.generation.values())) for v in self.generation.values()]))
-        try:
-            assert(sum(self.generation.values()) == self.population_size)
-        except AssertionError:
-            raise("Strange population distribution given: {} does not add up to {}. Cannot continue.".format(self.generation, self.population_size))
         # try:
-            # assert("mutate" in self.generation and self.generation["mutate"] > 0)
+            # assert(sum(self.generation.values()) == self.population_size)
         # except AssertionError:
-            # raise("Please specify a mutation probability")
+            # raise("Strange population distribution given: {} does not add up to {}. Cannot continue.".format(self.generation, self.population_size))
 
         # attribute variation
         try:
@@ -240,7 +236,7 @@ class Optimization:
                     break
             else:
                 # New population successfully generated. Print info
-                print(tries)
+                # print(tries)
                 # print optimization progress info
                 print('Iteration {}/{} finished. Best fit. val: {:.0f} Avg. fit. val: {:.0f}'.format(gen+1, self.n_generation, self.result.stats[-1]['min'], self.result.stats[-1]['mu']))
                 continue
