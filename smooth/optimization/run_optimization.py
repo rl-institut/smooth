@@ -1,6 +1,6 @@
 from multiprocessing import Pool, cpu_count
 from deap import base, creator, tools
-from random import seed, randint, random
+import random
 import numpy as np
 
 from smooth import run_smooth
@@ -13,7 +13,7 @@ class AttributeVariation:
 
 class OptimizationResult:
     # Class to store result from GA
-    individuals_evaluated = dict() # unused
+    individuals_evaluated = dict()
     best_fit_val = None # best score
     i_best_fit_val = 0 # index of best indivdual: always first
     best_gens = None # best genes
@@ -62,6 +62,10 @@ class Optimization:
             assert(sum(self.generation.values()) == self.population_size)
         except AssertionError:
             raise("Strange population distribution given: {} does not add up to {}. Cannot continue.".format(self.generation, self.population_size))
+        # try:
+            # assert("mutate" in self.generation and self.generation["mutate"] > 0)
+        # except AssertionError:
+            # raise("Please specify a mutation probability")
 
         # attribute variation
         try:
@@ -90,7 +94,7 @@ class Optimization:
 
     def initIndividual(self):
         # Callback function to create one individual with random genes
-        return [randint(av.val_min, av.val_max) for av in self.attribute_variation]
+        return [random.randint(av.val_min, av.val_max) for av in self.attribute_variation]
 
     def fitness_function(self, index, individual, model):
         # compute fitness for individual
@@ -127,6 +131,7 @@ class Optimization:
     def set_fitness(self, result):
         # Async success calbback: update master individual
         self.population[result[0]] = result[1]
+        self.result.individuals_evaluated[str(self.population[result[0]])] = result[1]
 
     def compute_fitness(self):
         # compute fitness of every individual in population
@@ -144,7 +149,7 @@ class Optimization:
         pool.join()
 
     def run(self):
-        seed() # init RNG
+        random.seed() # init RNG
 
         print('\n+++++++ START GENETIC ALGORITHM +++++++')
         print('The optimization parameters chosen are:')
@@ -154,9 +159,11 @@ class Optimization:
         print('  n_core:          {}'.format(self.n_core))
         print('+++++++++++++++++++++++++++++++++++++++\n')
 
-        result = OptimizationResult()
+        self.result = OptimizationResult()
 
         for gen in range(self.n_generation):
+            # print(self.population)
+
             # evaluate current population fitness
             self.compute_fitness()
 
@@ -176,7 +183,7 @@ class Optimization:
             self.population, fitnesses = map(list, zip(*self.population))
 
             # update stats - count only valid
-            result.stats.append({
+            self.result.stats.append({
                 'i': gen,
                 'mu': np.mean(fitnesses),
                 'std': np.std(fitnesses),
@@ -185,48 +192,79 @@ class Optimization:
             })
 
             # save latest best result
-            result.best_smooth_result = self.population[0].smooth_result
+            self.result.best_smooth_result = self.population[0].smooth_result
 
             # crossover: get parents from best, select genes randomly
-            offset = self.generation["select"]
+            change_idx = self.generation["select"]
             for i in range(self.generation["crossover"]):
                 parent1 = self.tbx.clone(self.population[0])
                 parent2 = self.tbx.clone(self.population[(i % self.generation["select"])+1]) # TODO: find more clever way of sampling parents
                 child, _ = tools.cxUniform(parent1, parent2, indpb=self.probabilities["crossover"])
-                del child.fitness.values # makes fitness invalid
-                self.population[offset + i] = child
+                fingerprint = str(child)
+                if fingerprint not in self.result.individuals_evaluated:
+                    del child.fitness.values # makes fitness invalid
+                    self.population[change_idx] = child
+                    self.result.individuals_evaluated[fingerprint] = None
+                    change_idx += 1
 
             # mutate: may change gene(s) within given range
-            offset = offset + self.generation["crossover"]
-            for i in range(self.generation["mutate"]):
-                child = self.tbx.clone(self.population[i % self.generation["select"]])
-                for j in range(len(child)):
-                    if random() < self.probabilities["mutate"]:
-                        child[j] = randint(self.attribute_variation[j].val_min, self.attribute_variation[j].val_max)
-                    del child.fitness.values
-                    self.population[offset + i] = child
+            tries = 0
+            while change_idx < self.population_size:
+                child = self.tbx.clone(self.population[change_idx % self.generation["select"]])
+                tries += 1
 
-            # print optimization progress info
-            print('Iteration {}/{} finished. Best fit. val: {:.0f} Avg. fit. val: {:.0f}'.format(gen+1, self.n_generation, result.stats[-1]['min'], result.stats[-1]['mu']))
+                num_genes_to_change = random.randint(1, len(child))
+                genes_to_change = random.sample(range(len(child)), num_genes_to_change)
+                for mut_gene_idx in genes_to_change:
+                    val_min = self.attribute_variation[mut_gene_idx].val_min
+                    val_max = self.attribute_variation[mut_gene_idx].val_max
+                    delta_min = child[mut_gene_idx] - val_min
+                    delta_max = val_max - child[mut_gene_idx]
+                    delta = min(delta_min, delta_max)
+                    sigma = delta / (3 / (gen + 1)) if delta > 0 else 1
+                    child[mut_gene_idx] = int(min(max(random.gauss(child[mut_gene_idx], sigma), val_min), val_max))
+                """
+                for j in range(len(child)):
+                    if random.random() < self.probabilities["mutate"]:
+                        child[j] = random.randint(self.attribute_variation[j].val_min, self.attribute_variation[j].val_max)
+                """
+
+                fingerprint = str(child)
+                if fingerprint not in self.result.individuals_evaluated:
+                    del child.fitness.values
+                    self.population[change_idx] = child
+                    self.result.individuals_evaluated[fingerprint] = None
+                    change_idx += 1
+                if tries > 1000 * self.population_size:
+                    print("Search room exhausted. Aborting.")
+                    break
+            else:
+                # New population successfully generated. Print info
+                print(tries)
+                # print optimization progress info
+                print('Iteration {}/{} finished. Best fit. val: {:.0f} Avg. fit. val: {:.0f}'.format(gen+1, self.n_generation, self.result.stats[-1]['min'], self.result.stats[-1]['mu']))
+                continue
+            # mutation broke off: stop GA
+            break
+
+
 
         # All generations computed
         # update result instance. Best in pop[0]
-        # individuals_evaluated = population
-        result.best_fit_val = self.population[0].fitness.values
-        result.i_best_fit_val = 0
-        result.best_gens = self.population[0]
-        # best_smooth_result
+        self.result.best_fit_val = self.population[0].fitness.values
+        self.result.i_best_fit_val = 0
+        self.result.best_gens = self.population[0]
         # stats is already set
 
         print('\n+++++++ GENETIC ALGORITHM FINISHED +++++++')
         print('The best individual is:')
-        print('  fit_val: {}'.format(result.best_fit_val))
+        print('  fit_val: {}'.format(self.result.best_fit_val))
         for i, attr in enumerate(self.attribute_variation):
             print(' attribute {} - {} value: {}'.format(
-                attr.comp_name, attr.comp_attribute, result.best_gens[i]))
+                attr.comp_name, attr.comp_attribute, self.result.best_gens[i]))
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
-        return result
+        return self.result
 
 def run_optimization(opt_config, _model):
     # save GA params directly in config
