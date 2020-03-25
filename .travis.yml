@@ -27,5 +27,8 @@ script:
   # Run pytest in `tests` directory
   - pytest tests
 
+  # Run smooth example
+  - xvfb-run python smooth/examples/run_smooth_example.py
+
   #TODO re-enable flake8
   #- flake8
