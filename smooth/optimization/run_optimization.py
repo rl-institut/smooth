@@ -29,7 +29,7 @@ class Optimization:
 
     def __init__(self, iterable=(), **kwargs):
         # defaults
-        self.weights = (1.0,)
+        self.weights = (-1.0, -1.0) # minimize both
         self.generation = {"select": 2, "crossover": 3, "mutate": 3}
         self.probabilities = {"crossover": 0.5}
 
@@ -99,19 +99,14 @@ class Optimization:
         # update (copied) oemof model
         for i, av in enumerate(self.attribute_variation):
             model['components'][av.comp_name][av.comp_attribute] = individual[i]
-        # generate awkward component array for use in smooth
-        components = []
-        for name, comp in model['components'].items():
-            comp["name"] = name
-            components.append(comp)
-        model['components'] = components
 
         # Now that the model is updated according to the genes given by the GA, smooth can be run.
         try:
             smooth_result = run_smooth(model)
             # As a fitness value, give back the summed up total annuity (which will be minimized) [EUR/a].
             annuity_total = sum([c.results["annuity_total"] for c in smooth_result])
-            individual.fitness.values = annuity_total, # has to be tuple
+            emission_total = sum([c.results["annual_total_emissions"] for c in smooth_result])
+            individual.fitness.values = (annuity_total, emission_total) # has to be tuple
             individual.smooth_result = smooth_result
 
         except Exception as e:
@@ -144,8 +139,14 @@ class Optimization:
         pool.close()
         pool.join()
 
+    def weights_to_str(self):
+        dims = ["costs", "emissions"]
+        strings = [("minimize " if w < 0 else "ignore " if w == 0 else "maximize ") + d for (d,w) in zip(dims, self.weights)]
+        return ", ".join(strings)
+
     def run(self):
         random.seed() # init RNG
+
 
         print('\n+++++++ START GENETIC ALGORITHM +++++++')
         print('The optimization parameters chosen are:')
@@ -153,6 +154,7 @@ class Optimization:
         print('  distribution:    {}'.format(self.generation))
         print('  n_generation:    {}'.format(self.n_generation))
         print('  n_core:          {}'.format(self.n_core))
+        print('  {}'.format(self.weights_to_str()))
         print('+++++++++++++++++++++++++++++++++++++++\n')
 
         self.result = OptimizationResult()
@@ -164,7 +166,7 @@ class Optimization:
             self.compute_fitness()
 
             # compute multi-dimensional fitness value: sum of weighted dimensions
-            fitnesses = [sum(v*w for v,w in zip(individual.fitness.values, self.weights)) for individual in self.population]
+            fitnesses = [sum(v*(-w) for v,w in zip(individual.fitness.values, self.weights)) for individual in self.population]
 
             # filter out individuals with invalid fitness values
             self.population = list(filter(lambda ind: ind[0].fitness.valid, zip(self.population, fitnesses)))
@@ -178,6 +180,9 @@ class Optimization:
             # unzip population from fitness
             self.population, fitnesses = map(list, zip(*self.population))
 
+            # allocate space for new generation (population may have shrunk)
+            self.population += [None]*(self.population_size - len(self.population))
+
             # update stats - count only valid
             self.result.stats.append({
                 'i': gen,
@@ -189,6 +194,8 @@ class Optimization:
 
             # save latest best result
             self.result.best_smooth_result = self.population[0].smooth_result
+
+
 
             # crossover: get parents from best, select genes randomly
             change_idx = self.generation["select"]
@@ -265,9 +272,10 @@ class Optimization:
 def run_optimization(opt_config, _model):
     # save GA params directly in config
     opt_config.update(opt_config.pop("ga_params", dict))
-    # simplify oemof model: instead of components array, have dict with component names as key
-    _names = [c.pop("name") for c in _model["components"]]
-    _model.update({'components': dict(zip(_names, _model["components"]))})
+    if isinstance(_model["components"], list):
+        # simplify oemof model: instead of components array, have dict with component names as key
+        _names = [c.pop("name") for c in _model["components"]]
+        _model.update({'components': dict(zip(_names, _model["components"]))})
     # save oemof model in config
     opt_config.update({"model": _model})
     # run GA
