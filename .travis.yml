@@ -28,7 +28,7 @@ script:
   - pytest tests
 
   # Run smooth example
-  - xvfb-run python smooth/examples/run_smooth_example.py
+  - MPLBACKEND=SVG python smooth/examples/run_smooth_example.py
 
   #TODO re-enable flake8
   #- flake8
