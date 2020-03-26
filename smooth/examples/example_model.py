@@ -72,7 +72,8 @@ components.append({
     'fs_attribute_name': 'storage_level',
     'fs_threshold': 200,
     'fs_low_art_cost': -0.001,
-    'fs_high_art_cost': 50
+    'fs_high_art_cost': 50,
+    'dependency_flow_costs': 'flow: from_grid-->bel',
 })
 
 components.append({
