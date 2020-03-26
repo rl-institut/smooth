@@ -80,7 +80,8 @@ components.append({
     'component': 'sink',
     'name': 'to_grid',
     'bus_in': 'bel',
-    'artificial_costs': 10
+    'artificial_costs': 10,
+    'dependency_flow_costs': 'flow: bel-->to_grid',
 })
 
 components.append({
