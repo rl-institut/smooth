@@ -2,8 +2,6 @@ import os
 import oemof.solph as solph
 from smooth.components.component import Component
 import smooth.framework.functions.functions as func
-import numpy as np
-import pandas as pd
 
 
 class EnergyDemandFromCsv(Component):
