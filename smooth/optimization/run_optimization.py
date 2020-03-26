@@ -76,8 +76,10 @@ class Optimization:
         except AssertionError:
             raise("No model given")
 
-        # init deap
-        creator.create("Fitness", base.Fitness, weights = self.weights)
+        # Init deap.
+        # Values are divided by weights when accessed, so weight 0 is impossible.
+        # Give dummy value to make deap happy, compute weighted fitness yourself.
+        creator.create("Fitness", base.Fitness, weights = (1,1)) #self.weights)
         creator.create("Individual", list, fitness=creator.Fitness)
         self.tbx = base.Toolbox()
 
@@ -179,6 +181,7 @@ class Optimization:
 
             # unzip population from fitness
             self.population, fitnesses = map(list, zip(*self.population))
+            # fitnesses = [abs(f) for f in fitnesses]
 
             # allocate space for new generation (population may have shrunk)
             self.population += [None]*(self.population_size - len(self.population))
@@ -186,7 +189,7 @@ class Optimization:
             # update stats - count only valid
             self.result.stats.append({
                 'i': gen,
-                'mu': np.mean(fitnesses),
+                'mu':  np.mean(fitnesses),
                 'std': np.std(fitnesses),
                 'max': np.max(fitnesses),
                 'min': np.min(fitnesses)
