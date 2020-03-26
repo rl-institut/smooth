@@ -1,4 +1,4 @@
-from smooth.examples.example_model import mymodel
+from smooth.examples.example_dict_model import mymodel
 from smooth import run_optimization
 import smooth
 from multiprocessing import freeze_support
@@ -14,10 +14,11 @@ def main():
     #  n_gen: Number of generations that will be evaluated [-].
     #  n_core: Number of cores used in the optimization ('max' will use all of them) [-].
     opt_params['ga_params'] = {
-        'population_size': 10,
-        'n_generation': 10,
+        'population_size': 30,
+        'n_generation': 15,
         'n_core': 'max',
-        'generation': {"select": 2, "mutate": 5, "crossover": 3}
+        'generation': {'select': 2, 'crossover': 3, 'mutate': 5},
+        'weights': (-1, -1),
     }
     # Define the attribute variation information that will be used by the genetic algorithm.
     #  comp_name: Name of the component [string].
