@@ -1,8 +1,10 @@
-from smooth.examples.example_dict_model import mymodel
+from smooth.examples.example_model import mymodel
 from smooth import run_optimization
 import smooth
 from multiprocessing import freeze_support
 
+import logging
+logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
 def main():
     # Define the optimization parameter. This dict needs the following information:
