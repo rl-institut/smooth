@@ -34,11 +34,11 @@ class StratifiedThermalStorage (Component):
         self.density = 971.78
         # Heat capacity of the storage medium [J/(kg*K)]
         self.heat_capacity = 4180
-        # The hot temperature level [deg C] MAYBE CHANGE TO KELVIN?
+        # The hot temperature level [K]
         self.temp_h = 368.15
         # The cold temperature level [K]
         self.temp_c = 333.15
-        # The environment temperature timeseries [deg C] MAYBE CHANGE TO KELVIN?
+        # The environment temperature timeseries [K]
         self.temp_env = 283.15
         # The chosen height to diameter ratio [-]
         self.height_diameter_ratio = 3
