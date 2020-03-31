@@ -1,16 +1,7 @@
 import oemof.solph as solph
-from .component import Component
+from smooth.components.component import Component
+from numpy import pi
 from oemof.outputlib import views
-import os
-import smooth.framework.functions.functions as func
-from math import pi
-
-from oemof.thermal.stratified_thermal_storage import (
-    calculate_storage_u_value,
-    calculate_storage_dimensions,
-    calculate_capacities,
-    calculate_losses,
-)
 
 
 class StratifiedThermalStorage (Component):
@@ -25,30 +16,32 @@ class StratifiedThermalStorage (Component):
         # Define the heat bus the storage is connected to.
         self.bus_in_and_out = None
 
-        # Storage volume [m3]
-        self.storage_volume = None
-        # Initial USABLE storage level [Wh??].
-        self.storage_level_init = 200
-        # Life time [a].
+        # Storage capacity [Wh]
+        self.storage_capacity = 6000e3
+        # Factor describing non-usable storage amount [-]
+        self.nonusable_storage_volume = 0.05
+        # Calculate the minimum storage level relative to storage capacity [Wh]
+        self.storage_level_min = 0.5 * self.nonusable_storage_volume * self.storage_capacity
+        # Calculate the maximum storage level relative to storage capacity [Wh]
+        self.storage_level_max = 1 - 0.5 * self.nonusable_storage_volume * self.storage_capacity
+        # Initial USABLE storage level [Wh]
+        self.storage_level_init = 200e3
+        # Lifetime [a]
         self.life_time = 20
 
-        """PARAMETERS TAKEN FROM OEMOF THERMAL EXAMPLE CSV FILE"""
+        """ PARAMETERS TAKEN FROM OEMOF THERMAL EXAMPLE FILE """
         # Density of the storage medium [kg/m3]
         self.density = 971.78
         # Heat capacity of the storage medium [J/(kg*K)]
         self.heat_capacity = 4180
         # The hot temperature level [deg C] MAYBE CHANGE TO KELVIN?
-        self.temp_h = 95
-        # The cold temperature level [deg C] MAYBE CHANGE TO KELVIN?
-        self.temp_c = 60
+        self.temp_h = 368.15
+        # The cold temperature level [K]
+        self.temp_c = 333.15
         # The environment temperature timeseries [deg C] MAYBE CHANGE TO KELVIN?
-        self.temp_env = 10
-        # The charging efficiency [-]
-        self.inflow_conversion_factor = 0.9
-        # The discharging efficiency [-]
-        self.outflow_conversion_factor = 0.9
-        # Factor describing the proportion of the storage that is non-usable [-]
-        self.nonusable_storage_volume = 0.05
+        self.temp_env = 283.15
+        # The chosen height to diameter ratio [-]
+        self.height_diameter_ratio = 3
         # Thickness of isolation layer [m]
         self.s_iso = 0.05
         # Heat conductivity of isolation material [W/(m*K)]
@@ -58,36 +51,18 @@ class StratifiedThermalStorage (Component):
         # Heat transfer coefficient outside [W/(m*K)]
         self.alpha_outside = 1
 
-        # Ratio of diameter to height [-]
-        self.diameter_height_ratio = 3
-        # Calculate the diameter of the storage from the storage volume and the defined diameter/height ratio [m]
-        self.diameter = ((4*self.storage_volume)/(pi*self.diameter_height_ratio))**(1/3)
-        # Height of storage [m]
-        self.height = self.diameter * self.diameter_height_ratio
-
         """ PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) """
-        # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].
+        # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/Wh.
         self.vac_in = 0
         self.vac_out = 0
-        # If a storage level is set as wanted, the vac_low costs apply if the storage is below that level [kg].
+        # If a storage level is set as wanted, the vac_low costs apply if the storage is below that level [Wh].
         self.storage_level_wanted = None
-        # Var. art. costs that apply if the storage level is below the wanted storage level [EUR/kg].
+        # Var. art. costs that apply if the storage level is below the wanted storage level [EUR/Wh].
         self.vac_low_in = 0
         self.vac_low_out = 0
 
         """ UPDATE PARAMETER DEFAULT VALUES """
         self.set_parameters(params)
-
-        # the thermal transmittance is calculated [W/(m2*K)]
-        self.u_value = calculate_storage_u_value(self.s_iso, self.lamb_iso, self.alpha_inside, self.alpha_outside)
-
-        # the capacities are calculated [MWh]
-        [self.storage_capacity, self.storage_level_max, self.storage_level_min]\
-            = calculate_capacities(self.storage_volume, self.temp_h, self.temp_c, self.nonusable_storage_volume,
-                                 self.heat_capacity, self.density)
-
-        [self.loss_rate, self.fixed_losses_relative, self.fixed_losses_absolute] \
-            = calculate_losses(self.u_value, self.diameter, self.temp_h, self.temp_c, self.temp_env)
 
         """ STATES """
         # Storage level [kg of h2]
@@ -96,6 +71,20 @@ class StratifiedThermalStorage (Component):
         """ VARIABLE ARTIFICIAL COSTS """
         # Store the current artificial costs for input and output [EUR/kg].
         self.current_vac = [0, 0]
+
+        """FURTHER STORAGE VALUES DEPENDING ON SPECIFIED PARAMETERS """
+        # Calculate the storage volume [m³].
+        self.volume \
+            = self.get_volume(self.storage_capacity, self.heat_capacity, self.density, self.temp_h, self.temp_c)
+        # Calculate the diameter of the storage [m]
+        self.diameter = self.get_diameter(self.volume, self.height_diameter_ratio)
+        # the thermal transmittance is calculated [W/(m2*K)]
+        self.u_value \
+            = self.calculate_storage_u_value(self.alpha_inside, self.s_iso, self.lamb_iso, self.alpha_outside)
+
+        [self.loss_rate, self.fixed_losses_relative, self.fixed_losses_absolute] \
+            = self.calculate_losses(self.u_value, self.diameter, self.density, self.heat_capacity,
+                                    self.temp_c, self.temp_env, self.temp_h)
 
     def create_oemof_model(self, busses, _):
         thermal_storage = solph.components.GenericStorage(
@@ -112,3 +101,51 @@ class StratifiedThermalStorage (Component):
             outflow_conversion_factor=1,
             balanced=False)
         return thermal_storage
+
+    def update_states(self, results, sim_params):
+        data_storage = views.node(results, self.name)
+        df_storage = data_storage['sequences']
+
+        # Loop Through the data frame values and update states accordingly.
+        for i_result in df_storage:
+            if i_result[1] == 'capacity':
+                if 'storage_level' not in self.states:
+                    # Initialize an array that tracks the state stored mass.
+                    self.states['storage_level'] = [None] * sim_params.n_intervals
+                # Check if this result is the storage capacity.
+                self.storage_level = df_storage[i_result][0]
+                self.states['storage_level'][sim_params.i_interval] = self.storage_level
+
+    def get_volume(self, s_c, h_c, de, t_h, t_c):
+        volume = s_c * 3600 / (h_c * de * (t_h - t_c))
+        return volume
+
+    def get_diameter(self, V, h_d_ratio):
+        diameter = ((4 * V)/(pi * h_d_ratio))**(1/3)
+        return diameter
+
+    def calculate_storage_u_value(self, a_in, s_iso, l_iso, a_out):
+        # Function from oemof-thermal: CHECK ABOUT S_ISO UNITS
+        denominator = 1 / a_in + s_iso / l_iso + 1 / a_out
+        u_value = 1 / denominator
+        return u_value
+
+    def calculate_losses(self, u_val, d, de, h_c, t_c, t_env, t_h, time_increment=1):
+        loss_rate = (
+                4 * u_val * 1 / (d * de * h_c) * time_increment
+                * 3600  # Ws to Wh
+        )
+
+        fixed_losses_relative = (
+                4 * u_val * (t_c - t_env)
+                * 1 / ((d * de * h_c) * (t_h - t_c))
+                * time_increment
+                * 3600  # Ws to Wh
+        )
+
+        fixed_losses_absolute = (
+                0.25 * u_val * pi * d ** 2 * (t_h + t_c - 2 * t_env) * time_increment
+        )
+        return loss_rate, fixed_losses_relative, fixed_losses_absolute
+
+
