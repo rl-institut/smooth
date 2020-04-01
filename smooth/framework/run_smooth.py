@@ -3,6 +3,7 @@ from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
 from smooth.framework.functions.debug import get_df_debug, show_debug
+from smooth.framework import SolverNonOptimalError
 
 
 def run_smooth(model):
@@ -111,7 +112,7 @@ def run_smooth(model):
             new_df_results = processing.create_dataframe(model_to_solve)
             df_debug = get_df_debug(df_results, results_dict, new_df_results)
             show_debug(df_debug, components)
-            raise RuntimeError('status: ' + status + " / termination condition: " + termination_condition)
+            raise SolverNonOptimalError('solver status: ' + status + " / termination condition: " + termination_condition)
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.
