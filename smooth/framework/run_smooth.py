@@ -3,7 +3,7 @@ from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
 from smooth.framework.functions.debug import get_df_debug, show_debug
-from smooth.framework import SolverNonOptimalError
+from smooth.framework.exceptions import SolverNonOptimalError
 
 
 def run_smooth(model):

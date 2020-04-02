@@ -25,7 +25,7 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'power_max': 400000,
+    'input_max': 400000,
     'variable_costs': 0.00016,
     'dependency_flow_costs': 'flow: from_grid-->bel',
     'variable_emissions': 0.341,
