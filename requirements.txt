@@ -4,3 +4,4 @@ pandas
 numpy
 deap
 oemof
+scipy
