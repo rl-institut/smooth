@@ -62,8 +62,11 @@ def plot_smooth_results(smooth_result):
                                                 component_flows[flow][:nb_intervals-nb_trailing_none]]
 
             for this_bus in this_comp_flows:
+                # Replaces shorthand component names in the results with the official names for those listed.
                 if component_result.name == 'this_ely':
                     component_result.name = 'Elektrolyseur'
+                elif component_result.name == 'this_pem_ely':
+                    component_result.name = 'PEM-Elektrolyseur'
                 elif component_result.name == 'pv_output':
                     component_result.name = 'PV-Anlage'
                 elif component_result.name == 'wind_output':
@@ -98,7 +101,7 @@ def plot_smooth_results(smooth_result):
                     component_result.name = 'Überschüssige Wind-Elektrizität'
 
                 if this_bus not in busses_to_plot:
-                    # If bus name didnt't appear so far, add it to the list of busses.
+                    # If bus name didn't appear so far, add it to the list of busses.
                     busses_to_plot[this_bus] = dict()
 
                 # Add the flow of this component to this bus.
@@ -108,8 +111,7 @@ def plot_smooth_results(smooth_result):
     if(nb_trailing_none > 0):
         print('The flow sequences have {} trailing None values. Did the optimization terminate?'.format(nb_trailing_none))
 
-    # TODO forgotten debuging print?
-    busses_to_plot['bel']['Elektrolyseur']
+    
 
     # Plot each bus in a new window.
     for this_bus in busses_to_plot:
