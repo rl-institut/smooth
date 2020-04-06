@@ -46,10 +46,6 @@ class Electrolyzer (Component):
         self.cur_dens_max_temp = 0.35
         # size of cell surface [cm²].
         self.area_cell = 1500
-        # lumped thermal capacitance C_t [J/K]
-        self.lumped_thermal_capacitance = 625*1e3
-        # source: Ulleberg et al., 'Modeling of advanced alkaline electrolyzer: a system simulation approach', Int. J.
-        # Hydrogen Energy, 2003
         # resistance to heat transfer R_t [K/W]
         self.resistance_to_heat_transfer = 0.164
         # source: Dieguez et al., 'Thermal Performance of a commercial alkaline water electrolyzer: Experimental study
@@ -181,7 +177,7 @@ class Electrolyzer (Component):
             bp_ely_temp.append(this_temp)
             # Calculate the waste heat [Wh] with the energy, hydrogen produced and resulting temperature of this
             # breakpoint at the current temperature.
-            this_waste_heat = self.get_waste_heat(this_energy / 1000, this_mass, this_temp) * 1000
+            this_waste_heat = self.get_waste_heat(this_energy / 1000, this_mass, this_temp) * 1000 # [Wh]
             bp_ely_thermal.append(this_waste_heat)
 
         self.supporting_points['temperature'] = bp_ely_temp
@@ -402,20 +398,24 @@ class Electrolyzer (Component):
         # return value:
         # waste_heat [kWh]
 
-        # do not use cooling water until the aimed temperature is reached
-        # if new_ely_temp<(0.98*self.temp_max): # TO DO: statt temp_max würde temp_aim benötigt werden!
-
-        # calcualting the internal heat generation out of the relation Q = E_el*(1-eta_stack) with eta_stack = m_H2
-        # * HHV / E_el, eta_I (ac/dc conversion) is neglected for a first approximation
-        internal_heat_generation = energy_used - h2_produced * self.upp_heat_val / 3.6 # [kWh]
-        # heat losses modeled trough an overall convective-radiative heat transfer coeffiecient
-        heat_losses = (new_ely_temp - self.temp_min) / (self.resistance_to_heat_transfer * 1000) \
-                      * (self.interval_time / 60) # [kWh]
-        [sensible_heat, latent_heat] = self.sensible_and_latent_heats(h2_produced, new_ely_temp) # [kWh]
-        # amount of heat resulting in change of temperature
-        heat_change = self.lumped_thermal_capacitance * (new_ely_temp - self.temperature) / 3.6e6 # [kWh], 1J = 1/3.6e6 kWh
-        # heat that is removed through cooling
-        waste_heat = internal_heat_generation - heat_losses + sensible_heat - heat_change # [kWh]
+        # waste heat is heat that is removed through cooling, cooling only takes place if the elctrolyzer is near to its
+        # maximum temperature, factor 0.999 is chosen since newtons law of cooling describes an exponential convergency
+        # towards the aimed temperature, therefore temperatures near the max. temperature are reached quite fast whereas
+        # the max. temperature itself is reached after a longer period of time
+        if new_ely_temp >= (0.999 * self.temp_max):
+            # calcualting the internal heat generation out of the relation Q = E_el*(1-eta_stack) with eta_stack = m_H2
+            # * HHV / E_el, eta_I (ac/dc conversion) is neglected for a first approximation
+            internal_heat_generation = energy_used - h2_produced * self.upp_heat_val / 3.6  # [kWh]
+            # heat losses modeled trough an overall convective-radiative heat transfer coeffiecient
+            heat_losses = (new_ely_temp - self.temp_min) / (self.resistance_to_heat_transfer * 1000) \
+                          * (self.interval_time / 60)  # [kWh]
+            # sensible heat is calculated using water decomposition stoichiometry, mass balance and constant specific
+            # heat, latent heat is neglected for a first approximation
+            [sensible_heat, latent_heat] = self.sensible_and_latent_heats(h2_produced, new_ely_temp)  # [kWh]
+            # the waste heat follows from the energy balance
+            waste_heat = internal_heat_generation - heat_losses + sensible_heat
+        else:
+            waste_heat = 0
         return waste_heat
 
     def sensible_and_latent_heats(self, mass_H2, new_ely_temp):
@@ -429,7 +429,7 @@ class Electrolyzer (Component):
         sensible_heat = (mass_H2O * self.c_p_H2O * (self.temp_min - new_ely_temp) \
                         - mass_H2 * self.c_p_H2 * (new_ely_temp - self.temp_min) \
                         - mass_O2 * self.c_p_O2 * (new_ely_temp - self.temp_min)) / 3.6e6 # [kWh], 1J = 1/3.6e6 kWh
-        # latent heat is neglected since mass_H2O_vapor is neglected --> better approx. with LHV??
+        # latent heat is neglected since mass_H2O_vapor is neglected
         return [sensible_heat, 0]
 
     def update_states(self, results, sim_params):
