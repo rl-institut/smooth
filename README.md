@@ -32,7 +32,7 @@ locally. This can be done by the following steps:
 
 1. Clone [oemof](https://github.com/oemof/oemof) to your local machine
     ```
-    git clone https://github.com/oemof/oemof.git
+    git clone https://github.com/oemof/oemof-solph.git
     ```
 2. In the oemof repo, fetch the pull request version [#592](https://github.com/oemof/oemof/pull/592),
 which contains the component, to a new branch BRANCHNAME of your choice.
