@@ -10,8 +10,8 @@ install:
   - sudo apt-get install coinor-cbc
 
   # Install specific branch of oemof
-  - git clone https://github.com/oemof/oemof.git
-  - cd oemof
+  - git clone https://github.com/oemof/oemof-solph.git
+  - cd oemof-solph
   - git fetch origin pull/592/head:smoothbranch
   - git checkout smoothbranch
   - pip install .
