@@ -30,11 +30,11 @@ PiecewiseLinearTransformer is needed. This component is currently in the review 
 the pull request containing this component needs to be downloaded from github directly and installed
 locally. This can be done by the following steps:
 
-1. Clone [oemof](https://github.com/oemof/oemof) to your local machine
+1. Clone [oemof](https://github.com/oemof/oemof-solph) to your local machine
     ```
-    git clone https://github.com/oemof/oemof.git
+    git clone https://github.com/oemof/oemof-solph.git
     ```
-2. In the oemof repo, fetch the pull request version [#592](https://github.com/oemof/oemof/pull/592),
+2. In the oemof repo, fetch the pull request version [#592](https://github.com/oemof/oemof-solph/pull/592),
 which contains the component, to a new branch BRANCHNAME of your choice.
     ```
     git fetch origin pull/592/head:BRANCHNAME
