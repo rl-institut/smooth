@@ -5,6 +5,6 @@ from smooth import save_results
 from smooth import plot_smooth_results
 
 # Run an example.
-smooth_result = run_smooth(mymodel)
-print_smooth_results(smooth_result)
+smooth_result, status = run_smooth(mymodel)
 plot_smooth_results(smooth_result)
+

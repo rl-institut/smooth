@@ -2,6 +2,8 @@ import importlib
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
+from smooth.framework.functions.debug import get_df_debug, show_debug
+from smooth.framework.exceptions import SolverNonOptimalError
 
 
 def run_smooth(model):
@@ -46,6 +48,10 @@ def run_smooth(model):
         this_comp_obj.check_validity()
         # Add this component to the list containing all components.
         components.append(this_comp_obj)
+
+    # There are no results yet.
+    df_results = None
+    results_dict = None
 
     """ SIMULATION """
     for i_interval in range(sim_params.n_intervals):
@@ -92,15 +98,23 @@ def run_smooth(model):
             # Save the set of linear equations for the first interval.
             model_to_solve.write('./oemof_model.lp', io_options={'symbolic_solver_labels': True})
 
-        model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
+        oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
         """ CHECK IF SOLVING WAS SUCCESSFUL """
-        # Get the meta results.
-        # meta_results = processing.meta_results(model_to_solve)
+        # If the status and temination condition is not ok/optimal, get and print the current flows and status
+        status = oemof_results["Solver"][0]["Status"].key
+        termination_condition = oemof_results["Solver"][0]["Termination condition"].key
+        if status != "ok" and termination_condition != "optimal":
+            new_df_results = processing.create_dataframe(model_to_solve)
+            df_debug = get_df_debug(df_results, results_dict, new_df_results)
+            show_debug(df_debug, components)
+            raise SolverNonOptimalError('solver status: ' + status + " / termination condition: " + termination_condition)
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.
         results = processing.results(model_to_solve)
+        results_dict = processing.parameter_as_dict(model_to_solve)
+        df_results = processing.create_dataframe(model_to_solve)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:
@@ -117,4 +131,4 @@ def run_smooth(model):
     for this_comp in components:
         this_comp.generate_results()
 
-    return components
+    return components, status
