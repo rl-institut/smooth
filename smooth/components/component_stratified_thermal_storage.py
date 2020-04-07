@@ -47,6 +47,8 @@ class StratifiedThermalStorage (Component):
         self.temp_h = 368.15
         # The cold temperature level of the stratified storage tank [K]
         self.temp_c = 333.15
+        # The environment temperature value [K}
+        self.temp_env = 283.15
         # The chosen height to diameter ratio [-]
         self.height_diameter_ratio = 3
         # Thickness of isolation layer [m]
@@ -76,10 +78,7 @@ class StratifiedThermalStorage (Component):
             # The environment temperature timeseries [K}
             self.temp_env = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
             self.temp_env = self.temp_env[self.column_title].values.tolist()
-        else:
-            # The environment temperature value [K}
-            self.temp_env = 283.15
-
+ 
         """ STATES """
         # Storage level [kg of h2]
         self.storage_level = min(self.storage_level_init + self.storage_level_min, self.storage_capacity)
