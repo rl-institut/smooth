@@ -28,12 +28,20 @@ class AirSourceHeatPump(Component):
         self.path = os.path.dirname(__file__)
 
         """ PARAMETERS BASED ON OEMOF THERMAL EXAMPLE """
-        # Temperature below which icing occurs [deg C]
-        self.temp_threshold_icing = 2
-        # The output temperature from the heat pump [deg C]
-        self.temp_high = [40]
-        # The ambient temperature [deg C]
-        self.temp_low = 10
+        # Temperature below which icing occurs [K]
+        self.temp_threshold_icing = 275.15
+        # Convert to degrees C for oemof_thermal function
+        self.temp_threshold_icing_C = self.temp_threshold_icing - 273.15
+        # The output temperature from the heat pump [K]
+        self.temp_high = 313.15
+        # Convert to degrees C for oemof_thermal function
+        self.temp_high_C = self.temp_high - 273.15
+        # Convert to a list for oemof_thermal function
+        self.temp_high_C_list = [self.temp_high_C]
+        # The ambient temperature [K]
+        self.temp_low = 283.15
+        # Convert to degrees C for oemof_thermal function
+        self.temp_low_C = self.temp_low - 273.15
         # Quality grade of heat pump [-]
         self.quality_grade = 0.4
         # Can be set to heat pump or chiller
@@ -50,13 +58,14 @@ class AirSourceHeatPump(Component):
             # A csv file containing data for the ambient temperature is required [deg C]
             self.temp_low = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
             self.temp_low_series = self.temp_low[self.column_title]
+            self.temp_low_series_C = self.temp_low_series - 273.15
         else:
-            self.temp_low_list = [self.temp_low] * self.sim_params.n_intervals
-            self.temp_low_series = pd.Series(self.temp_low_list)
+            self.temp_low_list = [self.temp_low_C] * self.sim_params.n_intervals
+            self.temp_low_series_C = pd.Series(self.temp_low_list)
 
         # A function taken from oemof thermal that calculates the coefficient of performance (pre-calculated)
-        self.cops = cmpr_hp_chiller.calc_cops(self.temp_high, self.temp_low_series, self.quality_grade,
-                                              self.temp_threshold_icing,
+        self.cops = cmpr_hp_chiller.calc_cops(self.temp_high_C_list, self.temp_low_series_C, self.quality_grade,
+                                              self.temp_threshold_icing_C,
                                               self.consider_icing, self.factor_icing, self.mode)
 
     def create_oemof_model(self, busses, _):
@@ -69,4 +78,5 @@ class AirSourceHeatPump(Component):
             conversion_factors={busses[self.bus_th]: self.cops[self.sim_params.i_interval]}
             )
         return air_source_heat_pump
+
 
