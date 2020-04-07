@@ -72,6 +72,12 @@ Electrolyzer (alkaline)
 Descriptions on the electrolyzer component:
 
 
+.. autoclass:: smooth.components.component_electrolyzer.Electrolyzer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 
 
 .. _smooth_components_examples_label:
