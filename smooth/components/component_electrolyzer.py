@@ -6,9 +6,16 @@ import numpy as np
 import warnings
 
 class Electrolyzer (Component):
-    """ Electrolyzer agents are created through this class """
-    def __init__(self, params):
+    """Electrolyzer agents are created through this class
 
+    :param name: unique name of the component
+    :type name: str
+    :param bus_el: name of the electric bus
+    :type bus_el: str
+    """
+    def __init__(self, params):
+        '''Constructor method
+        '''
         # Call the init function of the mother class.
         Component.__init__(self)
 
