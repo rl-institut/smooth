@@ -2,6 +2,8 @@ import oemof.solph as solph
 from smooth.components.component import Component
 from numpy import pi
 from oemof.outputlib import views
+import smooth.framework.functions.functions as func
+import os
 
 
 class StratifiedThermalStorage (Component):
@@ -29,17 +31,22 @@ class StratifiedThermalStorage (Component):
         # Lifetime [a]
         self.life_time = 20
 
+        # To be used for extracting an environmental temp timeseries from csv file
+        self.nominal_value = 1
+        self.csv_filename = None
+        self.csv_separator = ','
+        self.column_title = 0
+        self.path = os.path.dirname(__file__)
+
         """ PARAMETERS TAKEN FROM OEMOF THERMAL EXAMPLE FILE """
         # Density of the storage medium [kg/m3]
         self.density = 971.78
         # Heat capacity of the storage medium [J/(kg*K)]
         self.heat_capacity = 4180
-        # The hot temperature level [K]
+        # The hot temperature level of the stratified storage tank [K]
         self.temp_h = 368.15
-        # The cold temperature level [K]
+        # The cold temperature level of the stratified storage tank [K]
         self.temp_c = 333.15
-        # The environment temperature timeseries [K]
-        self.temp_env = 283.15
         # The chosen height to diameter ratio [-]
         self.height_diameter_ratio = 3
         # Thickness of isolation layer [m]
@@ -64,6 +71,15 @@ class StratifiedThermalStorage (Component):
         """ UPDATE PARAMETER DEFAULT VALUES """
         self.set_parameters(params)
 
+        # Check to see if the environmental temperature has been given as a timeseries or a singular value
+        if self.csv_filename is not None:
+            # The environment temperature timeseries [K}
+            self.temp_env = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+            self.temp_env = self.temp_env[self.column_title].values.tolist()
+        else:
+            # The environment temperature value [K}
+            self.temp_env = 283.15
+
         """ STATES """
         # Storage level [kg of h2]
         self.storage_level = min(self.storage_level_init + self.storage_level_min, self.storage_capacity)
@@ -78,13 +94,14 @@ class StratifiedThermalStorage (Component):
             = self.get_volume(self.storage_capacity, self.heat_capacity, self.density, self.temp_h, self.temp_c)
         # Calculate the diameter of the storage [m]
         self.diameter = self.get_diameter(self.volume, self.height_diameter_ratio)
-        # the thermal transmittance is calculated [W/(m2*K)]
+        # The thermal transmittance is calculated [W/(m2*K)]
         self.u_value \
             = self.calculate_storage_u_value(self.alpha_inside, self.s_iso, self.lamb_iso, self.alpha_outside)
-
+        # The losses in the storage are precalculated based on constant parameters and the environmental temperature
+        # timeseries
         [self.loss_rate, self.fixed_losses_relative, self.fixed_losses_absolute] \
-            = self.calculate_losses(self.u_value, self.diameter, self.density, self.heat_capacity,
-                                    self.temp_c, self.temp_env, self.temp_h)
+            = self.calculate_losses(self.sim_params, self.u_value, self.diameter, self.density, self.heat_capacity,
+                                    self.temp_c, self.temp_h, self.temp_env)
 
     def create_oemof_model(self, busses, _):
         thermal_storage = solph.components.GenericStorage(
@@ -95,8 +112,8 @@ class StratifiedThermalStorage (Component):
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
             loss_rate=self.loss_rate,
-            fixed_losses_relative=self.fixed_losses_relative,
-            fixed_losses_absolute=self.fixed_losses_absolute,
+            fixed_losses_relative=self.fixed_losses_relative[self.sim_params.i_interval],
+            fixed_losses_absolute=self.fixed_losses_absolute[self.sim_params.i_interval],
             inflow_conversion_factor=1,
             outflow_conversion_factor=1,
             balanced=False)
@@ -130,22 +147,25 @@ class StratifiedThermalStorage (Component):
         u_value = 1 / denominator
         return u_value
 
-    def calculate_losses(self, u_val, d, de, h_c, t_c, t_env, t_h, time_increment=1):
+    def calculate_losses(self, sim_params, u_val, d, de, h_c, t_c, t_h, t_env, time_increment=1):
         loss_rate = (
                 4 * u_val * 1 / (d * de * h_c) * time_increment
                 * 3600  # Ws to Wh
         )
 
-        fixed_losses_relative = (
-                4 * u_val * (t_c - t_env)
-                * 1 / ((d * de * h_c) * (t_h - t_c))
-                * time_increment
-                * 3600  # Ws to Wh
-        )
+        # check to see if t_env is a single value or a timeseries
+        if isinstance(t_env, int) is True or isinstance(t_env, float) is True:
+            # if t_env is a single value, convert into a list
+            t_env = [t_env] * sim_params.n_intervals
 
-        fixed_losses_absolute = (
-                0.25 * u_val * pi * d ** 2 * (t_h + t_c - 2 * t_env) * time_increment
-        )
+        fixed_losses_relative = [4 * u_val * (t_c - this_t_env)
+                    * 1 / ((d * de * h_c) * (t_h - t_c))
+                    * time_increment
+                    * 3600 for this_t_env in t_env] # multiply by 3600 to convert Ws to Wh
+
+        fixed_losses_absolute = [0.25 * u_val * pi * d ** 2 * (t_h + t_c - 2 * this_t_env) * time_increment
+                                 for this_t_env in t_env]
+
         return loss_rate, fixed_losses_relative, fixed_losses_absolute
 
 
