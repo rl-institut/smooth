@@ -14,6 +14,14 @@ def plot_smooth_results(smooth_result):
                 # Get rid of "'flow: ".
                 this_flow_name = flow[6:]
                 this_flow_name_split = this_flow_name.split('-->')
+                # Identify the number of trailing None values in case the optimization stopped before termination
+                nb_intervals = len(component_flows[flow])
+                nb_trailing_none = nb_intervals
+                for flow_val in component_flows[flow]:
+                    if flow_val is not None:
+                        nb_trailing_none -= 1
+                    else:
+                        break
                 # check if it's a chp component which consists of two oemof models
                 # if so get rid of the ending '_electric' or '_thermal'
                 if this_flow_name_split[0][-9:] == '_electric':
@@ -26,7 +34,7 @@ def plot_smooth_results(smooth_result):
                     # Check if this component already has a flow with this bus.
                     if bus in this_comp_flows:
                         updated_bus_list = []
-                        for i_val in range(len(this_comp_flows[bus])):
+                        for i_val in range(len(this_comp_flows[bus]) - nb_trailing_none):
                             # Get the summed up value.
                             this_val = this_comp_flows[bus][i_val] + component_flows[flow][i_val]
                             updated_bus_list.append(this_val)
@@ -34,7 +42,7 @@ def plot_smooth_results(smooth_result):
                         this_comp_flows[bus] = updated_bus_list
                     else:
                         # Case: Component has no flow with this bus yet.
-                        this_comp_flows[bus] = component_flows[flow]
+                        this_comp_flows[bus] = component_flows[flow][:nb_intervals-nb_trailing_none]
 
                 else:
                     # Case: Component takes from bus.
@@ -42,7 +50,7 @@ def plot_smooth_results(smooth_result):
                     # Check if this component already has a flow with this bus.
                     if bus in this_comp_flows:
                         updated_bus_list = []
-                        for i_val in range(len(this_comp_flows[bus])):
+                        for i_val in range(len(this_comp_flows[bus]) - nb_trailing_none):
                             # Get the summed up value.
                             this_val = this_comp_flows[bus][i_val] - component_flows[flow][i_val]
                             updated_bus_list.append(this_val)
@@ -50,7 +58,8 @@ def plot_smooth_results(smooth_result):
                         this_comp_flows[bus] = updated_bus_list
                     else:
                         # Case: Component has no flow with this bus yet.
-                        this_comp_flows[bus] = [-this_val for this_val in component_flows[flow]]
+                        this_comp_flows[bus] = [-this_val for this_val in
+                                                component_flows[flow][:nb_intervals-nb_trailing_none]]
 
             for this_bus in this_comp_flows:
                 if component_result.name == 'this_ely':
@@ -85,7 +94,13 @@ def plot_smooth_results(smooth_result):
                 # Add the flow of this component to this bus.
                 busses_to_plot[this_bus][component_result.name] = this_comp_flows[this_bus]
 
+
+    if(nb_trailing_none > 0):
+        print('The flow sequences have {} trailing None values. Did the optimization terminate?'.format(nb_trailing_none))
+
+    # TODO forgotten debuging print?
     busses_to_plot['bel']['Elektrolyseur']
+
     # Plot each bus in a new window.
     for this_bus in busses_to_plot:
 
