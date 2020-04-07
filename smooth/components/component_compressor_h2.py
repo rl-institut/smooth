@@ -4,6 +4,7 @@ from .component_functions.all_component_functions import calculate_compressibili
 from math import log
 
 
+
 class CompressorH2(Component):
     def __init__(self, params):
         # Call the init function of th mother class.
@@ -24,6 +25,9 @@ class CompressorH2(Component):
         self.life_time = 20
 
         # It is assumed that hydrogen always enters the compressor at room temperature [K]
+        # ISSUE: An assumption from MATLAB is that hydrogen always enters the compressor at this temp, should it be
+        # calculated instead of assumed??
+
         self.temp_in = 293.15
 
         # Overall efficiency of the compressor (value taken from MATLAB) [-]
@@ -70,6 +74,7 @@ class CompressorH2(Component):
         else:
             # Get the compression ratio [-]
             p_ratio = p_out / p_in
+
             # Initial assumption for the polytropic exponent, value taken from MATLAB [-]
             n_initial = 1.6
             # Calculates the output temperature [K]
@@ -97,6 +102,8 @@ class CompressorH2(Component):
             self.states['specific_compression_work'] = [None] * sim_params.n_intervals
         # self.states['inlet pressure'] = [None] * sim_params.n_intervals
         #  self.states['outlet pressure'] = [None] * sim_params.n_intervals
+        return
+
 
         self.states['specific_compression_work'][sim_params.i_interval] = self.spec_compression_energy
 
