@@ -1,7 +1,5 @@
 import oemof.solph as solph
 from .component import Component
-from math import log
-from .component_functions.component_functions import calculate_compressibility_factor
 
 
 class ElectricHeater(Component):
@@ -23,7 +21,7 @@ class ElectricHeater(Component):
         self.life_time = 20
 
         # Overall efficiency of the heater [-]
-        # Value taken from Meyers, S. 'Competitive Assessment between Solar Thermal and Photovoltaics for Industrial Process Heat Generation'
+        # Value taken from Meyers, S.et.al. 'Competitive Assessment between Solar Thermal and Photovoltaics for Industrial Process Heat Generation'
         self.efficiency = 0.98
 
         """ UPDATE PARAMETER DEFAULT VALUES """
@@ -34,8 +32,7 @@ class ElectricHeater(Component):
             label=self.name,
             inputs={busses[self.bus_el]: solph.Flow()},
             outputs={busses[self.bus_th]: solph.Flow(
-                nominal_value=self.power_max
-            )},
+                nominal_value=self.power_max)},
             conversion_factors={busses[self.bus_th]: self.efficiency})
 
         return electric_heater
