@@ -64,7 +64,7 @@ def plot_smooth_results(smooth_result):
                 elif component_result.name == 'h2_demand':
                     component_result.name = 'Wasserstoffbedarf'
                 elif component_result.name == 'h2_compressor':
-                    component_result.name = 'Wasserstoffkompressor (350 bar)'
+                    component_result.name = 'Wasserstoffkompressor (higher pressure)'
                 elif component_result.name == 'from_grid':
                     component_result.name = 'Strombezug'
                 elif component_result.name == 'to_grid':
@@ -78,7 +78,7 @@ def plot_smooth_results(smooth_result):
                 elif component_result.name == 'ch4_grid':
                     component_result.name = 'Biogas-Zufuhr'
                 elif component_result.name == 'h2_compressor_from_ely':
-                    component_result.name = 'Wasserstoffkompressor (250 bar)'
+                    component_result.name = 'Wasserstoffkompressor (lower pressure)'
                 elif component_result.name == 'dummy_2':
                     component_result.name = 'Gebrauchte PV-Elektrizität'
                 elif component_result.name == 'dummy_1':

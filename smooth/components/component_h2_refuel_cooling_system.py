@@ -31,7 +31,7 @@ class H2RefuelCoolingSystem(Component):
         # the required standby energy [kJ/h]
         self.standby_energy = 8100
         # lifetime of the component [years]
-        self.life_time = None
+        self.life_time = 20
         # number of units [-]
         self.number_of_units = 1
 
