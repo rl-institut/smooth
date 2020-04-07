@@ -57,7 +57,7 @@ def run_smooth(model):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
         if sim_params.print_progress:
-            print('Simulating interval {}/{}'.format(i_interval, sim_params.n_intervals))
+            print('Simulating interval {}/{}'.format(i_interval+1, sim_params.n_intervals))
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
@@ -114,17 +114,12 @@ def run_smooth(model):
             # Update the states.
             this_comp.update_states(results, sim_params)
             # Update the costs and artificial costs.
-            this_comp.update_costs(results, sim_params)
+            this_comp.update_var_costs(results, sim_params)
+            # Update the costs and artificial costs.
+            this_comp.update_var_emissions(results, sim_params)
 
     # Calculate the annuity for each component.
     for this_comp in components:
         this_comp.generate_results()
 
     return components
-
-
-
-
-
-
-
