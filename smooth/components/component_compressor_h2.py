@@ -1,7 +1,8 @@
 import oemof.solph as solph
 from .component import Component
+from .component_functions.all_component_functions import calculate_compressibility_factor
 from math import log
-from .component_functions.component_functions import calculate_compressibility_factor
+
 
 
 class CompressorH2(Component):
@@ -23,8 +24,10 @@ class CompressorH2(Component):
         # Life time [a].
         self.life_time = 20
 
+        # It is assumed that hydrogen always enters the compressor at room temperature [K]
         # ISSUE: An assumption from MATLAB is that hydrogen always enters the compressor at this temp, should it be
         # calculated instead of assumed??
+
         self.temp_in = 293.15
 
         # Overall efficiency of the compressor (value taken from MATLAB) [-]
@@ -46,8 +49,10 @@ class CompressorH2(Component):
     def create_oemof_model(self, busses, _):
         compressor = solph.Transformer(
             label=self.name,
-            inputs={busses[self.bus_h2_in]: solph.Flow(nominal_value=self.m_flow_max*self.sim_params.interval_time/60),
-                    busses[self.bus_el]: solph.Flow()},
+            inputs={
+                busses[self.bus_h2_in]: solph.Flow(
+                    nominal_value=self.m_flow_max * self.sim_params.interval_time / 60),
+                busses[self.bus_el]: solph.Flow()},
             outputs={busses[self.bus_h2_out]: solph.Flow()},
             conversion_factors={busses[self.bus_h2_in]: 1, busses[self.bus_el]: self.spec_compression_energy,
                                 busses[self.bus_h2_out]: 1})
@@ -70,26 +75,35 @@ class CompressorH2(Component):
             # Get the compression ratio [-]
             p_ratio = p_out / p_in
 
-            # ISSUE: is this an assumption for the polytropic exponent??
+            # Initial assumption for the polytropic exponent, value taken from MATLAB [-]
             n_initial = 1.6
-
+            # Calculates the output temperature [K]
             temp_out = min(max(self.temp_in, self.temp_in * p_ratio ** ((n_initial - 1) / n_initial)),
                            self.temp_in + 60)
+            # Get temperature ratio [-]
             temp_ratio = temp_out / self.temp_in
-
+            # Calculates the polytropic exponent [-]
             n = 1 / (1 - (log(temp_ratio) / log(p_ratio)))
-
+            # Gets the compressibility factors of the hydrogen entering and leaving the compressor [-]
             [z_in, z_out] = calculate_compressibility_factor(p_in, p_out, self.temp_in, temp_out)
-
             real_gas = (z_in + z_out) / 2
-
             # Specific compression work [kJ/kg]
-            spec_compression_work = ((1 / self.efficiency) * self.R_H2 * self.temp_in * (n / (n - 1)) * (((
-                    p_ratio ** (n - 1) / n)) - 1) * real_gas) / 1000
+            spec_compression_work = ((1 / self.efficiency) * self.R_H2 * self.temp_in * (n / (n - 1)) *
+                                     ((((p_ratio) ** ((n - 1) / n))) - 1) * real_gas) / 1000
 
         # Convert specific compression work into electrical energy needed per kg H2 [Wh]
         self.spec_compression_energy = float(spec_compression_work / 3.6)
 
+    def update_states(self, results, sim_params):
+        # Update the states of the compressor
+
+        # If the states dict of this object wasn't created yet, it's done here.
+        if not 'specific_compression_work' in self.states:
+            self.states['specific_compression_work'] = [None] * sim_params.n_intervals
+        # self.states['inlet pressure'] = [None] * sim_params.n_intervals
+        #  self.states['outlet pressure'] = [None] * sim_params.n_intervals
         return
 
+
+        self.states['specific_compression_work'][sim_params.i_interval] = self.spec_compression_energy
 
