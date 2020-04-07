@@ -3,6 +3,7 @@ import oemof.solph as solph
 from .component import Component
 import oemof.thermal.compression_heatpumps_and_chillers as cmpr_hp_chiller
 import smooth.framework.functions.functions as func
+import pandas as pd
 
 class AirSourceHeatPump(Component):
     """ An air source heat pump component is created through this class """
@@ -31,6 +32,8 @@ class AirSourceHeatPump(Component):
         self.temp_threshold_icing = 2
         # The output temperature from the heat pump [deg C]
         self.temp_high = [40]
+        # The ambient temperature [deg C]
+        self.temp_low = 10
         # Quality grade of heat pump [-]
         self.quality_grade = 0.4
         # Can be set to heat pump or chiller
@@ -43,9 +46,13 @@ class AirSourceHeatPump(Component):
         """ UPDATE PARAMETER DEFAULT VALUES """
         self.set_parameters(params)
 
-        # A csv file containing data for the ambient temperature is required [deg C]
-        self.temp_low = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
-        self.temp_low_series = self.temp_low[self.column_title]
+        if self.csv_filename is not None:
+            # A csv file containing data for the ambient temperature is required [deg C]
+            self.temp_low = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+            self.temp_low_series = self.temp_low[self.column_title]
+        else:
+            self.temp_low_list = [self.temp_low] * self.sim_params.n_intervals
+            self.temp_low_series = pd.Series(self.temp_low_list)
 
         # A function taken from oemof thermal that calculates the coefficient of performance (pre-calculated)
         self.cops = cmpr_hp_chiller.calc_cops(self.temp_high, self.temp_low_series, self.quality_grade,
