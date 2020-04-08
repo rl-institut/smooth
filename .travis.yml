@@ -23,16 +23,16 @@ install:
   # Install smooth itself
   - python setup.py install
 
-  # Build docs
-  - pip install -r doc/requirements.txt
-  - make -C doc html
-
 script:
   # Run pytest in `tests` directory
   - pytest tests
 
   # Run smooth example
   - MPLBACKEND=SVG python smooth/examples/run_smooth_example.py
+
+  # Build docs
+  - pip install -r doc/requirements.txt
+  - make -C doc html
 
   #TODO re-enable flake8
   #- flake8
