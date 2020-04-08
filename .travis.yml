@@ -20,6 +20,10 @@ install:
   # Install other smooth dependencies
   - pip install -r requirements.txt
 
+  # Build docs
+  - pip install -r doc/requirements.txt
+  - make -C doc html
+
 script:
   # Run pytest in `tests` directory
   - pytest tests
