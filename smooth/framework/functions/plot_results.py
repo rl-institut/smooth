@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 def plot_smooth_results(smooth_result):
 
     busses_to_plot = dict()
+    nb_trailing_none = 0
 
     for component_result in smooth_result:
         if hasattr(component_result, 'flows'):
@@ -107,9 +108,6 @@ def plot_smooth_results(smooth_result):
 
     if(nb_trailing_none > 0):
         print('The flow sequences have {} trailing None values. Did the optimization terminate?'.format(nb_trailing_none))
-
-    # TODO forgotten debuging print?
-    busses_to_plot['bel']['Elektrolyseur']
 
     # Plot each bus in a new window.
     for this_bus in busses_to_plot:
