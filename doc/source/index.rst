@@ -10,6 +10,7 @@ Welcome to smooth's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   getting_started
    smooth_components
 
 
