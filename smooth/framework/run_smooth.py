@@ -104,7 +104,7 @@ def run_smooth(model):
         # If the status and temination condition is not ok/optimal, get and print the current flows and status
         status = oemof_results["Solver"][0]["Status"].key
         termination_condition = oemof_results["Solver"][0]["Termination condition"].key
-        if status != "ok" and termination_condition != "optimal" and model["sim_params"]["print_progress"]:
+        if status != "ok" and termination_condition != "optimal" and model["sim_params"]["show_debug_flag"]:
             new_df_results = processing.create_dataframe(model_to_solve)
             df_debug = get_df_debug(df_results, results_dict, new_df_results)
             show_debug(df_debug, components)
