@@ -160,7 +160,8 @@ sim_params = {
     'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03,
-    'print_progress': True
+    'print_progress': False,
+    'show_debug_flag': False,
 }
 
 mymodel = {
@@ -168,4 +169,3 @@ mymodel = {
     'components': components,
     'sim_params': sim_params,
 }
-

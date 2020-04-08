@@ -7,4 +7,3 @@ from smooth import plot_smooth_results
 # Run an example.
 smooth_result, status = run_smooth(mymodel)
 plot_smooth_results(smooth_result)
-

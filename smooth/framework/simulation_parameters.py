@@ -14,6 +14,8 @@ class SimulationParameters:
         self.interest_rate = 0.03
         # Decide if the running progress should be printed out.
         self.print_progress = False
+        # Decide if last result values should be shown in case solver was not successful
+        self.show_debug_flag = True
 
         """ UPDATE PARAMETER DEFAULT VALUES """
         self.set_parameters(params)
