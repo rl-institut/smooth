@@ -62,7 +62,7 @@ Smooth components
 
  * :ref:`smooth_components_electrolyzer_label`
 
-
+ * :ref:`smooth_components_compressor_label`
 
 .. _smooth_components_electrolyzer_label:
 
@@ -71,13 +71,23 @@ Electrolyzer (alkaline)
 
 Descriptions on the electrolyzer component:
 
-
 .. autoclass:: smooth.components.component_electrolyzer.Electrolyzer
     :members:
     :undoc-members:
     :show-inheritance:
 
 
+.. _smooth_components_compressor_label:
+
+Compressor (hydrogen)
+^^^^^^^^^^^^^^^^^^^^^
+
+Descriptions on the hydrogen compressor component:
+
+.. autoclass:: smooth.components.component_compressor_h2.CompressorH2
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 
 .. _smooth_components_examples_label:
@@ -85,4 +95,4 @@ Descriptions on the electrolyzer component:
 Smooth Examples
 ---------------
 
-See the `example repository <https://github.com/smooth/smooth/examples>`_ for examples.
+See the `example repository <https://github.com/rl-institut/smooth/tree/master/smooth/examples>`_ for examples.
