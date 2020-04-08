@@ -9,7 +9,6 @@ def plot_smooth_results(smooth_result, comp_label_dict=comp_dict, bus_dict=bus_d
 
     # Plot each bus in a new window.
     for this_bus in busses_to_plot:
-        print(this_bus)
         for this_component, this_flow in busses_to_plot[this_bus].items():
             plt.plot(this_flow, label=str(this_component))
         plt.legend()
