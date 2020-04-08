@@ -105,6 +105,8 @@ def plot_smooth_results(smooth_result):
                 # Add the flow of this component to this bus.
                 busses_to_plot[this_bus][component_result.name] = this_comp_flows[this_bus]
 
+#    busses_to_plot['bel']['Elektrolyseur']
+
 
     if(nb_trailing_none > 0):
         print('The flow sequences have {} trailing None values. Did the optimization terminate?'.format(nb_trailing_none))
