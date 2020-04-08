@@ -42,6 +42,16 @@ def get_sim_time_span(n_interval, step_size):
     return n_interval * step_size
 
 
+def cut_suffix(str, suffix):
+    # Cuts off the 'suffix' from 'str' if it ends with it
+    # str: String from which suffix will be cut off
+    # suffix: String, that is removed
+    if str.endswith(suffix):
+        str = str[:-len(suffix)]
+
+    return str
+
+
 def extract_flow_per_bus(smooth_result):
     """
     Extract dict containing the busses that will be plotted.
@@ -69,10 +79,8 @@ def extract_flow_per_bus(smooth_result):
                         break
                 # check if it's a chp component which consists of two oemof models
                 # if so get rid of the ending '_electric' or '_thermal'
-                if this_flow_name_split[0][-9:] == '_electric':
-                    this_flow_name_split[0] = this_flow_name_split[0][:-9]
-                elif this_flow_name_split[0][-8:] == '_thermal':
-                    this_flow_name_split[0] = this_flow_name_split[0][:-8]
+                this_flow_name_split[0] = cut_suffix(this_flow_name_split[0],'_electric')
+                this_flow_name_split[0] = cut_suffix(this_flow_name_split[0], '_thermal')
                 if this_flow_name_split[0] == component_result.name:
                     # Case: Component flows into bus.
                     bus = this_flow_name_split[1]
