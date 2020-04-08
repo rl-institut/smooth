@@ -1,4 +1,4 @@
-name_label_dict ={
+comp_dict ={
     'this_ely': 'Elektrolyseur',
     'this_pem_ely': 'PEM-Elektrolyseur',
     'pv_output': 'PV-Anlage',
@@ -18,4 +18,26 @@ name_label_dict ={
     'dummy_1': 'Gebrauchte Wind-Elektrizität',
     'pv_to_grid': 'Überschüssige PV-Elektrizität',
     'wind_to_grid': 'Überschüssige Wind-Elektrizität',
+}
+
+bus_dict = {
+    'bel': 'Elektrische Energie',
+    'bel_wind':	'Wind Energie',
+    'bel_pv': 'PV Energie',
+    'bth': 'Thermische Energie',
+    'bh2_lp': 'Wasserstoff-Fluss bei Niederdruck',
+    'bh2_mp': 'Wasserstoff-Fluss bei Mitteldruck',
+    'bh2_hp': 'Wasserstoff-Fluss bei Hochdruck',
+    'bch4': 'Biomethan-Fluss',
+}
+
+y_dict = {
+    'bel': 'Energie in Wh',
+    'bel_wind':	'Energie in Wh',
+    'bel_pv': 'Energie in Wh',
+    'bth': 'Energie in Wh',
+    'bh2_lp': 'Wasserstoff in kg',
+    'bh2_mp': 'Wasserstoff in kg',
+    'bh2_hp': 'Wasserstoff in kg',
+    'bch4': 'Biomethan in kg',
 }

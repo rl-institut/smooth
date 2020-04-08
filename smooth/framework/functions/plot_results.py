@@ -1,42 +1,23 @@
 from matplotlib import pyplot as plt
 from smooth.framework.functions.functions import extract_flow_per_bus
+from smooth.examples.example_plotting_dicts import comp_dict, bus_dict, y_dict
 
 
-def plot_smooth_results(smooth_result, name_label_dict=dict()):
+def plot_smooth_results(smooth_result, comp_label_dict=comp_dict, bus_dict=bus_dict, y_dict=y_dict):
     # Extract dict containing the busses that will be plotted.
-    busses_to_plot = extract_flow_per_bus(smooth_result, name_label_dict)
+    busses_to_plot = extract_flow_per_bus(smooth_result, comp_label_dict)
 
     # Plot each bus in a new window.
     for this_bus in busses_to_plot:
-
+        print(this_bus)
         for this_component, this_flow in busses_to_plot[this_bus].items():
             plt.plot(this_flow, label=str(this_component))
         plt.legend()
         plt.xlabel('Stunden des Jahres')
-        if this_bus == 'bel':
-            plt.title('Elektrische Energie')
-            plt.ylabel('Energie in Wh')
-        elif this_bus == 'bel_wind':
-            plt.title('Wind Energie')
-            plt.ylabel('Energie in WH')
-        elif this_bus == 'bel_pv':
-            plt.title('PV Energie')
-            plt.ylabel('Energie in WH')
-        elif this_bus == 'bth':
-            plt.title('Thermische Energie')
-            plt.ylabel('Energie in Wh')
-        elif this_bus == 'bh2_lp':
-            plt.title('Wasserstoff-Fluss bei Niederdruck')
-            plt.ylabel('Wasserstoff in kg')
-        elif this_bus == 'bh2_mp':
-            plt.title('Wasserstoff-Fluss bei Mitteldruck')
-            plt.ylabel('Wasserstoff in kg')
-        elif this_bus == 'bh2_hp':
-            plt.title('Wasserstoff-Fluss bei Hochdruck')
-            plt.ylabel('Wasserstoff in kg')
-        elif this_bus == 'bch4':
-            plt.title('Biomethan-Fluss')
-            plt.ylabel('Biomethan in kg')
-        else:
+        try:
+            plt.title(bus_dict[this_bus])
+            plt.ylabel(y_dict[this_bus])
+        except:
             plt.title('bus: ' + this_bus)
+
         plt.show()

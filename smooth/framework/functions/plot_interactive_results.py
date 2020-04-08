@@ -4,39 +4,27 @@ from bokeh.palettes import Spectral11
 import pandas as pd
 from bokeh.io import export_png
 from smooth.framework.functions.functions import extract_flow_per_bus
+from smooth.examples.example_plotting_dicts import comp_dict, bus_dict, y_dict
 
 
-def plot_interactive_smooth_results(smooth_result, name_label_dict=dict()):
+def plot_interactive_smooth_results(smooth_result, comp_label_dict=comp_dict, bus_dict=bus_dict, y_dict=y_dict):
     # Plots the results of a smooth run - the distinction between this function and the 'plot_results'
     # function is: 1) all figures are displayed at once, 2) the plots are more interactive e.g. legends can be hidden
     # Parameter:
     #  smooth_results: Smooth result file containing all components [list].
 
     # Extract dict containing the busses that will be plotted.
-    busses_to_plot = extract_flow_per_bus(smooth_result, name_label_dict)
+    busses_to_plot = extract_flow_per_bus(smooth_result, comp_label_dict)
 
     # Creates empty dict which will contain the figures for each individual bus.
     figures = {}
     for this_bus in busses_to_plot:
         # Replaces shorthand bus names with the official names for those listed.
-        if this_bus == 'bel':
-            bus_label = 'Elektrische Energie'
-            y_label = 'Energie in Wh'
-        elif this_bus == 'bth':
-            bus_label = 'Thermische Energie'
-            y_label = 'Energie in Wh'
-        elif this_bus == 'bh2_lp':
-            bus_label = 'Wasserstoff-Fluss bei Niederdruck'
-            y_label = 'Wasserstoff in kg'
-        elif this_bus == 'bh2_mp':
-            bus_label = 'Wasserstoff-Fluss bei Mitteldruck'
-            y_label = 'Wasserstoff in kg'
-        elif this_bus == 'bh2_hp':
-            bus_label = 'Wasserstoff-Fluss bei Hochdruck'
-            y_label = 'Wasserstoff in kg'
-        elif this_bus == 'bch4':
-            bus_label = 'Biomethan-Fluss'
-            y_label = 'Biomethan in kg'
+        try:
+            bus_label = bus_dict[this_bus]
+            y_label = y_dict[this_bus]
+        except:
+            bus_label = 'bus: ' + this_bus
 
         # Creates a new figure for plotting for this bus.
         figures[this_bus] = figure(plot_width=800, plot_height=600, title=bus_label, x_axis_label='Stunden des Jahres',
