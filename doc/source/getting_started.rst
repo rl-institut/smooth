@@ -69,7 +69,7 @@ Componentes, Framework, ...
 Examples
 ========
 
-See the `example repository <https://github.com/rl-institut/smooth/tree/master/smooth/examples>`_ for examples.
+See the `examples directory <https://github.com/rl-institut/smooth/tree/dev/smooth/examples>`_ for examples.
 
 
 
@@ -82,4 +82,4 @@ Contact ...
 License
 =======
 
-Copyright
+SMOOTH is licensed under the GNU Affero General Public License v3.0. See the `LICENSE file <https://github.com/rl-institut/smooth/blob/dev/LICENSE>`_ for details.
