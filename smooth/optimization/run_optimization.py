@@ -49,18 +49,6 @@ class Individual:
     def __setitem__(self, idx, value):
         self.values[idx] = value
 
-
-def crossover(parent1, parent2, probability):
-    child = Individual([p for p in parent1.values]) # copy values
-    # switch genes randomly
-    for gene_idx, gene in enumerate(parent2):
-        # switch based on probability
-        if random.random() < probability:
-            child[gene_idx] = gene
-
-    return child
-
-
 class OptimizationResult:
     # Class to store result from GA
     individuals_evaluated = dict()
@@ -79,15 +67,23 @@ class Optimization:
 
     def __init__(self, iterable=(), **kwargs):
         # defaults
-        self.weights = (-1.0, -1.0) # minimize both
 
-        # Relative number of individuals in new generation
-        # select: number of best individuals that get selected for the new generation
-        self.generation = {
-            "select": 2,
-            "crossover": 3,
-            "mutate": 5
-        }
+        # weights: tuple controlling fitness function of optimization.
+        # negative numbers minimize, the absolute value describes relative importance.
+        # First value is linked to cost, the second to emissions.
+        # (-1, -1) means minimze costs and emissions, with equal importance.
+        self.weights = (-1.0, -1.0)
+
+        # generation: dictionary with relative number of individuals to select, crossover and mutate in each generation.
+        # With a population_size of 30, a 2/3/5 generation:
+        # - selects 6 best individuals without change
+        # - generates at most 9 children through crossover of these 6 selected
+        # - generates at least 15 children through mutation of the 6 selected
+        self.generation = {"select": 2, "crossover": 3, "mutate": 5}
+
+        # probability for change
+        # crossover change determines how likely a gene from
+        # the second parent is picked instead of the first
         self.probabilities = {"crossover": 0.5}
 
         # set from args
@@ -146,7 +142,7 @@ class Optimization:
 
         # Now that the model is updated according to the genes given by the GA, smooth can be run.
         try:
-            smooth_result = run_smooth(model)
+            smooth_result = run_smooth(model)[0]
             # As first fitness value, compute summed up total annuity [EUR/a].
             annuity_total = sum([c.results["annuity_total"] for c in smooth_result])
             # As second fitness value, compute emission [tons CO2/year]
@@ -250,21 +246,24 @@ class Optimization:
                 'min': np.min(fitnesses)
             })
 
-            # select best individuals
-            selected_individuals = self.population[:self.generation['select']]
-            crossover_individuals = []
-            mutated_individuals = []
+            select_population = self.population[:self.generation["select"]]
+            self.population = select_population
 
-            if len(selected_individuals) > 1:
-                # crossover: get parents from best, select genes randomly
+            # crossover: get parents from best, select genes randomly
+            if len(select_population) > 1:
                 for _ in range(self.generation["crossover"]):
-                    # select two parents from selected best individuals randomly
-                    [parent1, parent2] = random.sample(selected_individuals, 2)
-                    child = crossover(parent1, parent2, self.probabilities["crossover"])
+                    # select two parents
+                    [parent1, parent2] = random.sample(select_population, 2)
+                    child = Individual([p for p in parent1.values]) # copy values
+                    # switch genes randomly
+                    for gene_idx, gene in enumerate(parent2):
+                        # switch based on probability
+                        if random.random() < self.probabilities["crossover"]:
+                            child[gene_idx] = gene
                     fingerprint = str(child)
                     if fingerprint not in self.result.individuals_evaluated:
                         # child config not seen so far
-                        crossover_individuals.append(child)
+                        self.population.append(child)
                         self.result.individuals_evaluated[fingerprint] = None # block, so not in population again
 
             # mutate: may change gene(s) within given range
@@ -272,8 +271,7 @@ class Optimization:
             while len(self.population) < self.population_size:
                 # population not full yet
                 # select parent from most fit
-                parent = random.choice(self.population[:self.generation["select"]])
-                parent = self.population[ch
+                parent = random.choice(select_population)
                 child = Individual([p for p in parent.values]) # copy values
                 tries += 1
 
@@ -298,14 +296,14 @@ class Optimization:
                 fingerprint = str(child)
                 if fingerprint not in self.result.individuals_evaluated:
                     # child configuration not seen so far
-                    self.population[change_idx] = child
+                    self.population.append(child)
                     self.result.individuals_evaluated[fingerprint] = None # block, so not in population again
-                    change_idx += 1
                 if tries > 1000 * self.population_size:
                     print("Search room exhausted. Aborting.")
                     break
             else:
-                # New population successfully generated. Print info
+                # New population successfully generated.
+                # Print info
                 print('Iteration {}/{} finished. Best fit. val: {:.0f} Avg. fit. val: {:.0f}'.format(gen+1, self.n_generation, self.result.stats[-1]['min'], self.result.stats[-1]['mu']))
                 continue
             # mutation broke off: stop GA
