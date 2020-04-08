@@ -49,6 +49,18 @@ class Individual:
     def __setitem__(self, idx, value):
         self.values[idx] = value
 
+
+def crossover(parent1, parent2, probability):
+    child = Individual([p for p in parent1.values]) # copy values
+    # switch genes randomly
+    for gene_idx, gene in enumerate(parent2):
+        # switch based on probability
+        if random.random() < probability:
+            child[gene_idx] = gene
+
+    return child
+
+
 class OptimizationResult:
     # Class to store result from GA
     individuals_evaluated = dict()
@@ -68,7 +80,14 @@ class Optimization:
     def __init__(self, iterable=(), **kwargs):
         # defaults
         self.weights = (-1.0, -1.0) # minimize both
-        self.generation = {"select": 2, "crossover": 3, "mutate": 3}
+
+        # Relative number of individuals in new generation
+        # select: number of best individuals that get selected for the new generation
+        self.generation = {
+            "select": 2,
+            "crossover": 3,
+            "mutate": 5
+        }
         self.probabilities = {"crossover": 0.5}
 
         # set from args
@@ -231,35 +250,30 @@ class Optimization:
                 'min': np.min(fitnesses)
             })
 
-            # allocate space for new generation (population may have shrunk)
-            self.population += [None]*(self.population_size - len(self.population))
+            # select best individuals
+            selected_individuals = self.population[:self.generation['select']]
+            crossover_individuals = []
+            mutated_individuals = []
 
-            # crossover: get parents from best, select genes randomly
-            # index: where to insert new element. Start after best.
-            change_idx = self.generation["select"]
-            for i in range(self.generation["crossover"]):
-                # select two parents
-                parent1 = self.population[0] # best fitness
-                parent2 = self.population[(i % (self.generation["select"]-1))+1] # TODO: find more clever way of sampling parents
-                child = Individual([p for p in parent1.values]) # copy values
-                # switch genes randomly
-                for gene_idx, gene in enumerate(parent2):
-                    # switch based on probability
-                    if random.random() < self.probabilities["crossover"]:
-                        child[gene_idx] = gene
-                fingerprint = str(child)
-                if fingerprint not in self.result.individuals_evaluated:
-                    # child config not seen so far
-                    self.population[change_idx] = child
-                    self.result.individuals_evaluated[fingerprint] = None # block, so not in population again
-                    change_idx += 1
+            if len(selected_individuals) > 1:
+                # crossover: get parents from best, select genes randomly
+                for _ in range(self.generation["crossover"]):
+                    # select two parents from selected best individuals randomly
+                    [parent1, parent2] = random.sample(selected_individuals, 2)
+                    child = crossover(parent1, parent2, self.probabilities["crossover"])
+                    fingerprint = str(child)
+                    if fingerprint not in self.result.individuals_evaluated:
+                        # child config not seen so far
+                        crossover_individuals.append(child)
+                        self.result.individuals_evaluated[fingerprint] = None # block, so not in population again
 
             # mutate: may change gene(s) within given range
             tries = 0 # count how often new configs were created this generation
-            while change_idx < self.population_size:
+            while len(self.population) < self.population_size:
                 # population not full yet
                 # select parent from most fit
-                parent = self.population[change_idx % self.generation["select"]]
+                parent = random.choice(self.population[:self.generation["select"]])
+                parent = self.population[ch
                 child = Individual([p for p in parent.values]) # copy values
                 tries += 1
 
