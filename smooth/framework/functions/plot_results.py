@@ -85,7 +85,7 @@ def plot_smooth_results(smooth_result):
                 # Add the flow of this component to this bus.
                 busses_to_plot[this_bus][component_result.name] = this_comp_flows[this_bus]
 
-    busses_to_plot['bel']['Elektrolyseur']
+#    busses_to_plot['bel']['Elektrolyseur']
     # Plot each bus in a new window.
     for this_bus in busses_to_plot:
 
