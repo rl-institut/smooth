@@ -25,7 +25,7 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'input_max': 5000000,
+    'input_max': 400000,
     'variable_costs': 0.00016,
     'dependency_flow_costs': 'flow: from_grid-->bel',
     'variable_emissions': 0.341,
@@ -38,13 +38,13 @@ components.append({
     'fs_high_art_cost': 50,
 })
 
-components.append({
-    'component': 'sink',
-    'name': 'to_grid',
-    'bus_in': 'bel',
-    'artificial_costs': 10,
-    'dependency_flow_costs': 'flow: bel-->to_grid',
-})
+# components.append({
+#     'component': 'sink',
+#     'name': 'to_grid',
+#     'bus_in': 'bel',
+#     'artificial_costs': 10,
+#     'dependency_flow_costs': 'flow: bel-->to_grid',
+# })
 
 # Electicity generators
 components.append({
@@ -74,7 +74,7 @@ components.append({
     'name': 'wind_output',
     'bus_out': 'bel',
     'csv_filename': 'ts_wind.csv',
-    'nominal_value': 1/4,
+    'nominal_value': 1/8,
     'column_title': 'Power output',
     'path': my_path,
     'life_time': 20,
@@ -110,7 +110,7 @@ components.append({
     'bus_el': 'bel',
     'bus_h2': 'bh2_lp',
     # Parameters
-    'power_max': 100e3,
+    'power_max': 100000,
     'temp_init': 293.15,
     'life_time': 20,
     # Foreign states
@@ -208,7 +208,7 @@ components.append({
     'name': 'h2_demand',
     'bus_in': 'bh2_hp',
     'csv_filename': 'ts_demand_h2.csv',
-    'nominal_value': 1,
+    'nominal_value': 0.5,
     'column_title': 'Hydrogen load',
     'path': my_path,
 })
@@ -237,7 +237,7 @@ components.append({
 # Simulation parameters and model
 sim_params = {
     'start_date': '1/1/2019',
-    'n_intervals': 10,
+    'n_intervals': 20,
     'interval_time': 60,
     'interest_rate': 0.03,
     'print_progress': True

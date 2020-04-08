@@ -51,9 +51,13 @@ class Component:
             setattr(self, this_param, params[this_param])
 
         if self.variable_costs is not None  or self.artificial_costs is not None:
-            assert self.dependency_flow_costs is not None
+            assert self.dependency_flow_costs is not None, \
+                "If variable (and/or artificial) costs are defined, " \
+                "the dependency_flow for costs has to be defined as well."
         if self.variable_emissions is not None:
-            assert self.dependency_flow_emissions is not None
+            assert self.dependency_flow_emissions is not None,\
+                "If variable emissions are defined, " \
+                "dependency_flow for emissions has to be defined as well."
 
 
     """ UPDATE THE FLOWS FOR EACH COMPONENT """
