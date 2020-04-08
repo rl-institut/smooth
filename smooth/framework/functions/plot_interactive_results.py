@@ -6,14 +6,14 @@ from bokeh.io import export_png
 from smooth.framework.functions.functions import extract_flow_per_bus
 
 
-def plot_interactive_smooth_results(smooth_result):
+def plot_interactive_smooth_results(smooth_result, name_label_dict=dict()):
     # Plots the results of a smooth run - the distinction between this function and the 'plot_results'
     # function is: 1) all figures are displayed at once, 2) the plots are more interactive e.g. legends can be hidden
     # Parameter:
     #  smooth_results: Smooth result file containing all components [list].
 
     # Extract dict containing the busses that will be plotted.
-    busses_to_plot = extract_flow_per_bus(smooth_result)
+    busses_to_plot = extract_flow_per_bus(smooth_result, name_label_dict)
 
     # Creates empty dict which will contain the figures for each individual bus.
     figures = {}

@@ -52,7 +52,7 @@ def cut_suffix(str, suffix):
     return str
 
 
-def extract_flow_per_bus(smooth_result):
+def extract_flow_per_bus(smooth_result, name_label_dict):
     """
     Extract dict containing the busses that will be plotted.
     """
@@ -114,45 +114,13 @@ def extract_flow_per_bus(smooth_result):
                         this_comp_flows[bus] = [-this_val for this_val in
                                                 component_flows[flow][:nb_intervals - nb_trailing_none]]
 
-            for this_bus in this_comp_flows:
-                # Replaces shorthand component names in the results with the official names for those listed.
-                if component_result.name == 'this_ely':
-                    component_result.name = 'Elektrolyseur'
-                elif component_result.name == 'this_pem_ely':
-                    component_result.name = 'PEM-Elektrolyseur'
-                elif component_result.name == 'pv_output':
-                    component_result.name = 'PV-Anlage'
-                elif component_result.name == 'wind_output':
-                    component_result.name = 'WE-Anlage'
-                elif component_result.name == 'th_demand':
-                    component_result.name = 'Heizbedarf'
-                elif component_result.name == 'h2_demand':
-                    component_result.name = 'Wasserstoffbedarf'
-                elif component_result.name == 'h2_compressor':
-                    component_result.name = 'Wasserstoffkompressor (higher pressure)'
-                elif component_result.name == 'from_grid':
-                    component_result.name = 'Strombezug'
-                elif component_result.name == 'to_grid':
-                    component_result.name = 'Stromeinspeisung'
-                elif component_result.name == 'h2_storage':
-                    component_result.name = 'Wasserstoffspeicher'
-                elif component_result.name == 'fuel_cell_chp':
-                    component_result.name = 'Brennstoffzelle'
-                elif component_result.name == 'CHP_Methane':
-                    component_result.name = 'Biogas-BHKW'
-                elif component_result.name == 'ch4_grid':
-                    component_result.name = 'Biogas-Zufuhr'
-                elif component_result.name == 'h2_compressor_from_ely':
-                    component_result.name = 'Wasserstoffkompressor (lower pressure)'
-                elif component_result.name == 'dummy_2':
-                    component_result.name = 'Gebrauchte PV-Elektrizität'
-                elif component_result.name == 'dummy_1':
-                    component_result.name = 'Gebrauchte Wind-Elektrizität'
-                elif component_result.name == 'pv_to_grid':
-                    component_result.name = 'Überschüssige PV-Elektrizität'
-                elif component_result.name == 'wind_to_grid':
-                    component_result.name = 'Überschüssige Wind-Elektrizität'
+            # Replaces shorthand component names in the results with the official names for those listed.
+            try:
+                component_result.name = name_label_dict[component_result.name]
+            except:
+                print(component_result.name + ": is not defined in the label dict.")
 
+            for this_bus in this_comp_flows:
                 if this_bus not in busses_to_plot:
                     # If bus name didn't appear so far, add it to the list of busses.
                     busses_to_plot[this_bus] = dict()

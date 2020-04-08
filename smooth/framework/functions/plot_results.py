@@ -2,9 +2,9 @@ from matplotlib import pyplot as plt
 from smooth.framework.functions.functions import extract_flow_per_bus
 
 
-def plot_smooth_results(smooth_result):
+def plot_smooth_results(smooth_result, name_label_dict=dict()):
     # Extract dict containing the busses that will be plotted.
-    busses_to_plot = extract_flow_per_bus(smooth_result)
+    busses_to_plot = extract_flow_per_bus(smooth_result, name_label_dict)
 
     # Plot each bus in a new window.
     for this_bus in busses_to_plot:
