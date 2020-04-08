@@ -5,5 +5,3 @@ numpy
 deap
 oemof
 scipy
-selenium
-bokeh
