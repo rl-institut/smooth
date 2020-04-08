@@ -160,7 +160,8 @@ sim_params = {
     'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03,
-    'print_progress': False
+    'print_progress': False,
+    'show_debug_flag': False,
 }
 
 mymodel = {
