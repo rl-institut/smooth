@@ -3,6 +3,8 @@ from smooth import run_optimization
 import smooth
 from multiprocessing import freeze_support
 
+import logging
+logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
 def main():
     # Define the optimization parameter. This dict needs the following information:
@@ -13,10 +15,21 @@ def main():
     #  pop_size: Number of individuals in the population [-].
     #  n_gen: Number of generations that will be evaluated [-].
     #  n_core: Number of cores used in the optimization ('max' will use all of them) [-].
+    # generation: dictionary with relative number of individuals to select, crossover and mutate in each generation.
+    # With a population_size of 30, a 2/3/5 generation:
+    # - selects 6 best individuals without change
+    # - generates at most 9 children through crossover of these 6 selected
+    # - generates at least 15 children through mutation of the 6 selected
+    # weights: tuple controlling fitness function of optimization.
+    # negative numbers minimize, the absolute value describes relative importance.
+    # First value is linked to cost, the second to emissions.
+    # (-1, -1) means minimze costs and emissions, with equal importance.
     opt_params['ga_params'] = {
-        'population_size': 4,
-        'n_generation': 4,
-        'n_core': 'max'
+        'population_size': 30,
+        'n_generation': 15,
+        'n_core': 'max',
+        'generation': {'select': 2, 'crossover': 3, 'mutate': 5},
+        'weights': (-1, -1),
     }
     # Define the attribute variation information that will be used by the genetic algorithm.
     #  comp_name: Name of the component [string].
@@ -50,5 +63,5 @@ def main():
 if __name__ == '__main__':
     freeze_support()
     optimization_results = main()
-    smooth.save_results('optimization_result', optimization_results)
+    # smooth.save_results('optimization_result', optimization_results)
     smooth.plot_optimization_results(optimization_results)

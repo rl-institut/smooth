@@ -25,7 +25,7 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'input_max': 5000000,
+    'output_max': 5000000,
     'variable_costs': 0.00016,
     'dependency_flow_costs': 'flow: from_grid-->bel',
     'variable_emissions': 0.341,
@@ -240,7 +240,8 @@ sim_params = {
     'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03,
-    'print_progress': True
+    'print_progress': True,
+    'show_debug_flag': True,
 }
 
 mymodel = {

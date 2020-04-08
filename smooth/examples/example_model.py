@@ -66,7 +66,7 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'input_max': 5000000,
+    'output_max': 5000000,
     'variable_costs': 0.00016,
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
@@ -160,7 +160,8 @@ sim_params = {
     'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03,
-    'print_progress': True
+    'print_progress': False,
+    'show_debug_flag': False,
 }
 
 mymodel = {
@@ -168,4 +169,3 @@ mymodel = {
     'components': components,
     'sim_params': sim_params,
 }
-
