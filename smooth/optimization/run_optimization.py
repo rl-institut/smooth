@@ -144,6 +144,7 @@ def mutate(parent, attribute_variation):
 # called async -> copies of individual and model given
 # program makes computer freeze when this is a class function?
 def fitness_function(index, individual, model, attribute_variation):
+    # individual.fitness = (-individual.values[0], -(individual.values[1]**2))
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
         model['components'][av.comp_name][av.comp_attribute] = individual[i]
@@ -163,7 +164,6 @@ def fitness_function(index, individual, model, attribute_variation):
     except Exception as e:
         # The smooth run failed.The fitness score remains None.
         print('Evaluation canceled ({})'.format(str(e)))
-
     return index, individual
 
 class Optimization:
@@ -281,8 +281,8 @@ class Optimization:
 
             # show current pareto front in plot
             if self.plot_progress:
-                f1_vals = [-i.fitness[0] for i in self.population]
-                f2_vals = [-i.fitness[1] for i in self.population]
+                f1_vals = [r[1][0] for r in result]
+                f2_vals = [r[1][1] for r in result]
                 self.ax.clear()
                 self.ax.plot(f1_vals, f2_vals, '.b')
                 plt.title('Front for Generation #{}'.format(gen+1))
