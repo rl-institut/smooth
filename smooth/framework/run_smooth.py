@@ -1,9 +1,9 @@
-import importlib
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
 from smooth.framework.functions.debug import get_df_debug, show_debug
 from smooth.framework.exceptions import SolverNonOptimalError
+from smooth.framework.functions.functions import create_component_obj
 
 
 def run_smooth(model):
@@ -22,32 +22,7 @@ def run_smooth(model):
     sim_params = sp(model['sim_params'])
 
     # CREATE COMPONENT OBJECTS
-    components = []
-    for name, this_comp in model['components'].items():
-        # Add simulation parameters to the components so they can be used
-        this_comp['sim_params'] = sim_params
-        # assign unique name
-        this_comp['name'] = name
-        # load the component class.
-        this_comp_name = this_comp['component']
-        # Import the module of the component.
-        this_comp_module = importlib.import_module('smooth.components.component_' + this_comp_name)
-        # While class name is camel case, underscores has to be removed and letters after underscores have to be capital
-        class_name = ''
-        if this_comp_name.isupper():
-            class_name = this_comp_name
-        else:
-            this_comp_name_split = this_comp_name.split('_')
-            for this_comp_name_part in this_comp_name_split:
-                class_name += this_comp_name_part.capitalize()
-        # Load the class (which by convention has a name with a capital first letter and camel case).
-        this_comp_class = getattr(this_comp_module, class_name)
-        # Initialize the component.
-        this_comp_obj = this_comp_class(this_comp)
-        # Check if this component is valid.
-        this_comp_obj.check_validity()
-        # Add this component to the list containing all components.
-        components.append(this_comp_obj)
+    components = create_component_obj(model, sim_params)
 
     # There are no results yet.
     df_results = None

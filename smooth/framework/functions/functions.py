@@ -1,4 +1,5 @@
 import os
+import importlib
 import pandas as pd
 
 
@@ -42,6 +43,38 @@ def get_sim_time_span(n_interval, step_size):
     return n_interval * step_size
 
 
+def create_component_obj(model, sim_params):
+    # CREATE COMPONENT OBJECTS
+    components = []
+    for name, this_comp in model['components'].items():
+        # Add simulation parameters to the components so they can be used
+        this_comp['sim_params'] = sim_params
+        # assign unique name
+        this_comp['name'] = name
+        # load the component class.
+        this_comp_name = this_comp['component']
+        # Import the module of the component.
+        this_comp_module = importlib.import_module('smooth.components.component_' + this_comp_name)
+        # While class name is camel case, underscores has to be removed and letters after underscores have to be capital
+        class_name = ''
+        if this_comp_name.isupper():
+            class_name = this_comp_name
+        else:
+            this_comp_name_split = this_comp_name.split('_')
+            for this_comp_name_part in this_comp_name_split:
+                class_name += this_comp_name_part.capitalize()
+        # Load the class (which by convention has a name with a capital first letter and camel case).
+        this_comp_class = getattr(this_comp_module, class_name)
+        # Initialize the component.
+        this_comp_obj = this_comp_class(this_comp)
+        # Check if this component is valid.
+        this_comp_obj.check_validity()
+        # Add this component to the list containing all components.
+        components.append(this_comp_obj)
+
+    return components
+
+
 def cut_suffix(str, suffix):
     # Cuts off the 'suffix' from 'str' if it ends with it
     # str: String from which suffix will be cut off
@@ -79,7 +112,7 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                         break
                 # check if it's a chp component which consists of two oemof models
                 # if so get rid of the ending '_electric' or '_thermal'
-                this_flow_name_split[0] = cut_suffix(this_flow_name_split[0],'_electric')
+                this_flow_name_split[0] = cut_suffix(this_flow_name_split[0], '_electric')
                 this_flow_name_split[0] = cut_suffix(this_flow_name_split[0], '_thermal')
                 if this_flow_name_split[0] == component_result.name:
                     # Case: Component flows into bus.
