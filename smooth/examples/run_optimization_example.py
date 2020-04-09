@@ -28,8 +28,7 @@ def main():
         'population_size': 30,
         'n_generation': 15,
         'n_core': 'max',
-        'generation': {'select': 2, 'crossover': 3, 'mutate': 5},
-        'weights': (-1, -1),
+        'plot_progress': True,
     }
     # Define the attribute variation information that will be used by the genetic algorithm.
     #  comp_name: Name of the component [string].
@@ -64,4 +63,4 @@ if __name__ == '__main__':
     freeze_support()
     optimization_results = main()
     # smooth.save_results('optimization_result', optimization_results)
-    smooth.plot_optimization_results(optimization_results)
+    # smooth.plot_optimization_results(optimization_results)

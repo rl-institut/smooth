@@ -1,6 +1,6 @@
 from multiprocessing import Pool, cpu_count
 import random
-import numpy as np
+import matplotlib.pyplot as plt # only needed when plot_progress is set
 
 # import traceback
 # def tb(e):
@@ -29,8 +29,8 @@ class Individual:
                 self._idx += 1
 
     values  = None # array. Take care when copying.
-    fitness = None # Single value
-    smooth_value = None # result of run_smooth
+    fitness = None # Tuple
+    smooth_result = None # result of run_smooth
 
     def __init__(self, values):
         self.values = values
@@ -49,42 +49,130 @@ class Individual:
     def __setitem__(self, idx, value):
         self.values[idx] = value
 
-class OptimizationResult:
-    # Class to store result from GA
-    individuals_evaluated = dict()
-    best_fit_val = None # best score
-    i_best_fit_val = 0 # index of best indivdual: always first
-    best_gens = None # best genes
-    best_smooth_result = None # best smooth result
-    stats = [] # statistics for each generation
+    def dominates(self, other):
+        return (
+        (self.fitness[0] > other.fitness[0] and self.fitness[1] > other.fitness[1]) or
+        (self.fitness[0] >= other.fitness[0] and self.fitness[1] > other.fitness[1]) or
+        (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1]))
 
-    def __init__(self, iterable=(), **kwargs):
-        self.__dict__.update(iterable, **kwargs)
+# sort values, return list of indices with max size n
+def sort_by_values(n, values):
+    return [i for e,i in sorted((e,i) for i,e in enumerate(values))][:n]
+
+# NSGA-II's fast non dominated sort
+def fast_non_dominated_sort(p):
+    S = [[]]*len(p)
+    front = [[]]
+    n = [0]*len(p)
+    rank = [0]*len(p)
+
+    # build domination tree
+    for i in range(0,len(p)):
+        for j in range(0, len(p)):
+            if p[i].dominates(p[j]) and j not in S[i]:
+                S[i].append(j)
+            elif p[j].dominates(p[i]):
+                n[i] += 1
+        if n[i]==0:
+            rank[i] = 0
+            if i not in front[0]:
+                front[0].append(i)
+
+    i = 0
+    while(len(front[i]) > 0):
+        Q=[]
+        for p in front[i]:
+            for q in S[p]:
+                n[q] -= 1
+                if n[q]==0:
+                    rank[q]=i+1
+                    if q not in Q:
+                        Q.append(q)
+        i = i+1
+        front.append(Q)
+
+    front.pop(len(front) - 1)
+    return front
+
+# calculate crowding distance
+def CDF(values1, values2, n):
+    distance = [0]*n
+    sorted1 = sort_by_values(n, values1)
+    sorted2 = sort_by_values(n, values2)
+    distance[0] = 1e100 # border
+    distance[-1] = 1e100
+    if max(values1) == min(values1) or max(values2) == min(values2):
+        return [1e100]*n
+    for k in range(1,n-1):
+        distance[k] = distance[k]+ (values1[sorted1[k+1]] - values2[sorted1[k-1]])/(max(values1)-min(values1))
+    for k in range(1,n-1):
+        distance[k] = distance[k]+ (values1[sorted2[k+1]] - values2[sorted2[k-1]])/(max(values2)-min(values2))
+    return distance
+
+# crossover between two parents
+# Selects random (independent) genes from one parent or the other
+def crossover(parent1, parent2):
+    child = Individual([gene for gene in parent1]) # copy parent1
+    for gene_idx, gene in enumerate(parent2):
+        if random.random() < 0.5:
+            child[gene_idx] = gene
+    return child
+
+# mutate parent
+# mutates a random number of genes around original value, within variation
+def mutate(parent, attribute_variation):
+    child = Individual([gene for gene in parent])
+    # change between one and all genes of parent
+    num_genes_to_change = random.randint(1, len(child))
+    # get indices of genes to change
+    genes_to_change = random.sample(range(len(child)), num_genes_to_change)
+    for mut_gene_idx in genes_to_change:
+        # compute smallest distance to min/max of attribute
+        val_min = attribute_variation[mut_gene_idx].val_min
+        val_max = attribute_variation[mut_gene_idx].val_max
+        delta_min = child[mut_gene_idx] - val_min
+        delta_max = val_max - child[mut_gene_idx]
+        delta = min(delta_min, delta_max)
+        # sigma influences spread of random numbers
+        # try to keep between min and max of attribute
+        sigma = delta / 3 if delta > 0 else 1
+        # mutate gene with normal distributaion around current value
+        child[mut_gene_idx] = int(min(max(random.gauss(child[mut_gene_idx], sigma), val_min), val_max))
+    return child
+
+# compute fitness for one individual
+# called async -> copies of individual and model given
+# program makes computer freeze when this is a class function?
+def fitness_function(index, individual, model, attribute_variation):
+    # update (copied) oemof model
+    for i, av in enumerate(attribute_variation):
+        model['components'][av.comp_name][av.comp_attribute] = individual[i]
+
+    # Now that the model is updated according to the genes given by the GA, smooth can be run.
+    try:
+        smooth_result = run_smooth(model)[0]
+        # As first fitness value, compute summed up total annuity [EUR/a].
+        annuity_total = -sum([c.results["annuity_total"] for c in smooth_result])
+        # As second fitness value, compute emission [tons CO2/year]
+        emission_total = -sum([c.results["annual_total_emissions"] for c in smooth_result])
+        # compute overall fitness by multiplying with weight tuple
+        # weight has negative sign to make positive numbers when minimizing
+        individual.fitness = (annuity_total, emission_total)
+        # individual.smooth_result = smooth_result if self.SAVE_ALL_SMOOTH_RESULTS else None
+
+    except Exception as e:
+        # The smooth run failed.The fitness score remains None.
+        print('Evaluation canceled ({})'.format(str(e)))
+
+    return index, individual
 
 class Optimization:
 
     SAVE_ALL_SMOOTH_RESULTS = False
 
     def __init__(self, iterable=(), **kwargs):
-        # defaults
 
-        # weights: tuple controlling fitness function of optimization.
-        # negative numbers minimize, the absolute value describes relative importance.
-        # First value is linked to cost, the second to emissions.
-        # (-1, -1) means minimze costs and emissions, with equal importance.
-        self.weights = (-1.0, -1.0)
-
-        # generation: dictionary with relative number of individuals to select, crossover and mutate in each generation.
-        # With a population_size of 30, a 2/3/5 generation:
-        # - selects 6 best individuals without change
-        # - generates at most 9 children through crossover of these 6 selected
-        # - generates at least 15 children through mutation of the 6 selected
-        self.generation = {"select": 2, "crossover": 3, "mutate": 5}
-
-        # probability for change
-        # crossover change determines how likely a gene from
-        # the second parent is picked instead of the first
-        self.probabilities = {"crossover": 0.5}
+        self.plot_progress = False
 
         # set from args
         self.__dict__.update(iterable, **kwargs)
@@ -109,11 +197,6 @@ class Optimization:
         except AssertionError:
             raise("Number of generations not set") # TODO stable gens?
 
-        # compute absolute values for generation distribution
-        # May not fit completely (rounding), but upper limit anyway
-        # During execution, mutation might occur more often
-        self.generation = dict(zip(self.generation.keys(), [round(v*self.population_size / sum(self.generation.values())) for v in self.generation.values()]))
-
         # attribute variation
         try:
             assert(self.attribute_variation)
@@ -131,33 +214,11 @@ class Optimization:
         self.population = [Individual(
             [random.randint(av.val_min, av.val_max) for av in self.attribute_variation])
         for _ in range(self.population_size)]
+        self.evaluated = {}
 
-    def fitness_function(self, index, individual, model):
-        # compute fitness for individual
-        # called async -> copies of individual and model given
-
-        # update (copied) oemof model
-        for i, av in enumerate(self.attribute_variation):
-            model['components'][av.comp_name][av.comp_attribute] = individual[i]
-
-        # Now that the model is updated according to the genes given by the GA, smooth can be run.
-        try:
-            smooth_result = run_smooth(model)[0]
-            # As first fitness value, compute summed up total annuity [EUR/a].
-            annuity_total = sum([c.results["annuity_total"] for c in smooth_result])
-            # As second fitness value, compute emission [tons CO2/year]
-            emission_total = sum([c.results["annual_total_emissions"] for c in smooth_result])
-            # compute overall fitness by multiplying with weight tuple
-            # weight has negative sign to make positive numbers when minimizing
-            values = (annuity_total, emission_total)
-            individual.fitness = sum(-w*v for v,w in zip(values, self.weights))
-            individual.smooth_result = smooth_result if self.SAVE_ALL_SMOOTH_RESULTS else None
-
-        except Exception as e:
-            # The smooth run failed.The fitness score remains None.
-            print('Evaluation canceled ({})'.format(str(e)))
-
-        return index, individual #.fitness
+        # plot intermediate results?
+        if self.plot_progress:
+            self.ax = plt.figure().add_subplot(111)
 
     def err_callback(self, err_msg):
         # Async error callback
@@ -166,8 +227,7 @@ class Optimization:
     def set_fitness(self, result):
         # Async success calbback: update master individual
         self.population[result[0]] = result[1]
-        # self.result.individuals_evaluated[str(self.population[result[0]])].fitness = result[1] # no join?
-        self.result.individuals_evaluated[str(self.population[result[0]])] = result[1]
+        self.evaluated[str(self.population[result[0]])] = result[1]
 
     def compute_fitness(self):
         # compute fitness of every individual in population
@@ -176,160 +236,119 @@ class Optimization:
         for idx, ind in enumerate(self.population):
             if ind.fitness is None: # not evaluated yet
                 pool.apply_async(
-                    self.fitness_function,
-                    (idx, ind, self.model),
+                    fitness_function,
+                    (idx, ind, self.model, self.attribute_variation),
                     callback=self.set_fitness,
                     error_callback=self.err_callback #tb
                 )
         pool.close()
         pool.join()
-
-    def weights_to_str(self):
-        # prepare human readable string describing weights (min/max/ignore)
-        dims = ["costs", "emissions"]
-        strings = [("minimize " if w < 0
-                else "ignore " if w == 0
-                else "maximize "
-        ) + d for (d,w) in zip(dims, self.weights)]
-        return ", ".join(strings)
+        # filter out individuals with invalid fitness values
+        self.population = list(filter(lambda ind: ind is not None and ind.fitness is not None, self.population))
 
     def run(self):
         """
         main GA function
-        In each timestep/generation:
-        - filter out bad results
-        - select best
-        - crossover those with each other
-        - mutate best individuals
-
-        Stop after set amount of generations or if no new individuals could be generated
-        Therefore, we need to keep track which configurations have been tested so far.
         """
         random.seed() # init RNG
 
         print('\n+++++++ START GENETIC ALGORITHM +++++++')
         print('The optimization parameters chosen are:')
         print('  population_size: {}'.format(self.population_size))
-        print('  distribution:    {}'.format(self.generation))
         print('  n_generation:    {}'.format(self.n_generation))
         print('  n_core:          {}'.format(self.n_core))
-        print('  {}'.format(self.weights_to_str()))
         print('+++++++++++++++++++++++++++++++++++++++\n')
 
-        self.result = OptimizationResult()
+        result = []
 
         for gen in range(self.n_generation):
+
             # evaluate current population fitness
             self.compute_fitness()
+            if len(self.population) == 0:
+                print("No individuals left. Aborting.")
+                break
 
-            # filter out individuals with invalid fitness values
-            self.population = list(filter(lambda ind: ind is not None and ind.fitness is not None, self.population))
+            FNDS = fast_non_dominated_sort(self.population)
+            # save pareto front
+            result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
 
-            # too many invalid?
-            if len(self.population) < self.generation["select"]:
-                raise Exception("Not enough valid results found")
+            # print info of current pareto front
+            print("The best front for Generation number {} / {} is".format(gen+1, self.n_generation))
+            for i,v in enumerate(FNDS[0]):
+                print(i, self.population[v], self.population[v].fitness)
+            print("\n")
 
-            # order by fitness (ascending: minimize)
-            self.population.sort(key=lambda ind: ind.fitness, reverse=False)
+            # show current pareto front in plot
+            if self.plot_progress:
+                f1_vals = [-i.fitness[0] for i in self.population]
+                f2_vals = [-i.fitness[1] for i in self.population]
+                self.ax.clear()
+                self.ax.plot(f1_vals, f2_vals, '.b')
+                plt.title('Front for Generation #{}'.format(gen+1))
+                plt.xlabel('costs')
+                plt.ylabel('emissions')
+                plt.draw()
+                plt.pause(0.1)
 
-            # save latest best result
-            self.result.best_smooth_result = self.population[0].smooth_result
-
-            fitnesses = [ind.fitness for ind in self.population] # abs values?
-
-            # update stats - count only valid
-            self.result.stats.append({
-                'i': gen,
-                'mu':  np.mean(fitnesses),
-                'std': np.std(fitnesses),
-                'max': np.max(fitnesses),
-                'min': np.min(fitnesses)
-            })
-
-            select_population = self.population[:self.generation["select"]]
-            self.population = select_population
-
-            # crossover: get parents from best, select genes randomly
-            if len(select_population) > 1:
-                for _ in range(self.generation["crossover"]):
-                    # select two parents
-                    [parent1, parent2] = random.sample(select_population, 2)
-                    child = Individual([p for p in parent1.values]) # copy values
-                    # switch genes randomly
-                    for gene_idx, gene in enumerate(parent2):
-                        # switch based on probability
-                        if random.random() < self.probabilities["crossover"]:
-                            child[gene_idx] = gene
-                    fingerprint = str(child)
-                    if fingerprint not in self.result.individuals_evaluated:
-                        # child config not seen so far
-                        self.population.append(child)
-                        self.result.individuals_evaluated[fingerprint] = None # block, so not in population again
-
-            # mutate: may change gene(s) within given range
-            tries = 0 # count how often new configs were created this generation
-            while len(self.population) < self.population_size:
-                # population not full yet
-                # select parent from most fit
-                parent = random.choice(select_population)
-                child = Individual([p for p in parent.values]) # copy values
-                tries += 1
-
-                # change between one and all genes of parent
-                num_genes_to_change = random.randint(1, len(child))
-                # get indices of genes to change
-                genes_to_change = random.sample(range(len(child)), num_genes_to_change)
-                for mut_gene_idx in genes_to_change:
-                    # compute smallest distance to min/max of attribute
-                    val_min = self.attribute_variation[mut_gene_idx].val_min
-                    val_max = self.attribute_variation[mut_gene_idx].val_max
-                    delta_min = child[mut_gene_idx] - val_min
-                    delta_max = val_max - child[mut_gene_idx]
-                    delta = min(delta_min, delta_max)
-                    # sigma influences spread of random numbers
-                    # higher generations have less spread
-                    # try to keep between min and max of attribute
-                    sigma = delta / (3 / (gen + 1)) if delta > 0 else 1
-                    # mutate gene with normal distributaion around current value
-                    child[mut_gene_idx] = int(min(max(random.gauss(child[mut_gene_idx], sigma), val_min), val_max))
-
+            population2 = self.population
+            # generate offspring
+            tries = 0
+            while(len(population2)!=2*self.population_size):
+                [parent1, parent2] = random.sample(self.population,2)
+                child = mutate(crossover(parent1, parent2), self.attribute_variation)
                 fingerprint = str(child)
-                if fingerprint not in self.result.individuals_evaluated:
-                    # child configuration not seen so far
-                    self.population.append(child)
-                    self.result.individuals_evaluated[fingerprint] = None # block, so not in population again
+                tries += 1
+                if fingerprint not in self.evaluated:
+                    # child config not seen so far
+                    population2.append(child)
+                    # block, so not in population again
+                    self.evaluated[fingerprint] = None
                 if tries > 1000 * self.population_size:
                     print("Search room exhausted. Aborting.")
                     break
             else:
                 # New population successfully generated.
-                # Print info
-                print('Iteration {}/{} finished. Best fit. val: {:.0f} Avg. fit. val: {:.0f}'.format(gen+1, self.n_generation, self.result.stats[-1]['min'], self.result.stats[-1]['mu']))
+                # evaluate generated population
+                self.population = population2
+                self.compute_fitness()
+                if len(self.population) == 0:
+                    print("No individuals left. Aborting.")
+                    break
+
+                f1_vals2 = [i.fitness[0] for i in self.population]
+                f2_vals2 = [i.fitness[1] for i in self.population]
+                FNDS2 = fast_non_dominated_sort(self.population)
+                CDF_values = [CDF(f1_vals2,f2_vals2,len(NDS)) for NDS in FNDS2]
+
+                # select individuals on pareto front, depending on fitness and distance
+                pop_idx = []
+                for i in range(0,len(FNDS2)):
+                    FNDS2_1 = [FNDS2[i].index(FNDS2[i][j]) for j in range(0, len(FNDS2[i]))]
+                    front22 = sort_by_values(len(FNDS2_1), CDF_values[i])
+                    front = [FNDS2[i][front22[j]] for j in range(0,len(FNDS2[i]))]
+                    front.reverse()
+                    pop_idx += [v for v in front[:self.population_size-len(pop_idx)]]
+                    if (len(pop_idx) == self.population_size):
+                        break
+                self.population = [self.population[i] for i in pop_idx]
+
                 continue
-            # mutation broke off: stop GA
+            # generation broke off: stop GA
             break
 
-        # All generations computed
-        # update result instance. Best in pop[0]
-        self.result.best_fit_val = self.population[0].fitness
-        self.result.i_best_fit_val = 0
-        self.result.best_gens = self.population[0]
-        # stats is already set
-
         print('\n+++++++ GENETIC ALGORITHM FINISHED +++++++')
-        print('The best individual is:')
-        print('  fit_val: {}'.format(self.result.best_fit_val))
         for i, attr in enumerate(self.attribute_variation):
-            print(' attribute {} - {} value: {}'.format(
-                attr.comp_name, attr.comp_attribute, self.result.best_gens[i]))
+            print(' {} - {}'.format(
+                attr.comp_name, attr.comp_attribute))
+        for i,v in enumerate(result):
+            print(i, v[0], " -> ", v[1])
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
-        # print all generated configuartions, ordered by fitness
-        # pop = [(k, int(v.fitness)) for k,v in filter(lambda t: t[1] is not None and t[1].fitness is not None, self.result.individuals_evaluated.items())]
-        # pop.sort(key=lambda t: t[1])
-        # print(pop)
+        if self.plot_progress:
+            plt.show()
 
-        return self.result
+        return result
 
 def run_optimization(opt_config, _model):
     # save GA params directly in config
