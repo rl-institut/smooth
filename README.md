@@ -34,20 +34,17 @@ locally. This can be done by the following steps:
     ```
     git clone https://github.com/oemof/oemof-solph.git
     ```
-2. In the oemof repo, fetch the pull request version [#592](https://github.com/oemof/oemof-solph/pull/592),
-which contains the component, to a new branch BRANCHNAME of your choice.
+2. In the oemof repo, checkout commit [585b123](https://github.com/oemof/oemof-solph/commit/585b123e3dc02b191fead4d202ba60c057c473fd),
+which is parte of branch [features/piecewise_linear_transformer](https://github.com/oemof/oemof-solph/compare/features/piecewise_linear_transformer) 
+and will be merged with the pull request version [#592](https://github.com/oemof/oemof-solph/pull/592).
     ```
-    git fetch origin pull/592/head:BRANCHNAME
+    git checkout 585b123e3dc02b191fead4d202ba60c057c473fd
     ```
-3. Checkout the branch BRANCHNAME of the pull request version.
-    ```
-    git checkout BRANCHNAME
-    ```
-4. Install the pull request version of oemof with pip
+3. Install the pull request version of oemof with pip
     ```
     pip install .
     ```
-5. Install the solver for oemof (if you wasn't running oemof before). This can be done according to
+4. Install the solver for oemof (if you wasn't running oemof before). This can be done according to
 [this](https://oemof.readthedocs.io/en/stable/installation_and_setup.html#installation-and-setup-label)
 documentation page.
 
