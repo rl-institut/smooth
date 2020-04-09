@@ -16,7 +16,7 @@ def plot_smooth_results(smooth_result, comp_label_dict=comp_dict, bus_dict=bus_d
         try:
             plt.title(bus_dict[this_bus])
             plt.ylabel(y_dict[this_bus])
-        except:
+        except KeyError:
             plt.title('bus: ' + this_bus)
 
         plt.show()

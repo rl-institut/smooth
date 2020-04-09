@@ -23,7 +23,7 @@ def plot_interactive_smooth_results(smooth_result, comp_label_dict=comp_dict, bu
         try:
             bus_label = bus_dict[this_bus]
             y_label = y_dict[this_bus]
-        except:
+        except KeyError:
             bus_label = 'bus: ' + this_bus
 
         # Creates a new figure for plotting for this bus.

@@ -150,7 +150,7 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
             # Replaces shorthand component names in the results with the official names for those listed.
             try:
                 component_result.name = name_label_dict[component_result.name]
-            except:
+            except KeyError:
                 print(component_result.name + ": is not defined in the label dict.")
 
             for this_bus in this_comp_flows:
