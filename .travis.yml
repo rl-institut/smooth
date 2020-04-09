@@ -30,5 +30,9 @@ script:
   # Run smooth example
   - MPLBACKEND=SVG python smooth/examples/run_smooth_example.py
 
+  # Build docs
+  - pip install -r doc/requirements.txt
+  - make -C doc html
+
   #TODO re-enable flake8
   #- flake8

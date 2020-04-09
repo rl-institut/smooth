@@ -6,6 +6,19 @@ from math import log
 
 
 class CompressorH2(Component):
+    """Compressor agents for compressing hydrogen are created through this class
+
+    :param name: unique name of the component
+    :type name: str
+    :param bus_h2_in: name of the lower pressure hydrogen bus
+    :type bus_h2_in: str
+    :param bus_h2_out: name of the higher pressure hydrogen bus
+    :type bus_h2_out: str
+    :param bus_el: name of the electric bus that provides energy to run the compressor
+    :type bus_el: str
+    :param m_flow_max: maximum mass flow through the compressor in kg/h
+    :type m_flow_max: float
+    """
     def __init__(self, params):
         # Call the init function of th mother class.
         Component.__init__(self)
