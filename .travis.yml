@@ -9,11 +9,12 @@ install:
   # Install CBC solver
   - sudo apt-get install coinor-cbc
 
-  # Install specific branch of oemof
+  # Install specific commit of branch of oemof to be merged with PR592
+  # - git fetch origin pull/592/head:smoothbranch
+  # - git checkout smoothbranch
   - git clone https://github.com/oemof/oemof-solph.git
   - cd oemof-solph
-  - git fetch origin pull/592/head:smoothbranch
-  - git checkout smoothbranch
+  - git checkout 585b123e3dc02b191fead4d202ba60c057c473fd
   - pip install .
   - cd ..
 
