@@ -14,7 +14,11 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         Electrolyzer.__init__(self)
 
         """ PARAMETERS """
+        self.name = 'ElectrolyzerWasteHeat_default_name'
 
+        # Define the additional thermal bus
+        self.bus_th = None
+        
         # resistance to heat transfer R_t [K/W]
         self.resistance_to_heat_transfer = 0.164
         # source: Dieguez et al., 'Thermal Performance of a commercial alkaline water electrolyzer: Experimental study
