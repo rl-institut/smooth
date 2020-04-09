@@ -77,8 +77,10 @@ class Electrolyzer (Component):
         self.molarity_KOH = 10
         # Molal concentration of the KOH solution (7.64 mol/kg for 30 wt% KOH) [mol/kg].
         self.molality_KOH = 7.64
-        # upper heating value in [MJ / kg]
+        # Upper heating value in [MJ / kg].
         self.upp_heat_val = 141.8
+        # Molar mass M_O2 [g / mol].
+        self.molar_mass_O2 = 31.99880
 
         # Number of cell amount on one stack.
         # TO MAKE IT POSSIBLE TO DEFINE A MAX. POWER OF THE ELECTROLYZER, THE NUMBER OF CELLS ARE ADJUSTED ACCORDINGLY.
@@ -359,6 +361,8 @@ class Electrolyzer (Component):
         # If the states dict of this object wasn't created yet, it's done here.
         if not 'temperature' in self.states:
             self.states['temperature'] = [None] * sim_params.n_intervals
+        if not 'water_consumption' in self.states:
+            self.states['water_consumption'] = [None] * sim_params.n_intervals
 
         # Get the flows of the electrolyzer for this time step.
         data_electrolyzer = views.node(results, self.name)
@@ -375,10 +379,15 @@ class Electrolyzer (Component):
         suporting_points_h2 = self.supporting_points['h2_produced']
         this_temp = np.interp(this_h2_produced, suporting_points_h2, suporting_points_temp)
 
+        # With the hydrogen produced this step the according water consumption can be calculated due to stoichiometry
+        # and mass balance
+        this_water_consumption = this_h2_produced * (1 + 0.5 * self.molar_mass_O2 / self.molarity)
+
         # Update the current temperature and the temperature state for this time step.
         self.temperature = this_temp
         self.states['temperature'][sim_params.i_interval] = this_temp
-
+        # Update the water consumption state for this time step.
+        self.states['water_consumption'][sim_params.i_interval] = this_water_consumption
 
 
 
