@@ -25,6 +25,7 @@ def plot_interactive_smooth_results(smooth_result, comp_label_dict=comp_dict, bu
             y_label = y_dict[this_bus]
         except KeyError:
             bus_label = 'bus: ' + this_bus
+            y_label = ''
 
         # Creates a new figure for plotting for this bus.
         figures[this_bus] = figure(plot_width=800, plot_height=600, title=bus_label, x_axis_label='Stunden des Jahres',
