@@ -76,12 +76,14 @@ class StratifiedThermalStorage (Component):
         # Check to see if the environmental temperature has been given as a timeseries or a singular value
         if self.csv_filename is not None:
             # The environment temperature timeseries [K}
-            self.temp_env = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+            self.temp_env = func.read_data_file(
+                self.path, self.csv_filename, self.csv_separator, self.column_title)
             self.temp_env = self.temp_env[self.column_title].values.tolist()
- 
+
         """ STATES """
         # Storage level [kg of h2]
-        self.storage_level = min(self.storage_level_init + self.storage_level_min, self.storage_capacity)
+        self.storage_level = min(self.storage_level_init +
+                                 self.storage_level_min, self.storage_capacity)
 
         """ VARIABLE ARTIFICIAL COSTS """
         # Store the current artificial costs for input and output [EUR/kg].
@@ -148,8 +150,8 @@ class StratifiedThermalStorage (Component):
 
     def calculate_losses(self, sim_params, u_val, d, de, h_c, t_c, t_h, t_env, time_increment=1):
         loss_rate = (
-                4 * u_val * 1 / (d * de * h_c) * time_increment
-                * 3600  # Ws to Wh
+            4 * u_val * 1 / (d * de * h_c) * time_increment
+            * 3600  # Ws to Wh
         )
 
         # check to see if t_env is a single value or a timeseries
@@ -158,13 +160,11 @@ class StratifiedThermalStorage (Component):
             t_env = [t_env] * sim_params.n_intervals
 
         fixed_losses_relative = [4 * u_val * (t_c - this_t_env)
-                    * 1 / ((d * de * h_c) * (t_h - t_c))
-                    * time_increment
-                    * 3600 for this_t_env in t_env] # multiply by 3600 to convert Ws to Wh
+                                 * 1 / ((d * de * h_c) * (t_h - t_c))
+                                 * time_increment
+                                 * 3600 for this_t_env in t_env]  # multiply by 3600 to convert Ws to Wh
 
         fixed_losses_absolute = [0.25 * u_val * pi * d ** 2 * (t_h + t_c - 2 * this_t_env) * time_increment
                                  for this_t_env in t_env]
 
         return loss_rate, fixed_losses_relative, fixed_losses_absolute
-
-

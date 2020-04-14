@@ -5,6 +5,7 @@ import math
 import numpy as np
 import warnings
 
+
 class Electrolyzer (Component):
     """Electrolyzer agents are created through this class
 
@@ -13,6 +14,7 @@ class Electrolyzer (Component):
     :param bus_el: name of the electric bus
     :type bus_el: str
     """
+
     def __init__(self, params):
         '''Constructor method
         '''
@@ -31,7 +33,7 @@ class Electrolyzer (Component):
 
         # pressure of hydrogen in the system in [Pa]
         self.pressure = 40 * 10**5
-        
+
         # ISSUE: needed to create a new pressure parameter to be used in the compressor [bar], could be a better way
         # of doing this in the future
         self.fs_pressure = self.pressure / 10**5
@@ -121,8 +123,8 @@ class Electrolyzer (Component):
         electrolyzer = solph.custom.PiecewiseLinearTransformer(
             label=self.name,
             inputs={busses[self.bus_el]: solph.Flow(
-               nominal_value=self.energy_max,
-               variable_costs=0)},
+                nominal_value=self.energy_max,
+                variable_costs=0)},
             outputs={busses[self.bus_h2]: solph.Flow()},
             in_breakpoints=self.supporting_points['energy'],
             conversion_function=self.conversion_fun_ely,
@@ -180,7 +182,8 @@ class Electrolyzer (Component):
         # Get the current [A].
         current = cur_dens * self.area_cell
         # Calculate the hydrogen produced [kg]
-        h2_production = current * (self.interval_time * 60 * self.z_cell / (2 * self.faraday) * self.molarity / 1000)
+        h2_production = current * (self.interval_time * 60 * self.z_cell /
+                                   (2 * self.faraday) * self.molarity / 1000)
         # Return the mass produced
         return h2_production
 
@@ -200,7 +203,8 @@ class Electrolyzer (Component):
         temp_before = self.temperature
         # Calculate the temperature to which the electrolyzer is heating up depending on the given current density.
         # Lin. interpolation
-        temp_aim = self.temp_min + (self.temp_max - self.temp_min) * cur_dens_now / self.cur_dens_max_temp
+        temp_aim = self.temp_min + (self.temp_max - self.temp_min) * \
+            cur_dens_now / self.cur_dens_max_temp
         # Calculate the new temperature of the electrolyzer by Newtons law of cooling. The exponent (-t[s]/2310) was
         # parameterized such that the 98 % of the temperature change are reached after 2.5 hours.
         temp_new = temp_aim + (temp_before - temp_aim) * math.exp(-self.interval_time*60 / 2310)
@@ -228,7 +232,7 @@ class Electrolyzer (Component):
         initial_guess_for_efficiency = 0.65
         # Estimate the current density through the chemical power to start the iteration [A/cm²].
         cur_dens_iteration = (power * initial_guess_for_efficiency * 2.0 * self.faraday) / (
-                self.area_cell * self.z_cell * self.molarity * self.upp_heat_val)
+            self.area_cell * self.z_cell * self.molarity * self.upp_heat_val)
         # Calculate the current for the iteration start [A].
         current_iteration = cur_dens_iteration * self.area_cell
         # Determine the power deviation between the power target and the power reach within the iteration [kW].
@@ -278,8 +282,10 @@ class Electrolyzer (Component):
         alpha_a = 0.0675 + 0.00095 * this_temp
         alpha_c = 0.1175 + 0.00095 * this_temp
         # The two parts of the activation voltage for this node[V].
-        u_act_a = 2.306 * (self.gas_const * this_temp) / (self.n * self.faraday * alpha_a) * math.log10(cur_dens / j0)
-        u_act_c = 2.306 * (self.gas_const * this_temp) / (self.n * self.faraday * alpha_c) * math.log10(cur_dens / j0)
+        u_act_a = 2.306 * (self.gas_const * this_temp) / (self.n *
+                                                          self.faraday * alpha_a) * math.log10(cur_dens / j0)
+        u_act_c = 2.306 * (self.gas_const * this_temp) / (self.n *
+                                                          self.faraday * alpha_c) * math.log10(cur_dens / j0)
         # The activation voltage for this node[V].
         voltage_activation = u_act_a + u_act_c
 
@@ -300,8 +306,8 @@ class Electrolyzer (Component):
         this_temp = temp
         # The conductivity of the the potassium hydroxide (KOH) solution [1/(Ohm*cm)].
         conductivity_electrolyte = -2.041 * self.molarity_KOH - 0.0028 * self.molarity_KOH ** 2 + 0.001043 * \
-                                   self.molarity_KOH ** 3 + 0.005332 * self.molarity_KOH * this_temp + 207.2 * \
-                                   self.molarity_KOH / this_temp - 0.0000003 * self.molarity_KOH ** 2 * this_temp ** 2
+            self.molarity_KOH ** 3 + 0.005332 * self.molarity_KOH * this_temp + 207.2 * \
+            self.molarity_KOH / this_temp - 0.0000003 * self.molarity_KOH ** 2 * this_temp ** 2
         # The electrolyte resistance [Ohm*cm²].
         resistance_electrolyte = electrolyte_thickness / conductivity_electrolyte
         # Void fraction of the electrolyte (j is multiplied by 10^4 because the units the formula is made for is A/m²
@@ -329,27 +335,31 @@ class Electrolyzer (Component):
         #  temp: Temperature [K]
 
         # Coefficient 1 for the vapor pressure of the KOH solution.
-        c1 = -0.0151 * self.molality_KOH - 1.6788e-03 * self.molarity_KOH ** 2 + 2.2588e-05 * self.molality_KOH ** 3
+        c1 = -0.0151 * self.molality_KOH - 1.6788e-03 * \
+            self.molarity_KOH ** 2 + 2.2588e-05 * self.molality_KOH ** 3
         # Coefficient 2 for the vapor pressure of the KOH solution.
-        c2 = 1.0 - 1.2062e-03 * self.molality_KOH + 5.6024e-04 * self.molality_KOH ** 2 - 7.8228e-06 * self.molality_KOH**3
+        c2 = 1.0 - 1.2062e-03 * self.molality_KOH + 5.6024e-04 * \
+            self.molality_KOH ** 2 - 7.8228e-06 * self.molality_KOH**3
 
         '# COMPUTATION FOR ALL REQUESTED TEMPERATURES'
         # Get the temperature for this loop run [K].
         this_temp = temp
         # Compute the part of the reversible cell voltage that changes due to temperature [V].
         voltage_temperature = 1.5184 - 1.5421e-03 * this_temp + 9.526e-05 * this_temp * math.log(this_temp) + 9.84e-08 \
-                              * this_temp ** 2
+            * this_temp ** 2
         # Calculate the vapor pressure of water [bar].
-        pressure_water = math.exp(81.6179 - 7699.68 / this_temp - 10.9 * math.log(this_temp) + 9.5891e-03 * this_temp)
+        pressure_water = math.exp(81.6179 - 7699.68 / this_temp - 10.9 *
+                                  math.log(this_temp) + 9.5891e-03 * this_temp)
         # Calculate the vapor pressure of KOH solution [bar].
         pressure_koh = math.exp(2.302 * c1 + c2 * math.log(pressure_water))
         # Calculate the water activity value.
         water_activity = math.exp(
             -0.05192 * self.molality_KOH + 0.003302 * self.molality_KOH ** 2 + (3.177 * self.molality_KOH -
-                                                                            2.131 * self.molality_KOH ** 2) / this_temp)
+                                                                                2.131 * self.molality_KOH ** 2) / this_temp)
         # Compute the part of the reversible cell voltage that changes due to pressure [V].
         voltage_pressure = self.gas_const * this_temp / (self.n * self.faraday) *\
-                    math.log((self.pressure - pressure_koh) * (self.pressure - pressure_koh) ** 0.5 / water_activity)
+            math.log((self.pressure - pressure_koh) *
+                     (self.pressure - pressure_koh) ** 0.5 / water_activity)
         # Calculate the reversible voltage [V].
         voltage_reversible = voltage_temperature + voltage_pressure
 
@@ -388,7 +398,3 @@ class Electrolyzer (Component):
         self.states['temperature'][sim_params.i_interval] = this_temp
         # Update the water consumption state for this time step.
         self.states['water_consumption'][sim_params.i_interval] = this_water_consumption
-
-
-
-

@@ -37,8 +37,10 @@ def get_df_debug(df_results, results_dict, new_df_results):
 
     # Concatenate debug Dataframe with results of unfinished oemof iteration
     # (merging of different instances of oemof objects not working)
-    new_df_results[['from', 'to']] = pd.DataFrame(new_df_results['oemof_tuple'].tolist(), index=new_df_results.index)
-    new_df_debug = pd.DataFrame(new_df_results[:][['value', 'from', 'to']], columns=['value', 'from', 'to'])
+    new_df_results[['from', 'to']] = pd.DataFrame(
+        new_df_results['oemof_tuple'].tolist(), index=new_df_results.index)
+    new_df_debug = pd.DataFrame(new_df_results[:][['value', 'from', 'to']], columns=[
+                                'value', 'from', 'to'])
     new_df_debug['variable_name'] = 'next'
     df_debug = pd.concat([df_debug, new_df_debug], axis=0)
 

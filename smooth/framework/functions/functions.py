@@ -56,8 +56,8 @@ def create_component_obj(model, sim_params):
         this_comp_type = this_comp['component']
         # Component type should consist of lower case letters, numbers and underscores
         if re.fullmatch(r'[a-z0-9_]+', this_comp_type) is None:
-            raise ValueError('Invalid component type name "{}". '\
-                'Only lower case letters, numbers and underscores are allowed.'.format(this_comp_type))
+            raise ValueError('Invalid component type name "{}". '
+                             'Only lower case letters, numbers and underscores are allowed.'.format(this_comp_type))
         # Import the module of the component.
         this_comp_module = importlib.import_module('smooth.components.component_' + this_comp_type)
         # Convert component type from snake_case to CamelCase to get class name
@@ -127,7 +127,8 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                         this_comp_flows[bus] = updated_bus_list
                     else:
                         # Case: Component has no flow with this bus yet.
-                        this_comp_flows[bus] = component_flows[flow][:nb_intervals - nb_trailing_none]
+                        this_comp_flows[bus] = component_flows[flow][:nb_intervals -
+                                                                     nb_trailing_none]
 
                 else:
                     # Case: Component takes from bus.
@@ -162,7 +163,8 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
 
     if nb_trailing_none > 0:
         print(
-            'The flow sequences have {} trailing None values. Did the optimization terminate?'.format(nb_trailing_none)
+            'The flow sequences have {} trailing None values. Did the optimization terminate?'.format(
+                nb_trailing_none)
         )
 
     return busses_to_plot

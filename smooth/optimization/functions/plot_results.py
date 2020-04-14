@@ -16,11 +16,11 @@ def plot_optimization_results(optimization_results):
     # cmap = plt.cm.get_cmap("viridis")
     # cmap.set_bad(color="r")
     # plt.scatter(
-        # [r[0] for r in result],
-        # [r[1] for r in result],
-        # c=[r[2] or float("inf") for r in result],
-        # cmap=cmap,
-        # plotnonfinite=True
+    # [r[0] for r in result],
+    # [r[1] for r in result],
+    # c=[r[2] or float("inf") for r in result],
+    # cmap=cmap,
+    # plotnonfinite=True
     # )
 
     plt.show()

@@ -4,6 +4,7 @@ from .component import Component
 
 class Supply (Component):
     """ Generic supply component (usually for grid supplied electricity, heat etc.) is created through this class """
+
     def __init__(self, params):
 
         # Call the init function of the mother class.

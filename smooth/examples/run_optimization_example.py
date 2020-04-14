@@ -6,6 +6,7 @@ from multiprocessing import freeze_support
 import logging
 logging.getLogger('pyomo.core').setLevel(logging.ERROR)
 
+
 def main():
     # Define the optimization parameter. This dict needs the following information:
     #  ga_params: Genetic algorithm parameters [dict].

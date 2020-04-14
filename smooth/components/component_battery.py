@@ -60,7 +60,8 @@ class Battery(Component):
         self.set_parameters(params)
         # Raise an error if the initial state of charge [%] is set below depth of discharge [%].
         if self.soc_init < self.dod:
-            raise ValueError('Initial state of charge is set below depth of discharge! Please adjust soc_init or dod')
+            raise ValueError(
+                'Initial state of charge is set below depth of discharge! Please adjust soc_init or dod')
 
         """ STATES """
         # State of charge [%]
@@ -93,24 +94,24 @@ class Battery(Component):
 
         # ToDo: c_rate depending on the soc
 
-        # Max. chargeable or dischargeable energy [Wh] goinge in from the bus due to c_rate depending on the soc. 
-        # To ensure that the battery can be fully charged in one timestep, the nominal value of the input-flow needs 
+        # Max. chargeable or dischargeable energy [Wh] goinge in from the bus due to c_rate depending on the soc.
+        # To ensure that the battery can be fully charged in one timestep, the nominal value of the input-flow needs
         # to be higher than what's actually going into the battery. Therefore we need to divide by the efficiency_charge.
-        # Due to the inflow_conversion_factor (in "create oemof model") the battery will then receive right amount. 
+        # Due to the inflow_conversion_factor (in "create oemof model") the battery will then receive right amount.
         self.e_in_max = min(self.c_rate_charge * self.battery_capacity * self.sim_params.interval_time / 60,
                             self.battery_capacity - self.soc * self.battery_capacity) / self.efficiency_charge
         self.e_out_max = min(self.c_rate_discharge * self.battery_capacity * self.sim_params.interval_time / 60,
-                            self.soc * self.battery_capacity)
-        
+                             self.soc * self.battery_capacity)
+
     def create_oemof_model(self, busses, _):
         """ Create oemof model """
         storage = solph.components.GenericStorage(
             label=self.name,
             inputs={busses[self.bus_in_and_out]: solph.Flow(
                     nominal_value=self.e_in_max, variable_costs=self.current_vac[0])
-            },
+                    },
             outputs={busses[self.bus_in_and_out]: solph.Flow(
-                    nominal_value=self.e_out_max, variable_costs=self.current_vac[1])
+                nominal_value=self.e_out_max, variable_costs=self.current_vac[1])
             },
             loss_rate=self.loss_rate,
             initial_storage_level=self.soc,

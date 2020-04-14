@@ -2,6 +2,7 @@ from oemof.outputlib import views
 from smooth.framework.functions.update_fitted_cost import update_financials, update_emissions
 from smooth.framework.functions.update_annuities import update_annuities
 
+
 class Component:
 
     def __init__(self):
@@ -46,11 +47,12 @@ class Component:
         for this_param in params:
             if not hasattr(self, this_param):
                 # Raise an error if the given parameter is not part of the component (interval time is an exception).
-                raise ValueError('The parameter "{}" is not part of the component'.format(this_param))
+                raise ValueError(
+                    'The parameter "{}" is not part of the component'.format(this_param))
 
             setattr(self, this_param, params[this_param])
 
-        if self.variable_costs is not None  or self.artificial_costs is not None:
+        if self.variable_costs is not None or self.artificial_costs is not None:
             assert self.dependency_flow_costs is not None, \
                 "If variable (and/or artificial) costs are defined, " \
                 "the dependency_flow for costs has to be defined as well."
@@ -59,8 +61,8 @@ class Component:
                 "If variable emissions are defined, " \
                 "dependency_flow for emissions has to be defined as well."
 
-
     """ UPDATE THE FLOWS FOR EACH COMPONENT """
+
     def update_flows(self, results, sim_params, comp_name=None):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
         if not hasattr(self, 'flows'):
@@ -83,11 +85,13 @@ class Component:
                 self.flows[this_flow_name][sim_params.i_interval] = this_df[i_result][0]
 
     """ PREPARE CREATING THE OEMOF MODEL """
+
     def prepare_simulation(self, components):
         # If a component has artificial costs, this update_artificial_costs function is overwritten in that component
         pass
 
     """ UPDATE STATES (PLACEHOLDER FOR COMPONENTS WITHOUT STATES) """
+
     def update_states(self, results, sim_params):
         # If a component has states, this update_states function is overwritten in that component
         pass
@@ -97,6 +101,7 @@ class Component:
         pass
 
     """ UPDATE THE COSTS """
+
     def update_var_costs(self, results, sim_params):
         # Track the costs and artificial costs of a component for each time step.
         # Parameters:
@@ -113,11 +118,13 @@ class Component:
         # Update the costs for this time step [EUR].
         if self.variable_costs is not None:
             this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
-            self.results['variable_costs'][sim_params.i_interval] = this_dependency_value * self.variable_costs
+            self.results['variable_costs'][sim_params.i_interval] = this_dependency_value * \
+                self.variable_costs
         # Update the artificial costs for this time step [EUR].
         if self.artificial_costs is not None:
             this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
-            self.results['art_costs'][sim_params.i_interval] = this_dependency_value * self.artificial_costs
+            self.results['art_costs'][sim_params.i_interval] = this_dependency_value * \
+                self.artificial_costs
 
     def update_var_emissions(self, results, sim_params):
         # Track the emissions of a component for each time step.
@@ -134,9 +141,11 @@ class Component:
         # Update the emissions for this time step [kg]. Before, verify if a flow name is given as emission dependency.
         if self.variable_emissions is not None:
             this_dependency_value = self.flows[self.dependency_flow_emissions][sim_params.i_interval]
-            self.results['variable_emissions'][sim_params.i_interval] = this_dependency_value * self.variable_emissions
+            self.results['variable_emissions'][sim_params.i_interval] = this_dependency_value * \
+                self.variable_emissions
 
     """ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMTER IF THEY ARE NOT NONE """
+
     def get_costs_and_art_costs(self):
         # Initialize the total variable costs and art. costs [EUR/???].
         variable_costs_total = 0
@@ -178,7 +187,8 @@ class Component:
                 is_fs_found = True
 
         if not is_fs_found:
-            raise ValueError('Foreign state couldn\'t be found, please check the fs names of the supply component.')
+            raise ValueError(
+                'Foreign state couldn\'t be found, please check the fs names of the supply component.')
 
         return foreign_state_value
 

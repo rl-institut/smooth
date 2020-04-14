@@ -55,7 +55,8 @@ class StorageH2 (Component):
 
         """ STATES """
         # Storage level [kg of h2]
-        self.storage_level = min(self.storage_level_init + self.storage_level_min, self.storage_capacity)
+        self.storage_level = min(self.storage_level_init +
+                                 self.storage_level_min, self.storage_capacity)
         # Storage pressure [bar].
         self.pressure = self.get_pressure(self.storage_level)
 
@@ -103,7 +104,6 @@ class StorageH2 (Component):
                 # Get the storage pressure [bar].
                 self.pressure = self.get_pressure(self.storage_level)
                 self.states['pressure'][sim_params.i_interval] = self.pressure
-
 
     def get_mass(self, p, V=None):
         # Calculate the mass of the storage at a certain pressure.
@@ -164,14 +164,3 @@ class StorageH2 (Component):
             self.rk_a / (T**0.5 * V * self.Mr / m * (V * self.Mr / m + self.rk_b))
         # Return pressure in bar [bar].
         return p / 1e5
-
-
-
-
-
-
-
-
-
-
-

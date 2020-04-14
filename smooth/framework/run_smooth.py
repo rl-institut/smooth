@@ -10,7 +10,6 @@ def run_smooth(model):
     # Run the smooth simulation framework.
     # Parameters:
     #  model: smooth model object containing parameters for components, simulation and busses.
-
     """ INITIALIZATION """
     # legacy: components may be list. Convert to dict.
     if isinstance(model["components"], list):
@@ -37,7 +36,8 @@ def run_smooth(model):
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
-        oemof_model = solph.EnergySystem(timeindex=this_time_index, freq='{}min'.format(sim_params.interval_time))
+        oemof_model = solph.EnergySystem(timeindex=this_time_index,
+                                         freq='{}min'.format(sim_params.interval_time))
 
         """ CREATE THE OEMOF MODEL FOR THIS INTERVAL """
         # Create all busses and save them to a dict for later use in the components.
@@ -84,7 +84,8 @@ def run_smooth(model):
                 new_df_results = processing.create_dataframe(model_to_solve)
                 df_debug = get_df_debug(df_results, results_dict, new_df_results)
                 show_debug(df_debug, components)
-            raise SolverNonOptimalError('solver status: ' + status + " / termination condition: " + termination_condition)
+            raise SolverNonOptimalError('solver status: ' + status +
+                                        " / termination condition: " + termination_condition)
 
         """ HANDLE RESULTS """
         # Get the results of this oemof run.

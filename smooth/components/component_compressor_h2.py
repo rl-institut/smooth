@@ -4,7 +4,6 @@ from .component_functions.all_component_functions import calculate_compressibili
 from math import log
 
 
-
 class CompressorH2(Component):
     """Compressor agents for compressing hydrogen are created through this class
 
@@ -19,6 +18,7 @@ class CompressorH2(Component):
     :param m_flow_max: maximum mass flow through the compressor in kg/h
     :type m_flow_max: float
     """
+
     def __init__(self, params):
         # Call the init function of th mother class.
         Component.__init__(self)
@@ -117,6 +117,4 @@ class CompressorH2(Component):
         #  self.states['outlet pressure'] = [None] * sim_params.n_intervals
         return
 
-
         self.states['specific_compression_work'][sim_params.i_interval] = self.spec_compression_energy
-

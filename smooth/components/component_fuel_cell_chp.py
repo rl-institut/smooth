@@ -5,6 +5,7 @@ import pyomo.environ as po
 
 class FuelCellChp(Component):
     """ A combined heat and power plant with a fuel cell, using H2 to generate electricity and heat. """
+
     def __init__(self, params):
 
         # Call the init function of the mother class.
@@ -36,28 +37,31 @@ class FuelCellChp(Component):
         # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
         self.bp_load_electric = [0.0, 0.0517, 0.1589, 0.2482, 1.0]
         # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
-        self.bp_eff_electric =  [0.0, 0.0915, 0.2188, 0.2795, 0.5238]
+        self.bp_eff_electric = [0.0, 0.0915, 0.2188, 0.2795, 0.5238]
 
         # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
         self.bp_load_thermal = [0.0, 0.0481, 0.0694, 0.0931, 0.1272, 0.1616, 0.2444, 0.5912, 1.0]
         # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
-        self.bp_eff_thermal =  [0.0, 0.1996, 0.3028, 0.4272, 0.5034, 0.5381, 0.5438, 0.4875, 0.3695]
+        self.bp_eff_thermal = [0.0, 0.1996, 0.3028, 0.4272, 0.5034, 0.5381, 0.5438, 0.4875, 0.3695]
 
         # Now calculate the absolute values for electricity [Wh] and thermal energy [Wh] and H2 consumption [kg].
 
         # Therefor first calculate the max. hydrogen input that lead to the max. electrical energy in Wh [kg].
         self.h2_input_max = self.power_max / (
-                self.heating_value * self.bp_eff_electric[-1]) * self.sim_params.interval_time / 60 / 1000
+            self.heating_value * self.bp_eff_electric[-1]) * self.sim_params.interval_time / 60 / 1000
         # Now convert the load points according to the max. hydrogen input per time step [kg].
-        self.bp_h2_consumed_electric = [this_bp * self.h2_input_max for this_bp in self.bp_load_electric]
-        self.bp_h2_consumed_thermal = [this_bp * self.h2_input_max for this_bp in self.bp_load_thermal]
+        self.bp_h2_consumed_electric = [
+            this_bp * self.h2_input_max for this_bp in self.bp_load_electric]
+        self.bp_h2_consumed_thermal = [
+            this_bp * self.h2_input_max for this_bp in self.bp_load_thermal]
 
         # Now get the absolute electrical energy values over the load points [Wh].
         self.bp_energy_electric = []
         for i_bp in range(len(self.bp_load_electric)):
             # Calculate the electrical energy produced at this breaking point [Wh]
             this_energy_electric = \
-                self.bp_h2_consumed_electric[i_bp] * self.bp_eff_electric[i_bp] * self.heating_value * 1000
+                self.bp_h2_consumed_electric[i_bp] * \
+                self.bp_eff_electric[i_bp] * self.heating_value * 1000
             self.bp_energy_electric.append(this_energy_electric)
 
         # Now get the absolute thermal energy values over the load points [Wh].
@@ -65,13 +69,15 @@ class FuelCellChp(Component):
         for i_bp in range(len(self.bp_load_thermal)):
             # Calculate the thermal energy produced at this breaking point [Wh]
             this_energy_thermal = \
-                self.bp_h2_consumed_thermal[i_bp] * self.bp_eff_thermal[i_bp] * self.heating_value * 1000
+                self.bp_h2_consumed_thermal[i_bp] * \
+                self.bp_eff_thermal[i_bp] * self.heating_value * 1000
             self.bp_energy_thermal.append(this_energy_thermal)
 
         # While we will create two oemof components, one for thermal energy and one for electrical energy, and make a
         # constraint that both inflows of hydrogen have to be the same, each component will get only half the amount of
         # hydrogen. Therefore we need to make a list of hydrogen consumed that is halfed [kg]
-        self.bp_h2_consumed_electric_half = [this_bp / 2 for this_bp in self.bp_h2_consumed_electric]
+        self.bp_h2_consumed_electric_half = [
+            this_bp / 2 for this_bp in self.bp_h2_consumed_electric]
         self.bp_h2_consumed_thermal_half = [this_bp / 2 for this_bp in self.bp_h2_consumed_thermal]
 
         # Save the two models to set constraints later.
@@ -94,10 +100,9 @@ class FuelCellChp(Component):
         # Create the non-linear oemof component. The CHP has to be modelled as two components, while the piecewise
         # linear transformer does not accept 2 outputs yet.
 
-
         flow_electric = solph.Flow(
-                nominal_value=self.bp_h2_consumed_electric_half[-1],
-                variable_costs=0)
+            nominal_value=self.bp_h2_consumed_electric_half[-1],
+            variable_costs=0)
         flow_thermal = solph.Flow(nominal_value=self.bp_h2_consumed_electric_half[-1])
 
         # First create the electrical oemof component.
@@ -150,7 +155,8 @@ class FuelCellChp(Component):
             expr += - model.flow[busses[self.bus_h2], self.model_el, t]
             return (expr == 0)
 
-        model_to_solve.chp_flow_ratio_fix = po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
+        model_to_solve.chp_flow_ratio_fix = po.Constraint(
+            model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.

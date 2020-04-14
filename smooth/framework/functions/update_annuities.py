@@ -48,7 +48,9 @@ def update_annuities(component):
     component.results['annual_fix_emissions'] = fix_emissions_annual
     component.results['annual_op_emissions'] = op_emissions
     component.results['annual_variable_emissions'] = variable_emissions_annual
-    component.results['annual_total_emissions'] = fix_emissions_annual + op_emissions + variable_emissions_annual
+    component.results['annual_total_emissions'] = fix_emissions_annual + \
+        op_emissions + variable_emissions_annual
+
 
 def calc_annuity(component, target):
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
@@ -66,6 +68,7 @@ def calc_annuity(component, target):
 
     return target_annuity
 
+
 def calc_annual_emissions(component, target):
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
     if not target:
@@ -73,6 +76,6 @@ def calc_annual_emissions(component, target):
         target_annuity = 0
     else:
         # Calculate the annuity of the target in [target]/a.
-        target_annuity = target['cost'] /component.life_time
+        target_annuity = target['cost'] / component.life_time
 
     return target_annuity

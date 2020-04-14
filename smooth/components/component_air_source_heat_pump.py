@@ -5,6 +5,7 @@ import oemof.thermal.compression_heatpumps_and_chillers as cmpr_hp_chiller
 import smooth.framework.functions.functions as func
 import pandas as pd
 
+
 class AirSourceHeatPump(Component):
     """ An air source heat pump component is created through this class """
 
@@ -56,7 +57,8 @@ class AirSourceHeatPump(Component):
 
         if self.csv_filename is not None:
             # A csv file containing data for the ambient temperature is required [deg C]
-            self.temp_low = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+            self.temp_low = func.read_data_file(
+                self.path, self.csv_filename, self.csv_separator, self.column_title)
             self.temp_low_series = self.temp_low[self.column_title]
             self.temp_low_series_C = self.temp_low_series - 273.15
         else:
@@ -76,7 +78,5 @@ class AirSourceHeatPump(Component):
                 nominal_value=self.power_max,
                 variable_costs=0)},
             conversion_factors={busses[self.bus_th]: self.cops[self.sim_params.i_interval]}
-            )
+        )
         return air_source_heat_pump
-
-

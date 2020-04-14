@@ -89,7 +89,8 @@ def update_cost(component, fitting_dict, index, dependant_value, name):
     elif this_key == 'free':
         fitting_dict['cost'] = get_free(component, fitting_dict, index, dependant_value)
     else:
-        raise ValueError('{} key \'{}\' not recognized. Please choose a valid key.'.format(name, this_key))
+        raise ValueError(
+            '{} key \'{}\' not recognized. Please choose a valid key.'.format(name, this_key))
 
 
 def get_spec(component, fitting_dict, index, dependant_value):
@@ -186,6 +187,3 @@ def get_dependant_value(component, fitting_dict, index, fixedCost):
         dependant_value = dependant_value['cost']
 
     return dependant_value
-
-
-
