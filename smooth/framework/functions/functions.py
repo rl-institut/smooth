@@ -1,6 +1,7 @@
 import os
 import importlib
 import pandas as pd
+import re
 
 
 def read_data_file(path, filename, csv_separator, column_title):
@@ -52,17 +53,15 @@ def create_component_obj(model, sim_params):
         # assign unique name
         this_comp['name'] = name
         # load the component class.
-        this_comp_name = this_comp['component']
+        this_comp_type = this_comp['component']
+        # Component type should consist of lower case letters, numbers and underscores
+        if re.fullmatch(r'[a-z0-9_]+', this_comp_type) is None:
+            raise ValueError('Invalid component type name "{}". '\
+                'Only lower case letters, numbers and underscores are allowed.'.format(this_comp_type))
         # Import the module of the component.
-        this_comp_module = importlib.import_module('smooth.components.component_' + this_comp_name)
-        # While class name is camel case, underscores has to be removed and letters after underscores have to be capital
-        class_name = ''
-        if this_comp_name.isupper():
-            class_name = this_comp_name
-        else:
-            this_comp_name_split = this_comp_name.split('_')
-            for this_comp_name_part in this_comp_name_split:
-                class_name += this_comp_name_part.capitalize()
+        this_comp_module = importlib.import_module('smooth.components.component_' + this_comp_type)
+        # Convert component type from snake_case to CamelCase to get class name
+        class_name = ''.join(x.capitalize() for x in this_comp_type.split('_'))
         # Load the class (which by convention has a name with a capital first letter and camel case).
         this_comp_class = getattr(this_comp_module, class_name)
         # Initialize the component.
