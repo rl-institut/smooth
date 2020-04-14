@@ -23,9 +23,11 @@ def update_annuities(component):
     else:
         op_emissions = component.op_emissions['cost']
 
-    # Then calculate the annuity of the variable costs. This is only needed if the simulation did not take a whole year.
-    # In case it was a different time period, the costs per year have to be estimated by assuming the variable costs of
-    # the simulation period can be used as an average over the simulation time.
+    # Then calculate the annuity of the variable costs. This is only needed if
+    # the simulation did not take a whole year. In case it was a different time
+    # period, the costs per year have to be estimated by assuming the variable
+    # costs of the simulation period can be used as an average over the
+    # simulation time.
 
     # Calculate the ratio of simulation time to one year (sim_time_span is in minutes) [-].
     time_ratio = component.sim_params.sim_time_span / (365 * 24 * 60)

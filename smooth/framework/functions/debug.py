@@ -53,7 +53,10 @@ def get_df_debug(df_results, results_dict, new_df_results):
 
 def show_debug(df_debug, components):
     print("------------------------------------------------------------------------------")
-    with pd.option_context("display.max_rows", 99, "display.max_columns", 12, 'display.max_colwidth', 0):
+    with pd.option_context(
+            "display.max_rows", 99,
+            "display.max_columns", 12,
+            'display.max_colwidth', 0):
         print(df_debug)
     print("------------------------------------------------------------------------------")
     # Save to csv file

@@ -10,8 +10,9 @@ from smooth import run_smooth
 
 
 class AttributeVariation:
-    # Class that contain all information about the attribute that is varied by the genetic algorithm.
-    # recommended attributes: comp_name, comp_attribute, val_min, val_max
+    # Class that contain all information about the attribute that is varied by
+    # the genetic algorithm.
+    # Recommended attributes: comp_name, comp_attribute, val_min, val_max
     def __init__(self, iterable=(), **kwargs):
         self.__dict__.update(iterable, **kwargs)
 
@@ -297,7 +298,8 @@ class Optimization:
             result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
 
             # print info of current pareto front
-            print("The best front for Generation number {} / {} is".format(gen+1, self.n_generation))
+            print("The best front for Generation number {} / {} is"
+                  .format(gen+1, self.n_generation))
             for i, v in enumerate(FNDS[0]):
                 print(i, self.population[v], self.population[v].fitness)
             print("\n")

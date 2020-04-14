@@ -4,7 +4,8 @@ import pyomo.environ as po
 
 
 class GasEngineChpBiogas(Component):
-    """ A combined heat and power plant with a gas engine, using biogas to generate electricity and heat. """
+    """ A combined heat and power plant with a gas engine, using biogas to
+    generate electricity and heat. """
 
     def __init__(self, params):
 
@@ -35,7 +36,8 @@ class GasEngineChpBiogas(Component):
 
         # INTERNAL PARAMETERS
         # Heating value of methane [kWh/kg].
-        # [kWh/kg] https://www.linde-gas.at/de/images/1007_rechnen_sie_mit_wasserstoff_v110_tcm550-169419.pdf
+        # [kWh/kg]
+        # https://www.linde-gas.at/de/images/1007_rechnen_sie_mit_wasserstoff_v110_tcm550-169419.pdf
         self.heating_value_ch4 = 13.9
 
         # mol masses ch4 and co2
@@ -43,13 +45,17 @@ class GasEngineChpBiogas(Component):
         self.mol_mass_co2 = 0.04401  # [kg/mol]
 
         # Heating value of biogas [kWh/kg].
-        # The gas composition is given as a mol percentage. In the following this percentage will be transformed into a
-        # mass percentage and finally into the heating value of the biogas by multiplying it with the LHV of CH4
-        self.heating_value_biogas = ((self.ch4_share * self.mol_mass_ch4) / ((self.ch4_share*self.mol_mass_ch4) +
-                                                                             (self.co2_share*self.mol_mass_co2))) * self.heating_value_ch4
+        # The gas composition is given as a mol percentage. In the following
+        # this percentage will be transformed into a mass percentage and
+        # finally into the heating value of the biogas by multiplying it with
+        # the LHV of CH4
+        self.heating_value_biogas = ((self.ch4_share * self.mol_mass_ch4) /
+                                     ((self.ch4_share * self.mol_mass_ch4) +
+                                     (self.co2_share*self.mol_mass_co2))) * self.heating_value_ch4
 
         # The CHP an electrical efficiency and a thermal efficiency
-        # Source: 2G Energy AG Technical specification agenitor 206 BG, http://www.n2ies.com/pdf/2g-agenitor.pdf
+        # Source: 2G Energy AG Technical specification agenitor 206 BG,
+        #   http://www.n2ies.com/pdf/2g-agenitor.pdf
         # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
         self.bp_load_electric = [0, 0.5, 0.75, 1.0]
         # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
@@ -60,11 +66,14 @@ class GasEngineChpBiogas(Component):
         # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
         self.bp_eff_thermal = [0, 0.459, 0.438, 0.427]
 
-        # Now calculate the absolute values for electricity [Wh] and thermal energy [Wh] and ch4 consumption [kg].
+        # Now calculate the absolute values for electricity [Wh] and thermal
+        # energy [Wh] and ch4 consumption [kg].
 
-        # Therefor first calculate the max. biomethane input that lead to the max. electrical energy in Wh [kg].
-        self.ch4_input_max = self.power_max / (
-            self.heating_value_biogas * self.bp_eff_electric[-1]) * self.sim_params.interval_time / 60 / 1000
+        # Therefor first calculate the max. biomethane input that lead to the
+        # max. electrical energy in Wh [kg].
+        self.ch4_input_max = self.power_max / \
+            (self.heating_value_biogas * self.bp_eff_electric[-1]) * \
+            self.sim_params.interval_time / 60 / 1000
 
         # Now convert the load points according to the max. hydrogen input per time step [kg].
         self.bp_ch4_consumed_electric = [
@@ -90,9 +99,11 @@ class GasEngineChpBiogas(Component):
                 self.bp_eff_thermal[i_bp] * self.heating_value_biogas * 1000
             self.bp_energy_thermal.append(this_energy_thermal)
 
-        # While we will create two oemof components, one for thermal energy and one for electrical energy, and make a
-        # constraint that both inflows of hydrogen have to be the same, each component will get only half the amount of
-        # hydrogen. Therefore we need to make a list of hydrogen consumed that is halfed [kg]
+        # While we will create two oemof components, one for thermal energy and
+        # one for electrical energy, and make a constraint that both inflows of
+        # hydrogen have to be the same, each component will get only half the
+        # amount of hydrogen. Therefore we need to make a list of hydrogen
+        # consumed that is halfed [kg]
         self.bp_ch4_consumed_electric_half = [
             this_bp / 2 for this_bp in self.bp_ch4_consumed_electric]
         self.bp_ch4_consumed_thermal_half = [
@@ -115,9 +126,10 @@ class GasEngineChpBiogas(Component):
         return self.bp_energy_thermal[this_index]
 
     def create_oemof_model(self, busses, model):
-        # Create the non-linear oemof component. The CHP has to be modelled as two components, while the piecewise
-        # linear transformer does not accept 2 outputs yet.
-        # ToDo: adjust once the piecewise linear transformer allows 2 outputs
+        # Create the non-linear oemof component. The CHP has to be modelled as
+        # two components, while the piecewise linear transformer does not
+        # accept 2 outputs yet.
+        # TODO: adjust once the piecewise linear transformer allows 2 outputs
 
         flow_electric = solph.Flow(
             nominal_value=self.bp_ch4_consumed_electric_half[-1],
@@ -157,15 +169,17 @@ class GasEngineChpBiogas(Component):
         fl_el = model.groups[self.name + '_electric'].inputs[busses[self.bus_ch4]]
         fl_th = model.groups[self.name + '_thermal'].inputs[busses[self.bus_ch4]]
         """
-        # Now set the two inflows of ch4 in the electrical in the thermal CHP component to be the same.
+        # Now set the two inflows of ch4 in the electrical in the thermal CHP
+        # component to be the same.
         # solph.constraints.equate_variables(model, flow_electric, flow_thermal)
 
         return None
 
     def update_constraints(self, busses, model_to_solve):
-        # Set a constraint so that the ch4 inflow of the electrical and the thermal part are always the same (which
-        # is necessary while the piecewise linear transformer cannot have two outputs yet and therefore the two parts
-        # need to be separate components).
+        # Set a constraint so that the ch4 inflow of the electrical and the
+        # thermal part are always the same (which is necessary while the
+        # piecewise linear transformer cannot have two outputs yet and
+        # therefore the two parts need to be separate components).
         def chp_ratio_rule_methane(model, t):
             # Inverter flow
             expr = 0

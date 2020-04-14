@@ -17,7 +17,8 @@ class StorageH2 (Component):
         # Min. and max. pressure [bar].
         self.p_min = 0
         self.p_max = 450
-        # Storage capacity capacity at p_max (assuming all the can be used, p_min is not included here) [kg].
+        # Storage capacity capacity at p_max (assuming all the can be used,
+        # p_min is not included here) [kg].
         self.storage_capacity = 500
         # Initial USABLE storage level [kg].
         self.storage_level_init = 200
@@ -28,9 +29,11 @@ class StorageH2 (Component):
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].
         self.vac_in = 0
         self.vac_out = 0
-        # If a storage level is set as wanted, the vac_low costs apply if the storage is below that level [kg].
+        # If a storage level is set as wanted, the vac_low costs apply if the
+        # storage is below that level [kg].
         self.storage_level_wanted = None
-        # Var. art. costs that apply if the storage level is below the wanted storage level [EUR/kg].
+        # Var. art. costs that apply if the storage level is below the wanted
+        # storage level [EUR/kg].
         self.vac_low_in = 0
         self.vac_low_out = 0
 
@@ -38,7 +41,8 @@ class StorageH2 (Component):
         self.set_parameters(params)
 
         """ CONSTANTS FOR REAL GAS EQUATION """
-        # Critical temperature [K] and pressure [Pa], molar mass of H2 [kg/mol], the gas constant [J/(K*mol)].
+        # Critical temperature [K] and pressure [Pa], molar mass of H2
+        # [kg/mol], the gas constant [J/(K*mol)].
         self.T_crit = 33.19
         self.p_crit = 13.13 * 1e5
         self.Mr = 2.016 * 1e-3
@@ -70,7 +74,8 @@ class StorageH2 (Component):
         vac_out = self.vac_out
 
         if self.storage_level_wanted is not None and self.storage_level < self.storage_level_wanted:
-            # If a wanted storage level is set and the storage level fell below that wanted level, the low VAC apply.
+            # If a wanted storage level is set and the storage level fell below
+            # that wanted level, the low VAC apply.
             vac_in = self.vac_low_in
             vac_out = self.vac_low_out
 
@@ -125,7 +130,9 @@ class StorageH2 (Component):
         # The mass has to be defined in an iterative process by changing the spec. volume [m³/mol].
         v_spec = 10
         for i in range(10):
-            v_spec = (self.R * T / (p + (self.rk_a / (T**0.5*v_spec * (v_spec + self.rk_b))))) + self.rk_b
+            v_spec = (
+                    self.R * T / (p + (self.rk_a / (T**0.5*v_spec * (v_spec + self.rk_b))))
+                ) + self.rk_b
 
         # Calculate the mass [kg].
         m = V * self.Mr / v_spec
@@ -144,7 +151,9 @@ class StorageH2 (Component):
         # The mass has to be defined in an iterative process by changing the spec. volume [m³/mol].
         v_spec = 10
         for i in range(10):
-            v_spec = (self.R * T / (p + (self.rk_a / (T**0.5*v_spec * (v_spec + self.rk_b))))) + self.rk_b
+            v_spec = (
+                    self.R * T / (p + (self.rk_a / (T**0.5*v_spec * (v_spec + self.rk_b))))
+                ) + self.rk_b
 
         # Calculate the volume [m3]
         V = m * v_spec / self.Mr

@@ -29,6 +29,7 @@ class SimulationParameters:
         for this_param in params:
             if not hasattr(self, this_param):
                 raise ValueError(
-                    'The parameter "{}" is not part of the simulation parameters'.format(this_param))
+                    'The parameter "{}" is not part of the simulation parameters'
+                    .format(this_param))
 
             setattr(self, this_param, params[this_param])

@@ -3,7 +3,9 @@ from .component import Component
 
 
 class Supply (Component):
-    """ Generic supply component (usually for grid supplied electricity, heat etc.) is created through this class """
+    """ Generic supply component
+    (usually for grid supplied electricity, heat etc.) is created through this
+    class """
 
     def __init__(self, params):
 
@@ -19,9 +21,11 @@ class Supply (Component):
         self.bus_out = None
 
         """ PARAMETERS ARTIFICIAL COSTS FOREIGN STATE
-        The artificial costs for supplying electricity can be dependant on a foreign state, like a storage SoC. 
-        Therefore the name and the state name of that foreign entity have to be defined as well as the threshold level, 
-        under which the low level costs are used. Above the threshold, the high level artificial costs are used.
+        The artificial costs for supplying electricity can be dependant on a
+        foreign state, like a storage SoC. Therefore the name and the state
+        name of that foreign entity have to be defined as well as the threshold
+        level, under which the low level costs are used. Above the threshold,
+        the high level artificial costs are used.
         """
 
         # Define the threshold value for the artificial costs.
@@ -46,7 +50,8 @@ class Supply (Component):
             else:
                 self.artificial_costs = self.fs_high_art_cost
 
-        # Set the total costs for the commodity this time step (costs + art. costs) e.g. [EUR/Wh], [EUR/kg].
+        # Set the total costs for the commodity this time step
+        # (costs + art.  costs) e.g. [EUR/Wh], [EUR/kg].
         self.current_ac = self.get_costs_and_art_costs()
 
     def create_oemof_model(self, busses, _):

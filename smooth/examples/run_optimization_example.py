@@ -1,6 +1,5 @@
 from smooth.examples.example_model import mymodel
 from smooth import run_optimization
-import smooth
 from multiprocessing import freeze_support
 
 import logging
@@ -30,7 +29,8 @@ def main():
     #  val_max: Max. value in variation process [int/float].
     #  val_step: Step size in variation process [int/float].
     #
-    # E.g. the combination val_min = 5, val_max = 60 and val_step = 10 lead to possible values 5, 15, 25, 35, 45 and 55.
+    # E.g. the combination val_min = 5, val_max = 60 and val_step = 10 lead to
+    # possible values 5, 15, 25, 35, 45 and 55.
     var_ely_power = {
         'comp_name': 'this_ely',
         'comp_attribute': 'power_max',

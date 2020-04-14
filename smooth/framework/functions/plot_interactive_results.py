@@ -1,4 +1,4 @@
-from bokeh.plotting import figure, output_file, show
+from bokeh.plotting import figure, show
 from bokeh.layouts import row
 from bokeh.palettes import Spectral11
 import pandas as pd
@@ -7,9 +7,16 @@ from smooth.framework.functions.functions import extract_flow_per_bus
 from smooth.examples.example_plotting_dicts import comp_dict, bus_dict, y_dict
 
 
-def plot_interactive_smooth_results(smooth_result, comp_label_dict=comp_dict, bus_dict=bus_dict, y_dict=y_dict):
-    # Plots the results of a smooth run - the distinction between this function and the 'plot_results'
-    # function is: 1) all figures are displayed at once, 2) the plots are more interactive e.g. legends can be hidden
+def plot_interactive_smooth_results(
+        smooth_result,
+        comp_label_dict=comp_dict,
+        bus_dict=bus_dict,
+        y_dict=y_dict):
+    # Plots the results of a smooth run - the distinction between this function
+    # and the 'plot_results' function is:
+    #    1) all figures are displayed at once,
+    #    2) the plots are more interactive e.g. legends can be hidden
+    #
     # Parameter:
     #  smooth_results: Smooth result file containing all components [list].
 
@@ -28,8 +35,12 @@ def plot_interactive_smooth_results(smooth_result, comp_label_dict=comp_dict, bu
             y_label = ''
 
         # Creates a new figure for plotting for this bus.
-        figures[this_bus] = figure(plot_width=800, plot_height=600, title=bus_label, x_axis_label='Stunden des Jahres',
-                                   y_axis_label=y_label)
+        figures[this_bus] = figure(
+            plot_width=800,
+            plot_height=600,
+            title=bus_label,
+            x_axis_label='Stunden des Jahres',
+            y_axis_label=y_label)
         # Creates a dataframe of all flows leaving/entering this bus.
         df = pd.DataFrame.from_dict(busses_to_plot[this_bus])
         # Detects how many different flows are leaving/entering this bus.
@@ -43,9 +54,11 @@ def plot_interactive_smooth_results(smooth_result, comp_label_dict=comp_dict, bu
         ys = [df[component].values for component in df]
 
         for this_component, this_flow in busses_to_plot[this_bus].items():
-            # Loops through the colour palette, the legend labels, the x lists (xs) and the y lists (ys).
-            for (colours, legend_labels, x, y) in zip(my_palette, busses_to_plot[this_bus].keys(), xs, ys):
-                my_plot = figures[this_bus].line(x, y, color=colours, legend_label=legend_labels)
+            # Loops through the colour palette, the legend labels,
+            # the x lists (xs) and the y lists (ys).
+            labels = busses_to_plot[this_bus].keys()
+            for (colours, legend_label, x, y) in zip(my_palette, labels, xs, ys):
+                figures[this_bus].line(x, y, color=colours, legend_label=legend_label)
             # Sets the legend in the top left corner of the figure.
             figures[this_bus].legend.location = "top_left"
             # Enables the legends to be seen or hidden.

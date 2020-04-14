@@ -76,7 +76,8 @@ def run_smooth(model):
         oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
         """ CHECK IF SOLVING WAS SUCCESSFUL """
-        # If the status and temination condition is not ok/optimal, get and print the current flows and status
+        # If the status and temination condition is not ok/optimal, get and
+        # print the current flows and status
         status = oemof_results["Solver"][0]["Status"].key
         termination_condition = oemof_results["Solver"][0]["Termination condition"].key
         if status != "ok" and termination_condition != "optimal":

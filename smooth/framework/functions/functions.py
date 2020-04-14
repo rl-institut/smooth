@@ -57,12 +57,14 @@ def create_component_obj(model, sim_params):
         # Component type should consist of lower case letters, numbers and underscores
         if re.fullmatch(r'[a-z0-9_]+', this_comp_type) is None:
             raise ValueError('Invalid component type name "{}". '
-                             'Only lower case letters, numbers and underscores are allowed.'.format(this_comp_type))
+                             'Only lower case letters, numbers and underscores are allowed.'
+                             .format(this_comp_type))
         # Import the module of the component.
         this_comp_module = importlib.import_module('smooth.components.component_' + this_comp_type)
         # Convert component type from snake_case to CamelCase to get class name
         class_name = ''.join(x.capitalize() for x in this_comp_type.split('_'))
-        # Load the class (which by convention has a name with a capital first letter and camel case).
+        # Load the class (which by convention has a name with a capital first
+        # letter and camel case).
         this_comp_class = getattr(this_comp_module, class_name)
         # Initialize the component.
         this_comp_obj = this_comp_class(this_comp)
@@ -101,7 +103,8 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                 # Get rid of "'flow: ".
                 this_flow_name = flow[6:]
                 this_flow_name_split = this_flow_name.split('-->')
-                # Identify the number of trailing None values in case the optimization stopped before termination
+                # Identify the number of trailing None values in case the
+                # optimization stopped before termination
                 nb_intervals = len(component_flows[flow])
                 nb_trailing_none = nb_intervals
                 for flow_val in component_flows[flow]:
@@ -144,10 +147,11 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                         this_comp_flows[bus] = updated_bus_list
                     else:
                         # Case: Component has no flow with this bus yet.
-                        this_comp_flows[bus] = [-this_val for this_val in
-                                                component_flows[flow][:nb_intervals - nb_trailing_none]]
+                        flow_range = component_flows[flow][:nb_intervals - nb_trailing_none]
+                        this_comp_flows[bus] = [-this_val for this_val in flow_range]
 
-            # Replaces shorthand component names in the results with the official names for those listed.
+            # Replaces shorthand component names in the results with the
+            # official names for those listed.
             try:
                 component_result.name = name_label_dict[component_result.name]
             except KeyError:
@@ -163,8 +167,8 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
 
     if nb_trailing_none > 0:
         print(
-            'The flow sequences have {} trailing None values. Did the optimization terminate?'.format(
-                nb_trailing_none)
+            'The flow sequences have {} trailing None values. Did the optimization terminate?'
+            .format(nb_trailing_none)
         )
 
     return busses_to_plot
