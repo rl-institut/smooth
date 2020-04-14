@@ -4,7 +4,6 @@ from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
 
-
 def run_smooth(model):
     # Run the smooth simulation framework.
     # Parameters:
@@ -123,3 +122,4 @@ def run_smooth(model):
         this_comp.generate_results()
 
     return components
+

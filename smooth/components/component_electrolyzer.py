@@ -5,7 +5,8 @@ import math
 import numpy as np
 import warnings
 
-class Electrolyzer (Component):
+
+class Electrolyzer(Component):
     """ Electrolyzer agents are created through this class """
     def __init__(self, params):
 

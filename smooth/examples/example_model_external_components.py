@@ -131,27 +131,29 @@ components.append({
     }
 
 })
-"""
-components.append({
-    'component': 'energy_demand_from_csv',
-    'name': 'thermal_demand',
-    'bus_in': 'bth',
-    'csv_filename': 'ts_demand_h2.csv',
-    'nominal_value': 1,
-    'column_title': 'Hydrogen load',
-    'path': my_path
+
+"""Define any external components that should not be considered in the simulation/optimization"""
+external_components = list()
+
+external_components.append({
+    'external_component': 'test',
+    'name': 'test',
+    'number_of_units': 1,
+    'life_time': 20,
+    # Financials
+    'capex': {
+        'key': 'spec',
+        'fitting_value': 1000000,
+        'dependant_value': 'number_of_units'
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.04,
+        'dependant_value': 'capex'
+    }
+
 })
 
-
-components.append({
-    'component': 'fuel_cell_chp',
-    'name': 'fuel_cell_chp',
-    'bus_el': 'bel',
-    'bus_h2': 'bh2_hp',
-    'bus_th': 'bth',
-    'power_max': 500e3
-})
-"""
 
 sim_params = {
     'start_date': '1/1/2019',
@@ -162,10 +164,10 @@ sim_params = {
 }
 
 
-
 mymodel = {
     'busses': busses,
     'components': components,
     'sim_params': sim_params,
+    'external_components': external_components
 }
 
