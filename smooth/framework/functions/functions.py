@@ -1,5 +1,7 @@
 import os
+import importlib
 import pandas as pd
+import re
 
 
 def read_data_file(path, filename, csv_separator, column_title):
@@ -42,6 +44,36 @@ def get_sim_time_span(n_interval, step_size):
     return n_interval * step_size
 
 
+def create_component_obj(model, sim_params):
+    # CREATE COMPONENT OBJECTS
+    components = []
+    for name, this_comp in model['components'].items():
+        # Add simulation parameters to the components so they can be used
+        this_comp['sim_params'] = sim_params
+        # assign unique name
+        this_comp['name'] = name
+        # load the component class.
+        this_comp_type = this_comp['component']
+        # Component type should consist of lower case letters, numbers and underscores
+        if re.fullmatch(r'[a-z0-9_]+', this_comp_type) is None:
+            raise ValueError('Invalid component type name "{}". '\
+                'Only lower case letters, numbers and underscores are allowed.'.format(this_comp_type))
+        # Import the module of the component.
+        this_comp_module = importlib.import_module('smooth.components.component_' + this_comp_type)
+        # Convert component type from snake_case to CamelCase to get class name
+        class_name = ''.join(x.capitalize() for x in this_comp_type.split('_'))
+        # Load the class (which by convention has a name with a capital first letter and camel case).
+        this_comp_class = getattr(this_comp_module, class_name)
+        # Initialize the component.
+        this_comp_obj = this_comp_class(this_comp)
+        # Check if this component is valid.
+        this_comp_obj.check_validity()
+        # Add this component to the list containing all components.
+        components.append(this_comp_obj)
+
+    return components
+
+
 def cut_suffix(str, suffix):
     # Cuts off the 'suffix' from 'str' if it ends with it
     # str: String from which suffix will be cut off
@@ -79,7 +111,7 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                         break
                 # check if it's a chp component which consists of two oemof models
                 # if so get rid of the ending '_electric' or '_thermal'
-                this_flow_name_split[0] = cut_suffix(this_flow_name_split[0],'_electric')
+                this_flow_name_split[0] = cut_suffix(this_flow_name_split[0], '_electric')
                 this_flow_name_split[0] = cut_suffix(this_flow_name_split[0], '_thermal')
                 if this_flow_name_split[0] == component_result.name:
                     # Case: Component flows into bus.
@@ -117,7 +149,7 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
             # Replaces shorthand component names in the results with the official names for those listed.
             try:
                 component_result.name = name_label_dict[component_result.name]
-            except:
+            except KeyError:
                 print(component_result.name + ": is not defined in the label dict.")
 
             for this_bus in this_comp_flows:
