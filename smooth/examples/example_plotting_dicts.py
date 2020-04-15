@@ -1,4 +1,4 @@
-comp_dict ={
+comp_dict = {
     'this_ely': 'Elektrolyseur',
     'this_pem_ely': 'PEM-Elektrolyseur',
     'pv_output': 'PV-Anlage',

@@ -3,7 +3,8 @@ from .component import Component
 
 
 class Sink(Component):
-    """ Generic sink component (usually for excess electricity, heat etc.) is created through this class """
+    """ Generic sink component (usually for excess electricity, heat etc.) is
+    created through this class """
 
     def __init__(self, params):
 
@@ -22,7 +23,8 @@ class Sink(Component):
         self.set_parameters(params)
 
         """ COSTS """
-        # Define the costs for the commodities (negative means earning money) e.g. [EUR/Wh], [EUR/kg].
+        # Define the costs for the commodities (negative means earning money)
+        # e.g. [EUR/Wh], [EUR/kg].
         self.commodity_costs = self.get_costs_and_art_costs()
 
     def create_oemof_model(self, busses, _):

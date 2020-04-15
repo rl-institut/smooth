@@ -39,13 +39,15 @@ class H2RefuelCoolingSystem(Component):
         self.set_parameters(params)
 
         """ READ CSV FILES """
-        self.data = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+        self.data = func.read_data_file(self.path, self.csv_filename,
+                                        self.csv_separator, self.column_title)
 
         # calculate the electrical energy required for each hour [Wh]
         self.electrical_energy = \
             (self.data*self.cool_spec_energy + self.standby_energy) / 3.6
 
         """ STATES """
+
     def create_oemof_model(self, busses, _):
         h2_refuel_cooling_system = solph.Sink(
             label=self.name,
@@ -53,5 +55,5 @@ class H2RefuelCoolingSystem(Component):
                     actual_value=self.electrical_energy.iloc[self.sim_params.i_interval],
                     nominal_value=self.nominal_value,
                     fixed=True
-                )})
+                    )})
         return h2_refuel_cooling_system

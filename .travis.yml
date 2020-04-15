@@ -34,5 +34,5 @@ script:
   - pip install -r doc/requirements.txt
   - make -C doc html
 
-  #TODO re-enable flake8
-  #- flake8
+  # Lint
+  - flake8 smooth tests doc/source *.py

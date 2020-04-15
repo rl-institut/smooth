@@ -26,7 +26,8 @@ class EnergyDemandFromCsv(Component):
         self.set_parameters(params)
 
         """ READ CSV FILES """
-        self.data = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+        self.data = func.read_data_file(self.path, self.csv_filename,
+                                        self.csv_separator, self.column_title)
 
         """ STATES """
 
@@ -38,4 +39,3 @@ class EnergyDemandFromCsv(Component):
                 nominal_value=self.nominal_value,
                 fixed=True)})
         return energy_demand_from_csv
-
