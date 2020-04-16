@@ -304,42 +304,11 @@ class Optimization:
 
         for gen in range(self.n_generation):
 
-            # evaluate current population fitness
-            self.compute_fitness()
-            if len(self.population) == 0:
-                print("No individuals left. Aborting.")
-                break
-
-            FNDS = fast_non_dominated_sort(self.population)
-            # save pareto front
-            # values/fitness tuples for all non-dominated individuals
-            result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
-
-            # print info of current pareto front
-            print("The best front for Generation number {} / {} is".format(
-                gen+1, self.n_generation)
-            )
-            for i, v in enumerate(FNDS[0]):
-                print(i, self.population[v], self.population[v].fitness)
-            print("\n")
-
-            # show current pareto front in plot
-            if self.plot_progress:
-                # use abs(r[]) to display positive values
-                f1_vals = [r[1][0] for r in result]
-                f2_vals = [r[1][1] for r in result]
-                self.ax.clear()
-                self.ax.plot(f1_vals, f2_vals, '.b')
-                plt.title('Front for Generation #{}'.format(gen+1))
-                plt.xlabel(self.objective_names[0])
-                plt.ylabel(self.objective_names[1])
-                plt.draw()
-                plt.pause(0.1)
-
-            population2 = self.population
             # generate offspring
+            population2 = self.population
             tries = 0
-            while(len(population2) != 2*self.population_size):
+            # half are parents on front, so not computed again
+            while(len(population2) != 2*self.population_size) and gen > 0:
                 [parent1, parent2] = random.sample(self.population, 2)
                 child = mutate(crossover(parent1, parent2), self.attribute_variation)
                 fingerprint = str(child)
@@ -363,22 +332,48 @@ class Optimization:
 
                 f1_vals2 = [i.fitness[0] for i in self.population]
                 f2_vals2 = [i.fitness[1] for i in self.population]
-                FNDS2 = fast_non_dominated_sort(self.population)
-                CDF_values = [CDF(f1_vals2, f2_vals2, len(NDS)) for NDS in FNDS2]
+                FNDS = fast_non_dominated_sort(self.population)
+                CDF_values = [CDF(f1_vals2, f2_vals2, len(NDS)) for NDS in FNDS]
 
                 # select individuals on pareto front, depending on fitness and distance
                 pop_idx = []
-                for i in range(0, len(FNDS2)):
-                    FNDS2_1 = [FNDS2[i].index(FNDS2[i][j]) for j in range(0, len(FNDS2[i]))]
-                    front22 = sort_by_values(len(FNDS2_1), CDF_values[i])
-                    front = [FNDS2[i][front22[j]] for j in range(0, len(FNDS2[i]))]
+                for i in range(0, len(FNDS)):
+                    FNDS2 = [FNDS[i].index(FNDS[i][j]) for j in range(0, len(FNDS[i]))]
+                    front22 = sort_by_values(len(FNDS2), CDF_values[i])
+                    front = [FNDS[i][front22[j]] for j in range(0, len(FNDS[i]))]
                     front.reverse()
                     pop_idx += [v for v in front[:self.population_size-len(pop_idx)]]
                     if (len(pop_idx) == self.population_size):
                         break
+
+                # save pareto front
+                # values/fitness tuples for all non-dominated individuals
+                result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
+
+                # print info of current pareto front
+                print("The best front for Generation # {} / {} is".format(
+                    gen+1, self.n_generation))
+                for i, v in enumerate(FNDS[0]):
+                    print(i, self.population[v], self.population[v].fitness)
+                print("\n")
+
+                # show current pareto front in plot
+                if self.plot_progress:
+                    # use abs(r[]) to display positive values
+                    f1_vals = [r[1][0] for r in result]
+                    f2_vals = [r[1][1] for r in result]
+                    self.ax.clear()
+                    self.ax.plot(f1_vals, f2_vals, '.b')
+                    plt.title('Front for Generation #{}'.format(gen+1))
+                    plt.xlabel(self.objective_names[0])
+                    plt.ylabel(self.objective_names[1])
+                    plt.draw()
+                    plt.pause(0.1)
+
                 self.population = [self.population[i] for i in pop_idx]
 
                 continue
+
             # generation broke off: stop GA
             break
 
@@ -386,6 +381,7 @@ class Optimization:
         for i, attr in enumerate(self.attribute_variation):
             print(' {} - {}'.format(
                 attr.comp_name, attr.comp_attribute))
+        result.sort(key=lambda v: -v[1][0])
         for i, v in enumerate(result):
             print(i, v[0], " -> ", dict(zip(self.objective_names, v[1])))
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
