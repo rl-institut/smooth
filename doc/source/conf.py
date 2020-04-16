@@ -22,7 +22,7 @@ copyright = '2020, Reiner Lemoine Institute'
 author = 'Reiner Lemoine Institute'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1dev'
+release = '0.2.0'
 
 
 # -- General configuration ---------------------------------------------------
