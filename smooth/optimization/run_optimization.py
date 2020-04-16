@@ -10,8 +10,9 @@ from smooth import run_smooth
 
 
 class AttributeVariation:
-    # Class that contain all information about an attribute varied by the genetic algorithm.
-    # recommended attributes: comp_name, comp_attribute, val_min, val_max
+    # Class that contain all information about the attribute that is varied by
+    # the genetic algorithm.
+    # Recommended attributes: comp_name, comp_attribute, val_min, val_max
     def __init__(self, iterable=(), **kwargs):
         self.__dict__.update(iterable, **kwargs)
 
@@ -263,7 +264,7 @@ class Optimization:
         print('Callback error at parallel computing! The error message is: {}'.format(err_msg))
 
     def set_fitness(self, result):
-        # Async success calbback: update master individual
+        # Async success callback: update master individual
         self.population[result[0]] = result[1]
         self.evaluated[str(result[1])] = result[1]
 

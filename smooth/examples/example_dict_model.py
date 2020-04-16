@@ -48,7 +48,7 @@ components = {
         "csv_separator": ";",
         "nominal_value": 43478.260869565216,
         "column_title": "PV generation [kWh]",
-        "path": "/home/dev03/Dokumente/Projekte/smooth/smooth/examples/smooth/examples/example_timeseries"
+        "path": my_path
     },
     "wind_output": {
         "component": "energy_source_from_csv",
@@ -56,7 +56,7 @@ components = {
         "csv_filename": "ts_wind.csv",
         "nominal_value": 0.25,
         "column_title": "Power output",
-        "path": "/home/dev03/Dokumente/Projekte/smooth/smooth/examples/smooth/examples/example_timeseries"
+        "path": my_path
     },
     "h2_demand": {
         "component": "energy_demand_from_csv",
@@ -64,12 +64,12 @@ components = {
         "csv_filename": "ts_demand_h2.csv",
         "nominal_value": 1,
         "column_title": "Hydrogen load",
-        "path": "/home/dev03/Dokumente/Projekte/smooth/smooth/examples/smooth/examples/example_timeseries"
+        "path": my_path
     },
     "from_grid": {
         "component": "supply",
         "bus_out": "bel",
-        "input_max": 5000000,
+        "output_max": 5000000,
         "variable_costs": 0.00016,
         "fs_component_name": "h2_storage",
         "fs_attribute_name": "storage_level",

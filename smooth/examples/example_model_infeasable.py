@@ -249,4 +249,3 @@ mymodel = {
     'components': components,
     'sim_params': sim_params,
 }
-

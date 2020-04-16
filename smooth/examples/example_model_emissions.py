@@ -25,7 +25,7 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'input_max': 5000000,
+    'output_max': 5000000,
     'variable_costs': 0.00016,
     'dependency_flow_costs': 'flow: from_grid-->bel',
     'variable_emissions': 0.341,
@@ -249,4 +249,3 @@ mymodel = {
     'components': components,
     'sim_params': sim_params,
 }
-
