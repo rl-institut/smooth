@@ -140,11 +140,17 @@ def mutate(parent, attribute_variation):
         child[mut_gene_idx] = int(min(max(random.gauss(child[mut_gene_idx], sigma), val_min), val_max))
     return child
 
+# hack to have custom lambda objectives in pool worker
+# lambda's can't be pickled, but globals can be set when pool is init
+_objectives = None
+def worker_init(f):
+    global _objectives
+    _objectives = f
+
 # compute fitness for one individual
 # called async -> copies of individual and model given
 # program makes computer freeze when this is a class function?
 def fitness_function(index, individual, model, attribute_variation):
-    # individual.fitness = (-individual.values[0], -(individual.values[1]**2))
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
         model['components'][av.comp_name][av.comp_attribute] = individual[i]
@@ -152,14 +158,9 @@ def fitness_function(index, individual, model, attribute_variation):
     # Now that the model is updated according to the genes given by the GA, smooth can be run.
     try:
         smooth_result = run_smooth(model)[0]
-        # As first fitness value, compute summed up total annuity [EUR/a].
-        annuity_total = -sum([c.results["annuity_total"] for c in smooth_result])
-        # As second fitness value, compute emission [tons CO2/year]
-        emission_total = -sum([c.results["annual_total_emissions"] for c in smooth_result])
-        # compute overall fitness by multiplying with weight tuple
-        # weight has negative sign to make positive numbers when minimizing
-        individual.fitness = (annuity_total, emission_total)
-        # individual.smooth_result = smooth_result if self.SAVE_ALL_SMOOTH_RESULTS else None
+        # individual.smooth_result = smooth_result if SAVE_ALL_SMOOTH_RESULTS else None # can be given as arg if necessary
+        # update fitness with given objective functions
+        individual.fitness = tuple(f(smooth_result) for f in _objectives)
 
     except Exception as e:
         # The smooth run failed.The fitness score remains None.
@@ -168,19 +169,29 @@ def fitness_function(index, individual, model, attribute_variation):
 
 class Optimization:
 
-    SAVE_ALL_SMOOTH_RESULTS = False
+    SAVE_ALL_SMOOTH_RESULTS = False # ignored
 
     def __init__(self, iterable=(), **kwargs):
 
+        # set defaults
         self.plot_progress = False
+        # objective functions: tuple with lambdas
+        # negative sign for minimizing
+        # defaults to minimum of annual costs and emissions
+        self.objectives = (
+            lambda x: -sum([c.results["annuity_total"] for c in x]),
+            lambda x: -sum([c.results["annual_total_emissions"] for c in x]),
+        )
+        # objective names for plotting
+        self.objective_names = ('costs', 'emissions')
 
-        # set from args
+        # set parameters from args
         self.__dict__.update(iterable, **kwargs)
 
         # how many CPU cores to use
         try:
             assert(self.n_core)
-        except AssertionError:
+        except (AssertionError, AttributeError):
             print("No CPU count (n_core) given. Using all cores.")
             self.n_core = cpu_count()
         if self.n_core == "max":
@@ -189,26 +200,32 @@ class Optimization:
         # population size
         try:
             assert(self.population_size)
-        except AssertionError:
-            raise("No population size given")
+        except (AssertionError, AttributeError):
+            raise AssertionError("No population size given")
+
         # number of generations to run
+        # TODO run until no more change?
         try:
             assert(self.n_generation)
-        except AssertionError:
-            raise("Number of generations not set") # TODO stable gens?
+        except (AssertionError, AttributeError):
+            raise AssertionError("Number of generations not set")
 
         # attribute variation
         try:
             assert(self.attribute_variation)
-        except AssertionError:
-            raise("No attribute variation given")
+        except (AssertionError, AttributeError):
+            raise AssertionError("No attribute variation given")
         self.attribute_variation=[AttributeVariation(av) for av in self.attribute_variation]
 
         # oemof model to solve
         try:
             assert(self.model)
-        except AssertionError:
-            raise("No model given")
+        except (AssertionError, AttributeError):
+            raise AssertionError("No model given.")
+
+        # objectives
+        assert len(self.objectives) == 2, "Need exactly two objective functions"
+        assert len(self.objectives) == len(self.objective_names), "Objective names don't match objective functions"
 
         # Init population with random values between attribute variation
         self.population = [Individual(
@@ -227,12 +244,13 @@ class Optimization:
     def set_fitness(self, result):
         # Async success calbback: update master individual
         self.population[result[0]] = result[1]
-        self.evaluated[str(self.population[result[0]])] = result[1]
+        self.evaluated[str(result[1])] = result[1]
 
     def compute_fitness(self):
         # compute fitness of every individual in population
         # open worker n_core threads
-        pool = Pool(processes = self.n_core)
+        # set objective functions for each worker
+        pool = Pool(processes = self.n_core, initializer=worker_init, initargs=(self.objectives,))
         for idx, ind in enumerate(self.population):
             if ind.fitness is None: # not evaluated yet
                 pool.apply_async(
@@ -271,6 +289,7 @@ class Optimization:
 
             FNDS = fast_non_dominated_sort(self.population)
             # save pareto front
+            # values/fitness tuples for all non-dominated individuals
             result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
 
             # print info of current pareto front
@@ -281,13 +300,14 @@ class Optimization:
 
             # show current pareto front in plot
             if self.plot_progress:
+                # use abs(r[]) to display positive values
                 f1_vals = [r[1][0] for r in result]
                 f2_vals = [r[1][1] for r in result]
                 self.ax.clear()
                 self.ax.plot(f1_vals, f2_vals, '.b')
                 plt.title('Front for Generation #{}'.format(gen+1))
-                plt.xlabel('costs')
-                plt.ylabel('emissions')
+                plt.xlabel(self.objective_names[0])
+                plt.ylabel(self.objective_names[1])
                 plt.draw()
                 plt.pause(0.1)
 
@@ -342,7 +362,7 @@ class Optimization:
             print(' {} - {}'.format(
                 attr.comp_name, attr.comp_attribute))
         for i,v in enumerate(result):
-            print(i, v[0], " -> ", v[1])
+            print(i, v[0], " -> ", dict(zip(self.objective_names, v[1])))
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
         if self.plot_progress:
