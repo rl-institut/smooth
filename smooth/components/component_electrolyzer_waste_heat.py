@@ -10,17 +10,27 @@ class ElectrolyzerWasteHeat (Electrolyzer):
     """ Electrolyzer agents with waste heat model are created through this subclass of the Electrolyzer class """
     def __init__(self, params):
 
-        # Define the additional thermal bus
-        self.bus_th = params.pop('bus_th')
+        # Split the params dict
+        param_bus_th = {'bus_th': params.pop('bus_th')}
 
         # Call the init function of the mother class.
         Electrolyzer.__init__(self,params)
 
         """ PARAMETERS """
+        # Define the additional thermal bus
+        self.bus_th = None
+
         # resistance to heat transfer R_t [K/W]
         self.resistance_to_heat_transfer = 0.164
         # source: Dieguez et al., 'Thermal Performance of a commercial alkaline water electrolyzer: Experimental study
         # and mathematical modeling', Int. J. Hydrogen Energy, 2008
+
+        """ UPDATE PARAMETER DEFAULT VALUES """
+        self.set_parameters(param_bus_th)
+        # Interval time [min].
+        self.interval_time = self.sim_params.interval_time
+        # Calculate the max. energy the electrolyzer can use in one time step [Wh].
+        self.energy_max = self.power_max * self.interval_time/60
 
         """  CONSTANT PARAMETERS (PHYSICS) """
         # constant parameters for calculating sensible heat:
