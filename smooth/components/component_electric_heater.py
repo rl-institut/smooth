@@ -21,7 +21,9 @@ class ElectricHeater(Component):
         self.life_time = 20
 
         # Overall efficiency of the heater [-]
-        # Value taken from Meyers, S.et.al. 'Competitive Assessment between Solar Thermal and Photovoltaics for Industrial Process Heat Generation'
+        # Value taken from Meyers, S.et.al. 'Competitive Assessment between
+        # Solar Thermal and Photovoltaics for Industrial Process Heat
+        # Generation'
         self.efficiency = 0.98
 
         """ UPDATE PARAMETER DEFAULT VALUES """

@@ -66,7 +66,7 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'input_max': 5000000,
+    'output_max': 5000000,
     'variable_costs': 0.00016,
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
@@ -104,7 +104,6 @@ components.append({
         'dependant_value': 'capex'
     }
 })
-
 
 
 components.append({

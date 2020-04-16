@@ -3,7 +3,8 @@ from .component import Component
 
 
 class Sink(Component):
-    """ Excess electricity sold to the grid is created through this class """
+    """ Generic sink component (usually for excess electricity, heat etc.) is
+    created through this class """
 
     def __init__(self, params):
 
@@ -12,8 +13,9 @@ class Sink(Component):
         """ PARAMETERS """
         self.name = 'Grid_default_name'
 
-        # Max. power that can be taken by the sink [W]
-        self.power_max = 800000000
+        # Maximum input per timestep of commodity:
+        # e.g. for the electricity grid [Wh], thermal grid [Wh], CH4 grid [Wh]
+        self.input_max = 800000000
 
         self.bus_in = None
 
@@ -21,14 +23,15 @@ class Sink(Component):
         self.set_parameters(params)
 
         """ COSTS """
-        # Define the costs for electricity (negative means earning money) [EUR/Wh].
-        self.electricity_costs = self.get_costs_and_art_costs()
+        # Define the costs for the commodities (negative means earning money)
+        # e.g. [EUR/Wh], [EUR/kg].
+        self.commodity_costs = self.get_costs_and_art_costs()
 
     def create_oemof_model(self, busses, _):
         sink = solph.Sink(
             label=self.name,
             inputs={busses[self.bus_in]: solph.Flow(
-                variable_costs=self.electricity_costs,
-                nominal_value=self.power_max
+                variable_costs=self.commodity_costs,
+                nominal_value=self.input_max
             )})
         return sink
