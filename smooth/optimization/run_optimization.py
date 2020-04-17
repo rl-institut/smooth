@@ -62,16 +62,14 @@ class Individual:
             (self.fitness[0] >= other.fitness[0] and self.fitness[1] > other.fitness[1]) or
             (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1]))
 
-# sort values, return list of indices with max size n
-
 
 def sort_by_values(n, values):
+    # sort values, return list of indices with max size n
     return [i for e, i in sorted((e, i) for i, e in enumerate(values))][:n]
-
-# NSGA-II's fast non dominated sort
 
 
 def fast_non_dominated_sort(p):
+    # NSGA-II's fast non dominated sort
     S = [[]]*len(p)
     front = [[]]
     n = [0]*len(p)
@@ -105,10 +103,9 @@ def fast_non_dominated_sort(p):
     front.pop(len(front) - 1)
     return front
 
-# calculate crowding distance
-
 
 def CDF(values1, values2, n):
+    # calculate crowding distance
     distance = [0]*n
     sorted1 = sort_by_values(n, values1)
     sorted2 = sort_by_values(n, values2)
@@ -124,22 +121,20 @@ def CDF(values1, values2, n):
                                      values2[sorted2[k-1]])/(max(values2)-min(values2))
     return distance
 
-# crossover between two parents
-# Selects random (independent) genes from one parent or the other
-
 
 def crossover(parent1, parent2):
+    # crossover between two parents
+    # Selects random (independent) genes from one parent or the other
     child = Individual([gene for gene in parent1])  # copy parent1
     for gene_idx, gene in enumerate(parent2):
         if random.random() < 0.5:
             child[gene_idx] = gene
     return child
 
-# mutate parent
-# mutates a random number of genes around original value, within variation
-
 
 def mutate(parent, attribute_variation):
+    # mutate parent
+    # mutates a random number of genes around original value, within variation
     child = Individual([gene for gene in parent])
     # change between one and all genes of parent
     num_genes_to_change = random.randint(1, len(child))
@@ -160,13 +155,21 @@ def mutate(parent, attribute_variation):
             min(max(random.gauss(child[mut_gene_idx], sigma), val_min), val_max))
     return child
 
-# compute fitness for one individual
-# called async -> copies of individual and model given
-# program makes computer freeze when this is a class function?
+
+# hack to have custom lambda objectives in pool worker
+# lambda's can't be pickled, but globals can be set when pool is init
+_objectives = None
+
+
+def worker_init(f):
+    global _objectives
+    _objectives = f
 
 
 def fitness_function(index, individual, model, attribute_variation):
-    # individual.fitness = (-individual.values[0], -(individual.values[1]**2))
+    # compute fitness for one individual
+    # called async -> copies of individual and model given
+    # program makes computer freeze when this is a class function?
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
         model['components'][av.comp_name][av.comp_attribute] = individual[i]
@@ -174,14 +177,10 @@ def fitness_function(index, individual, model, attribute_variation):
     # Now that the model is updated according to the genes given by the GA, smooth can be run.
     try:
         smooth_result = run_smooth(model)[0]
-        # As first fitness value, compute summed up total annuity [EUR/a].
-        annuity_total = -sum([c.results["annuity_total"] for c in smooth_result])
-        # As second fitness value, compute emission [tons CO2/year]
-        emission_total = -sum([c.results["annual_total_emissions"] for c in smooth_result])
-        # compute overall fitness by multiplying with weight tuple
-        # weight has negative sign to make positive numbers when minimizing
-        individual.fitness = (annuity_total, emission_total)
-        # individual.smooth_result = smooth_result if self.SAVE_ALL_SMOOTH_RESULTS else None
+        # TODO: SAVE_ALL_SMOOTH_RESULTS can be given as arg if necessary
+        # individual.smooth_result = smooth_result if SAVE_ALL_SMOOTH_RESULTS else None
+        # update fitness with given objective functions
+        individual.fitness = tuple(f(smooth_result) for f in _objectives)
 
     except Exception as e:
         # The smooth run failed.The fitness score remains None.
@@ -191,19 +190,29 @@ def fitness_function(index, individual, model, attribute_variation):
 
 class Optimization:
 
-    SAVE_ALL_SMOOTH_RESULTS = False
+    SAVE_ALL_SMOOTH_RESULTS = False  # ignored
 
     def __init__(self, iterable=(), **kwargs):
 
+        # set defaults
         self.plot_progress = False
+        # objective functions: tuple with lambdas
+        # negative sign for minimizing
+        # defaults to minimum of annual costs and emissions
+        self.objectives = (
+            lambda x: -sum([c.results["annuity_total"] for c in x]),
+            lambda x: -sum([c.results["annual_total_emissions"] for c in x]),
+        )
+        # objective names for plotting
+        self.objective_names = ('costs', 'emissions')
 
-        # set from args
+        # set parameters from args
         self.__dict__.update(iterable, **kwargs)
 
         # how many CPU cores to use
         try:
             assert(self.n_core)
-        except AssertionError:
+        except (AssertionError, AttributeError):
             print("No CPU count (n_core) given. Using all cores.")
             self.n_core = cpu_count()
         if self.n_core == "max":
@@ -212,26 +221,33 @@ class Optimization:
         # population size
         try:
             assert(self.population_size)
-        except AssertionError:
-            raise("No population size given")
+        except (AssertionError, AttributeError):
+            raise AssertionError("No population size given")
+
         # number of generations to run
+        # TODO run until no more change?
         try:
             assert(self.n_generation)
-        except AssertionError:
-            raise("Number of generations not set")  # TODO stable gens?
+        except (AssertionError, AttributeError):
+            raise AssertionError("Number of generations not set")
 
         # attribute variation
         try:
             assert(self.attribute_variation)
-        except AssertionError:
-            raise("No attribute variation given")
+        except (AssertionError, AttributeError):
+            raise AssertionError("No attribute variation given")
         self.attribute_variation = [AttributeVariation(av) for av in self.attribute_variation]
 
         # oemof model to solve
         try:
             assert(self.model)
-        except AssertionError:
-            raise("No model given")
+        except (AssertionError, AttributeError):
+            raise AssertionError("No model given.")
+
+        # objectives
+        assert len(self.objectives) == 2, "Need exactly two objective functions"
+        assert len(self.objectives) == len(
+            self.objective_names), "Objective names don't match objective functions"
 
         # Init population with random values between attribute variation
         self.population = [Individual(
@@ -248,14 +264,15 @@ class Optimization:
         print('Callback error at parallel computing! The error message is: {}'.format(err_msg))
 
     def set_fitness(self, result):
-        # Async success calbback: update master individual
+        # Async success callback: update master individual
         self.population[result[0]] = result[1]
-        self.evaluated[str(self.population[result[0]])] = result[1]
+        self.evaluated[str(result[1])] = result[1]
 
     def compute_fitness(self):
         # compute fitness of every individual in population
         # open worker n_core threads
-        pool = Pool(processes=self.n_core)
+        # set objective functions for each worker
+        pool = Pool(processes=self.n_core, initializer=worker_init, initargs=(self.objectives,))
         for idx, ind in enumerate(self.population):
             if ind.fitness is None:  # not evaluated yet
                 pool.apply_async(
@@ -287,39 +304,11 @@ class Optimization:
 
         for gen in range(self.n_generation):
 
-            # evaluate current population fitness
-            self.compute_fitness()
-            if len(self.population) == 0:
-                print("No individuals left. Aborting.")
-                break
-
-            FNDS = fast_non_dominated_sort(self.population)
-            # save pareto front
-            result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
-
-            # print info of current pareto front
-            print("The best front for Generation number {} / {} is"
-                  .format(gen+1, self.n_generation))
-            for i, v in enumerate(FNDS[0]):
-                print(i, self.population[v], self.population[v].fitness)
-            print("\n")
-
-            # show current pareto front in plot
-            if self.plot_progress:
-                f1_vals = [r[1][0] for r in result]
-                f2_vals = [r[1][1] for r in result]
-                self.ax.clear()
-                self.ax.plot(f1_vals, f2_vals, '.b')
-                plt.title('Front for Generation #{}'.format(gen+1))
-                plt.xlabel('costs')
-                plt.ylabel('emissions')
-                plt.draw()
-                plt.pause(0.1)
-
-            population2 = self.population
             # generate offspring
+            population2 = self.population
             tries = 0
-            while(len(population2) != 2*self.population_size):
+            # half are parents on front, so not computed again
+            while(len(population2) != 2*self.population_size) and gen > 0:
                 [parent1, parent2] = random.sample(self.population, 2)
                 child = mutate(crossover(parent1, parent2), self.attribute_variation)
                 fingerprint = str(child)
@@ -343,22 +332,48 @@ class Optimization:
 
                 f1_vals2 = [i.fitness[0] for i in self.population]
                 f2_vals2 = [i.fitness[1] for i in self.population]
-                FNDS2 = fast_non_dominated_sort(self.population)
-                CDF_values = [CDF(f1_vals2, f2_vals2, len(NDS)) for NDS in FNDS2]
+                FNDS = fast_non_dominated_sort(self.population)
+                CDF_values = [CDF(f1_vals2, f2_vals2, len(NDS)) for NDS in FNDS]
 
                 # select individuals on pareto front, depending on fitness and distance
                 pop_idx = []
-                for i in range(0, len(FNDS2)):
-                    FNDS2_1 = [FNDS2[i].index(FNDS2[i][j]) for j in range(0, len(FNDS2[i]))]
-                    front22 = sort_by_values(len(FNDS2_1), CDF_values[i])
-                    front = [FNDS2[i][front22[j]] for j in range(0, len(FNDS2[i]))]
+                for i in range(0, len(FNDS)):
+                    FNDS2 = [FNDS[i].index(FNDS[i][j]) for j in range(0, len(FNDS[i]))]
+                    front22 = sort_by_values(len(FNDS2), CDF_values[i])
+                    front = [FNDS[i][front22[j]] for j in range(0, len(FNDS[i]))]
                     front.reverse()
                     pop_idx += [v for v in front[:self.population_size-len(pop_idx)]]
                     if (len(pop_idx) == self.population_size):
                         break
+
+                # save pareto front
+                # values/fitness tuples for all non-dominated individuals
+                result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
+
+                # print info of current pareto front
+                print("The best front for Generation # {} / {} is".format(
+                    gen+1, self.n_generation))
+                for i, v in enumerate(FNDS[0]):
+                    print(i, self.population[v], self.population[v].fitness)
+                print("\n")
+
+                # show current pareto front in plot
+                if self.plot_progress:
+                    # use abs(r[]) to display positive values
+                    f1_vals = [r[1][0] for r in result]
+                    f2_vals = [r[1][1] for r in result]
+                    self.ax.clear()
+                    self.ax.plot(f1_vals, f2_vals, '.b')
+                    plt.title('Front for Generation #{}'.format(gen+1))
+                    plt.xlabel(self.objective_names[0])
+                    plt.ylabel(self.objective_names[1])
+                    plt.draw()
+                    plt.pause(0.1)
+
                 self.population = [self.population[i] for i in pop_idx]
 
                 continue
+
             # generation broke off: stop GA
             break
 
@@ -366,8 +381,9 @@ class Optimization:
         for i, attr in enumerate(self.attribute_variation):
             print(' {} - {}'.format(
                 attr.comp_name, attr.comp_attribute))
+        result.sort(key=lambda v: -v[1][0])
         for i, v in enumerate(result):
-            print(i, v[0], " -> ", v[1])
+            print(i, v[0], " -> ", dict(zip(self.objective_names, v[1])))
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
         if self.plot_progress:
