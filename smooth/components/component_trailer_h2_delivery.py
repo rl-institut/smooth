@@ -11,7 +11,7 @@ class TrailerH2Delivery(Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Trailer_default_name'
 
         self.bus_in = None
@@ -21,8 +21,9 @@ class TrailerH2Delivery(Component):
         # ToDo: At the moment only the variable costs per distance travelled are taken into consideration,
         #  but the update_var_costs() function can be modified to allow for the variable costs per kg of
         #  hydrogen transported as well
-        # At the moment, it is assumed that the hydrogen can be delivered within one hour - this needs to be
-        # changed
+        # ToDo: At the moment, it is assumed that the hydrogen can be delivered within one hour - this needs to be
+        #  changed if the single trip distance from the origin to destination is longer than 45 minutes
+        #  (1 hour - 15 mins refuelling)
 
         # Trailer capacity (at maximum pressure) [kg]
         self.trailer_capacity = 500
@@ -32,24 +33,26 @@ class TrailerH2Delivery(Component):
 
         # Define the threshold value for the artificial costs.
         # The threshold for the destination storage to encourage/discourage the use of the trailer
+        # (percentage of capacity) [-]
         self.fs_destination_storage_threshold = None
         # The threshold for the origin storage to encourage/discourage the use of the trailer
+        # (percentage of capacity) [-]
         self.fs_origin_storage_threshold = None
-        # The amount of hydrogen transported by the trailer
+        # The amount of hydrogen transported by the trailer [kg]
         self.hydrogen_transported = 0
-        # The amount of hydrogen needed
+        # The amount of hydrogen needed [kg]
         self.hydrogen_needed = 0
         # Define the low and the high art. cost value (these will be set for the destination storage) [EUR/kg]
         self.fs_low_art_cost = None
         self.fs_high_art_cost = None
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
         # Round-trip distance [km]
         self.round_trip_distance = self.single_trip_distance * 2
 
-        """ STATES """
+        # ------------------- STATES -------------------
         # This determines whether there is a flow in the current timestep: 0 = off, 1 = on
         self.flow_switch = None
         # This defines the maximum amount of hydrogen that can be delivered in the given timestep:
@@ -59,7 +62,7 @@ class TrailerH2Delivery(Component):
         # This states whether or not delivery is possible in the given timestep: 0 = no, 1 = yes
         self.delivery_possible = 1
 
-        """ INTERNAL VALUES """
+        # ------------------- INTERNAL VALUES -------------------
         # The current artificial cost value [EUR/kg].
         self.current_ac = 0
 
@@ -87,46 +90,67 @@ class TrailerH2Delivery(Component):
             else:
                 flow_switch_value = 0
             self.flow_switch[sim_params.i_interval] = flow_switch_value
-            self.results['variable_costs'][sim_params.i_interval] = flow_switch_value * self.round_trip_distance * self.variable_costs
+            self.results['variable_costs'][sim_params.i_interval] = \
+                flow_switch_value * self.round_trip_distance * self.variable_costs
 
             # Update the artificial costs for this time step [EUR].
             if self.artificial_costs is not None:
                 this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
                 self.results['art_costs'][sim_params.i_interval] = this_dependency_value * self.artificial_costs
 
-
     def prepare_simulation(self, components):
         # Check level of destination storage component: if it is below specified threshold, implement
-        # low artificial costs (to incentivize system to fill it)
+        # low artificial costs (to encourage system to fill it)
         # Check level of non-central storage component: if it is below specified threshold, the
         # trailer cannot take any hydrogen from it
         if self.fs_component_name is not None:
-            # Obtains the origin storage pressure level
-            fs_origin_storage_level_pressure = self.get_foreign_state_value(components, index=0)
-            # Obtains the destination storage pressure level
-            fs_destination_storage_level_pressure = self.get_foreign_state_value(components, index=1)
-            # Obtains the destination storage capacity [kg]
-            fs_destination_storage_capacity = self.get_foreign_state_value(components, index=2)
+            # Obtains the origin storage level [kg]
+            fs_origin_storage_level_kg = self.get_foreign_state_value(components, index=0)
+            # Obtains the origin storage capacity [kg]
+            fs_origin_storage_capacity = self.get_foreign_state_value(components, index=1)
+            # Obtains the available mass that can be taken from the origin storage [kg]
+            fs_origin_available_kg = fs_origin_storage_level_kg - \
+                                          (self.fs_origin_storage_threshold * fs_origin_storage_capacity)
             # Obtains the destination storage level [kg]
-            fs_destination_storage_level_kg = self.get_foreign_state_value(components, index=3)
-            if fs_destination_storage_level_pressure < self.fs_destination_storage_threshold:
+            fs_destination_storage_level_kg = self.get_foreign_state_value(components, index=2)
+            # Obtains the destination storage capacity [kg]
+            fs_destination_storage_capacity = self.get_foreign_state_value(components, index=3)
+            # Obtains the available mass that can be delivered to the destination storage [kg]
+            fs_destination_available_storage = fs_origin_storage_capacity - fs_destination_storage_level_kg
+
+            # Checks if the destination storage level is below the threshold: if yes, low artificial costs
+            # are implemented to encourage a delivery from the trailer
+            if fs_destination_storage_level_kg \
+                    < self.fs_destination_storage_threshold * fs_destination_storage_capacity:
                 self.artificial_costs = self.fs_low_art_cost
-                if fs_destination_storage_capacity > self.trailer_capacity:
+                # If the available mass [kg] in the destination storage and the amount of available hydrogen [kg]
+                # in the origin storage exceed the trailer capacity, the trailer should be completely filled
+                if fs_destination_available_storage > self.trailer_capacity \
+                        and fs_origin_available_kg >= self.trailer_capacity:
                     self.hydrogen_needed = self.trailer_capacity
-                    self.artificial_costs = self.fs_low_art_cost
+                # If the available mass [kg] in the destination storage exceeds the trailer capacity but the amount
+                # of available hydrogen in the origin storage is less than the trailer capacity, the trailer
+                # should be filled with the maximum amount of available hydrogen from the origin storage
+                elif fs_destination_available_storage > self.trailer_capacity > fs_origin_available_kg:
+                    self.hydrogen_needed = fs_origin_available_kg
+                # Else, the trailer should deliver the maximum amount of hydrogen that can fit into the
+                # destination storage
                 else:
-                    self.hydrogen_needed = fs_destination_storage_capacity - fs_destination_storage_level_kg
+                    self.hydrogen_needed = fs_destination_available_storage
+            # If the destination storage level is not below the threshold, high artificial costs are
+            # implemented to discourage unnecessary deliveries
             else:
                 self.artificial_costs = self.fs_high_art_cost
-            if fs_origin_storage_level_pressure < self.fs_origin_storage_threshold or self.delivery_possible == 0:
+            # If the origin storage level is below the specified threshold or the distance is far enough that
+            # the trailer cannot complete the round trip plus refuelling in one hour, delivery is not possible from
+            # this storage
+            if fs_origin_storage_level_kg < self.fs_origin_storage_threshold * fs_origin_storage_capacity\
+                    or self.delivery_possible == 0:
                 self.hydrogen_transported = 0
             else:
                 self.hydrogen_transported = self.hydrogen_needed
 
-
-
         self.current_ac = self.get_costs_and_art_costs()
-
 
     def create_oemof_model(self, busses, _):
         trailer = solph.Transformer(
@@ -141,8 +165,8 @@ class TrailerH2Delivery(Component):
         df_trailer = data_trailer['sequences']
 
         for i_result in df_trailer:
-            if 'is_delivery_not_possible' not in self.states:
-                self.states['is_delivery_not_possible'] = [None] * sim_params.n_intervals
+            if 'is_delivery_possible' not in self.states:
+                self.states['is_delivery_possible'] = [None] * sim_params.n_intervals
 
             if i_result[0][1] == self.name and i_result[1] == 'flow':
                 # The amount of hydrogen entering the trailer is recorded
@@ -156,7 +180,7 @@ class TrailerH2Delivery(Component):
                 else:
                     self.delivery_possible = 1
 
-                self.states['is_delivery_not_possible'][sim_params.i_interval] = self.delivery_possible
+                self.states['is_delivery_possible'][sim_params.i_interval] = self.delivery_possible
 
 
 
