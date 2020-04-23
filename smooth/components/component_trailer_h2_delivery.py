@@ -21,9 +21,9 @@ class TrailerH2Delivery(Component):
         # ToDo: At the moment only the variable costs per distance travelled are taken into consideration,
         #  but the update_var_costs() function can be modified to allow for the variable costs per kg of
         #  hydrogen transported as well
-        # ToDo: At the moment, it is assumed that the hydrogen can be delivered within one hour - this needs to be
-        #  changed if the single trip distance from the origin to destination is longer than 45 minutes
-        #  (1 hour - 15 mins refuelling)
+        # ToDo: At the moment, it is assumed that the hydrogen can be delivered within one hour - this
+        #  needs to be changed if the single trip distance from the origin to destination is longer
+        #  than 45 minutes (1 hour - 15 mins refuelling)
 
         # Trailer capacity (at maximum pressure) [kg]
         self.trailer_capacity = 500
@@ -78,8 +78,8 @@ class TrailerH2Delivery(Component):
         # First create an empty cost and art. cost array for this component, if it
         # hasn't been created before.
         if 'variable_costs' not in self.results:
-            # If this function is not overwritten in the component, then costs and art. costs are not part of the
-            # component and therefore set to 0.
+            # If this function is not overwritten in the component, then costs and art. costs are not part of
+            # the component and therefore set to 0.
             self.results['variable_costs'] = [0] * sim_params.n_intervals
             self.results['art_costs'] = [0] * sim_params.n_intervals
             # A list is created for the flow switch values
@@ -123,8 +123,8 @@ class TrailerH2Delivery(Component):
 
             # Checks if the destination storage level is below the threshold: if yes, low artificial costs
             # are implemented to encourage a delivery from the trailer
-            if fs_destination_storage_level_kg \
-                    < self.fs_destination_storage_threshold * fs_destination_storage_capacity:
+            if fs_destination_storage_level_kg < \
+                    self.fs_destination_storage_threshold * fs_destination_storage_capacity:
                 self.artificial_costs = self.fs_low_art_cost
                 # If the available mass [kg] in the destination storage and the amount of available hydrogen [kg]
                 # in the origin storage exceed the trailer capacity, the trailer should be
@@ -147,8 +147,8 @@ class TrailerH2Delivery(Component):
             else:
                 self.artificial_costs = self.fs_high_art_cost
             # If the origin storage level is below the specified threshold or the distance is far enough that
-            # the trailer cannot complete the round trip plus refuelling in one hour, delivery is not possible from
-            # this storage
+            # the trailer cannot complete the round trip plus refuelling in one hour, delivery is not possible
+            # from this storage
             if fs_origin_storage_level_kg < self.fs_origin_storage_threshold * \
                     fs_origin_storage_capacity or self.delivery_possible == 0:
                 self.hydrogen_transported = 0

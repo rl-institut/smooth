@@ -13,7 +13,8 @@ class StorageH2 (Component):
         self.name = 'Storage_default_name'
 
         # Define the hydrogen bus the storage is connected to.
-        self.bus_in_and_out = None
+        self.bus_in = None
+        self.bus_out = None
         # Min. and max. pressure [bar].
         self.p_min = 0
         self.p_max = 450
@@ -78,8 +79,8 @@ class StorageH2 (Component):
     def create_oemof_model(self, busses, _):
         storage = solph.components.GenericStorage(
             label=self.name,
-            outputs={busses[self.bus_in_and_out]: solph.Flow(variable_costs=self.current_vac[1])},
-            inputs={busses[self.bus_in_and_out]: solph.Flow(variable_costs=self.current_vac[0])},
+            outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_vac[1])},
+            inputs={busses[self.bus_in]: solph.Flow(variable_costs=self.current_vac[0])},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
