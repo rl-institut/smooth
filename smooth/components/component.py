@@ -50,7 +50,7 @@ class Component:
 
             setattr(self, this_param, params[this_param])
 
-        if self.variable_costs is not None  or self.artificial_costs is not None:
+        if self.variable_costs is not None or self.artificial_costs is not None:
             assert self.dependency_flow_costs is not None
         if self.variable_emissions is not None:
             assert self.dependency_flow_emissions is not None
