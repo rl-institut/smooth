@@ -11,7 +11,7 @@ class Battery(Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = "Battery_default_name"
 
         # Define the electric bus the battery is connected to.
@@ -42,7 +42,7 @@ class Battery(Component):
         # Degradation over lifetime [%]
         # self.degradation =
 
-        """ PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) """
+        # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the
         # battery [EUR/Wh]. vac_out should be set to a minimal value to ensure,
         # that the supply for the demand is first satisfied by the renewables
@@ -57,7 +57,7 @@ class Battery(Component):
         self.vac_low_in = 0
         self.vac_low_out = 0
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
         # Raise an error if the initial state of charge [%] is set below depth of discharge [%].
         if self.soc_init < self.dod:
@@ -65,7 +65,7 @@ class Battery(Component):
                 'Initial state of charge is set below depth of discharge! '
                 'Please adjust soc_init or dod.')
 
-        """ STATES """
+        # ------------------- STATES -------------------
         # State of charge [%]
         self.soc = self.soc_init
 
@@ -75,7 +75,7 @@ class Battery(Component):
         # Adjust loss rate to chosen timestep [%/timestep].
         self.loss_rate = (self.loss_rate / 24) * (self.sim_params.interval_time / 60)
 
-        """ VARIABLE ARTIFICIAL COSTS """
+        # ------------------- VARIABLE ARTIFICIAL COSTS -------------------
         # Store the current artificial costs for input and output [EUR/Wh].
         self.current_vac = [0, 0]
 

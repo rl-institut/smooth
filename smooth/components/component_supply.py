@@ -12,7 +12,7 @@ class Supply (Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Grid_default_name'
         # Maximum output per timestep of commodity:
         # e.g. for the electricity grid [Wh], thermal grid [Wh], CH4 grid [kg/h]
@@ -20,13 +20,13 @@ class Supply (Component):
 
         self.bus_out = None
 
-        """ PARAMETERS ARTIFICIAL COSTS FOREIGN STATE
-        The artificial costs for supplying electricity can be dependant on a
-        foreign state, like a storage SoC. Therefore the name and the state
-        name of that foreign entity have to be defined as well as the threshold
-        level, under which the low level costs are used. Above the threshold,
-        the high level artificial costs are used.
-        """
+        # PARAMETERS ARTIFICIAL COSTS FOREIGN STATE
+        # The artificial costs for supplying electricity can be dependant on a
+        # foreign state, like a storage SoC. Therefore the name and the state
+        # name of that foreign entity have to be defined as well as the threshold
+        # level, under which the low level costs are used. Above the threshold,
+        # the high level artificial costs are used.
+
 
         # Define the threshold value for the artificial costs.
         self.fs_threshold = None
@@ -34,10 +34,10 @@ class Supply (Component):
         self.fs_low_art_cost = None
         self.fs_high_art_cost = None
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
-        """ INTERNAL VALUES """
+        # ------------------- INTERNAL VALUES -------------------
         # The current artificial cost value e.g. [EUR/Wh], [EUR/kg].
         self.current_ac = 0
 

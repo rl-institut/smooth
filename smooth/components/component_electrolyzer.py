@@ -21,7 +21,7 @@ class Electrolyzer (Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Electrolyzer_default_name'
 
         # Define the busses.
@@ -43,7 +43,7 @@ class Electrolyzer (Component):
         # Life time [a].
         self.life_time = 20
 
-        """ PARAMETERS (SPECIFIC) """
+        # ------------------- PARAMETERS (SPECIFIC) -------------------
         # The fitting parameter exchange current density [A/cm²].
         self.fitting_value_exchange_current_density = 1.4043839e-3
         # The thickness of the electrolyte layer [cm].
@@ -59,14 +59,14 @@ class Electrolyzer (Component):
         # size of cell surface [cm²].
         self.area_cell = 1500
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
         # Interval time [min].
         self.interval_time = self.sim_params.interval_time
         # Calculate the max. energy the electrolyzer can use in one time step [Wh].
         self.energy_max = self.power_max * self.interval_time/60
 
-        """  CONSTANT PARAMETERS (PHYSICS) """
+        # ------------------- CONSTANT PARAMETERS (PHYSICS) -------------------
         # Faraday constant F [As/mol].
         self.faraday = 96485
         # Gas constant R [J /(mol K)].
@@ -103,7 +103,7 @@ class Electrolyzer (Component):
             self.cur_dens_max * self.area_cell * self.interval_time * 60 * self.z_cell / \
             (2 * self.faraday) * self.molarity / 1000
 
-        """ STATES """
+        # ------------------- STATES -------------------
         # Temperature of the electrolyzer [K].
         self.temperature = self.temp_init
         # Tracking supporting points to calculate temperature later on.
