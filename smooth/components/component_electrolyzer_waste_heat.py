@@ -45,12 +45,19 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         self.model_h2 = None
         self.model_th = None
 
+    def conversion_fun_ely(self, ely_energy):
+        # Create a function that will give out the mass values for the electric energy values at the breakpoints.
+
+        # Check the index of this ely_energy entry.
+        this_index = self.supporting_points['energy_halved'].index(ely_energy)
+        # Return the according hydrogen production value [kg].
+        return self.supporting_points['h2_produced'][this_index]
 
     def conversion_fun_thermal(self, ely_energy):
         # Create a function that will give out the thermal energy values for the electric energy values at the breakpoints.
 
         # Check the index of this ely_energy entry.
-        this_index = self.supporting_points['energy'].index(ely_energy)
+        this_index = self.supporting_points['energy_halved'].index(ely_energy)
         # Return the according hydrogen production value [kg].
         return self.supporting_points['thermal_energy'][this_index]
 
@@ -62,10 +69,10 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         electrolyzer = solph.custom.PiecewiseLinearTransformer(
             label=self.name,
             inputs={busses[self.bus_el]: solph.Flow(
-               nominal_value=self.energy_max,
+               nominal_value=self.energy_max / 2,
                variable_costs=0)},
             outputs={busses[self.bus_h2]: solph.Flow()},
-            in_breakpoints=self.supporting_points['energy'],
+            in_breakpoints=self.supporting_points['energy_halved'],
             conversion_function=self.conversion_fun_ely,
             pw_repn='CC')
 
@@ -73,10 +80,10 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         electrolyzer_thermal = solph.custom.PiecewiseLinearTransformer(
             label=self.name+'_thermal',
             inputs={busses[self.bus_el]: solph.Flow(
-               nominal_value=self.energy_max,
+               nominal_value=self.energy_max / 2,
                variable_costs=0)},
             outputs={busses[self.bus_th]: solph.Flow()},
-            in_breakpoints=self.supporting_points['energy'],
+            in_breakpoints=self.supporting_points['energy_halved'],
             conversion_function=self.conversion_fun_thermal,
             pw_repn='CC')
 
@@ -115,6 +122,7 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         self.supporting_points['h2_produced'] = bp_ely_h2
         self.supporting_points['energy'] = bp_ely_energy
         self.supporting_points['thermal_energy'] = bp_ely_thermal
+        self.supporting_points['energy_halved'] = [this_bp / 2 for this_bp in bp_ely_energy]
 
 
     def get_waste_heat(self, energy_used, h2_produced, new_ely_temp):
@@ -175,7 +183,10 @@ class ElectrolyzerWasteHeat (Electrolyzer):
 
         model_to_solve.electrolyzer_flow_ratio_fix = po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
 
-
+    def update_flows(self, results, sim_params):
+        # Check if the component has an attribute 'flows', if not, create it as an empty dict.
+        Electrolyzer.update_flows(self, results, sim_params, self.name)
+        Electrolyzer.update_flows(self, results, sim_params, self.name + '_thermal')
 
 
 
