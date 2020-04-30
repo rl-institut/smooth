@@ -1,6 +1,5 @@
 matplotlib
-seaborn
 pandas
 numpy
-deap
 oemof
+scipy

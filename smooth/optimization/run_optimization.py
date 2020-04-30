@@ -1,367 +1,405 @@
-# With this optimization tool, attributes of a smooth component can be optimized. For the optimization, a genetic
-# algorithm (based on the DEAP package) is used.
-
+from multiprocessing import Pool, cpu_count
 import random
-import numpy as np
-import multiprocessing
-import copy
-import math
-from smooth.optimization.optimization_parameters import OptimizationParameters
+import matplotlib.pyplot as plt  # only needed when plot_progress is set
+
+# import traceback
+# def tb(e):
+# traceback.print_exception(type(e), e, e.__traceback__)
+
 from smooth import run_smooth
-from deap import base, creator, tools
 
 
-# Define if you want to save all smooth results of each individual evaluated. This can lead to big result files, in a
-# test run, the results of 100 individuals was ~500 MB, while the result file with only the smooth result saved for the
-# best individual was ~5 MB.
-save_all_smooth_results = False
+class AttributeVariation:
+    # Class that contain all information about the attribute that is varied by
+    # the genetic algorithm.
+    # Recommended attributes: comp_name, comp_attribute, val_min, val_max
+    def __init__(self, iterable=(), **kwargs):
+        self.__dict__.update(iterable, **kwargs)
 
 
-def fitness_function(_i_individual, _individual, model, opt_params):
-    # The fitness function evaluates one gen combination of one individual.
-    # Parameter:
-    #  _i_individual: Index of this individual [int].
-    # _individual: A shadow of a deap individual [ShadowIndividual].
-    # model: description of the smooth model.
+class Individual:
+    class IndividualIterator:
+        # Class to iterate over gene values
+        def __init__(self, individual):
+            self._idx = 0
+            self.individual = individual
 
-    # If this individual was already evaluated, just give back the fitness value.
-    if _individual.fitness.valid:
-        return [_i_individual, _individual]
+        def __next__(self):
+            try:
+                return self.individual.values[self._idx]
+            except IndexError:
+                raise StopIteration
+            finally:
+                self._idx += 1
 
-    # Get the values for each component of the gens given by the genetic algorithm.
-    attribute_values = opt_params.get_attribute_values(_individual.gen)
-    # Make a copy of the original model (not by reference).
-    this_model = copy.deepcopy(model)
-    # Update the model according to the gens.
-    for this_attribute in opt_params.attribute_var:
-        # Loop through all components of the model dict till the right component is found.
-        for this_comp in this_model['components']:
-            if this_comp['name'] == this_attribute.comp_name:
-                # Get the attribute value for this attribute and delete it from the list of all attribute values.
-                this_value = attribute_values.pop(0)
-                # Save the value in this component for later use.
-                this_attribute.this_val = this_value
-                # Change the value of that component according to the current gens.
-                this_comp[this_attribute.comp_attribute] = this_value
+    values = None  # array. Take care when copying.
+    fitness = None  # Tuple
+    smooth_result = None  # result of run_smooth
+
+    def __init__(self, values):
+        self.values = values
+
+    def __str__(self):
+        return str(self.values)
+
+    # enable iteration over values
+    def __iter__(self):
+        return self.IndividualIterator(self)
+
+    def __len__(self):
+        return len(self.values)
+
+    # access values directly
+    def __getitem__(self, idx):
+        return self.values[idx]
+
+    def __setitem__(self, idx, value):
+        self.values[idx] = value
+
+    def dominates(self, other):
+        return (
+            (self.fitness[0] > other.fitness[0] and self.fitness[1] > other.fitness[1]) or
+            (self.fitness[0] >= other.fitness[0] and self.fitness[1] > other.fitness[1]) or
+            (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1]))
+
+
+def sort_by_values(n, values):
+    # sort values, return list of indices with max size n
+    return [i for e, i in sorted((e, i) for i, e in enumerate(values))][:n]
+
+
+def fast_non_dominated_sort(p):
+    # NSGA-II's fast non dominated sort
+    S = [[]]*len(p)
+    front = [[]]
+    n = [0]*len(p)
+    rank = [0]*len(p)
+
+    # build domination tree
+    for i in range(0, len(p)):
+        for j in range(0, len(p)):
+            if p[i].dominates(p[j]) and j not in S[i]:
+                S[i].append(j)
+            elif p[j].dominates(p[i]):
+                n[i] += 1
+        if n[i] == 0:
+            rank[i] = 0
+            if i not in front[0]:
+                front[0].append(i)
+
+    i = 0
+    while(len(front[i]) > 0):
+        Q = []
+        for p in front[i]:
+            for q in S[p]:
+                n[q] -= 1
+                if n[q] == 0:
+                    rank[q] = i+1
+                    if q not in Q:
+                        Q.append(q)
+        i = i+1
+        front.append(Q)
+
+    front.pop(len(front) - 1)
+    return front
+
+
+def CDF(values1, values2, n):
+    # calculate crowding distance
+    distance = [0]*n
+    sorted1 = sort_by_values(n, values1)
+    sorted2 = sort_by_values(n, values2)
+    distance[0] = 1e100  # border
+    distance[-1] = 1e100
+    if max(values1) == min(values1) or max(values2) == min(values2):
+        return [1e100]*n
+    for k in range(1, n-1):
+        distance[k] = distance[k] + (values1[sorted1[k+1]] -
+                                     values2[sorted1[k-1]])/(max(values1)-min(values1))
+    for k in range(1, n-1):
+        distance[k] = distance[k] + (values1[sorted2[k+1]] -
+                                     values2[sorted2[k-1]])/(max(values2)-min(values2))
+    return distance
+
+
+def crossover(parent1, parent2):
+    # crossover between two parents
+    # Selects random (independent) genes from one parent or the other
+    child = Individual([gene for gene in parent1])  # copy parent1
+    for gene_idx, gene in enumerate(parent2):
+        if random.random() < 0.5:
+            child[gene_idx] = gene
+    return child
+
+
+def mutate(parent, attribute_variation):
+    # mutate parent
+    # mutates a random number of genes around original value, within variation
+    child = Individual([gene for gene in parent])
+    # change between one and all genes of parent
+    num_genes_to_change = random.randint(1, len(child))
+    # get indices of genes to change
+    genes_to_change = random.sample(range(len(child)), num_genes_to_change)
+    for mut_gene_idx in genes_to_change:
+        # compute smallest distance to min/max of attribute
+        val_min = attribute_variation[mut_gene_idx].val_min
+        val_max = attribute_variation[mut_gene_idx].val_max
+        delta_min = child[mut_gene_idx] - val_min
+        delta_max = val_max - child[mut_gene_idx]
+        delta = min(delta_min, delta_max)
+        # sigma influences spread of random numbers
+        # try to keep between min and max of attribute
+        sigma = delta / 3 if delta > 0 else 1
+        # mutate gene with normal distributaion around current value
+        child[mut_gene_idx] = int(
+            min(max(random.gauss(child[mut_gene_idx], sigma), val_min), val_max))
+    return child
+
+
+# hack to have custom lambda objectives in pool worker
+# lambda's can't be pickled, but globals can be set when pool is init
+_objectives = None
+
+
+def worker_init(f):
+    global _objectives
+    _objectives = f
+
+
+def fitness_function(index, individual, model, attribute_variation):
+    # compute fitness for one individual
+    # called async -> copies of individual and model given
+    # program makes computer freeze when this is a class function?
+    # update (copied) oemof model
+    for i, av in enumerate(attribute_variation):
+        model['components'][av.comp_name][av.comp_attribute] = individual[i]
 
     # Now that the model is updated according to the genes given by the GA, smooth can be run.
     try:
-        smooth_result = run_smooth(this_model)
-        # As a fitness value, give back the summed up total annuity (which will be minimized) [EUR/a].
-        annuity_tot = 0
-        for this_comp in smooth_result:
-            annuity_tot += this_comp.results['annuity_total']
+        smooth_result = run_smooth(model)[0]
+        # TODO: SAVE_ALL_SMOOTH_RESULTS can be given as arg if necessary
+        # individual.smooth_result = smooth_result if SAVE_ALL_SMOOTH_RESULTS else None
+        # update fitness with given objective functions
+        individual.fitness = tuple(f(smooth_result) for f in _objectives)
 
-    except:
-        # The smooth run failed. Therefore the fitness value is set to infinity.
-        # ToDo: Check if setting the fitness value to infinity is a good way to handle bad individuals. Maybe this could
-        # ToDo: be handled in a way where the genetic algorithm can extract information out of the failed result.
-        print('------------------------------------------------------------------------------------Evaluation canceled')
-        # Case: Smooth couldn't run through, thus a bad fitness value has to be assigned.
-        annuity_tot = float('inf')
-        smooth_result = None
-
-    # For the DEAP package, the fitness value needs to be a tuple, thus the comma.
-    _individual.fitness.valid = True
-    _individual.fitness.values = annuity_tot,
-    _individual.smooth_result = smooth_result
-    _individual.attribute_variation = opt_params.attribute_var
-    return [_i_individual, _individual]
+    except Exception as e:
+        # The smooth run failed.The fitness score remains None.
+        print('Evaluation canceled ({})'.format(str(e)))
+    return index, individual
 
 
-class TrackIndividuals:
-    # Track all individuals that ever have been calculated to prevent double calculations. An object of this class will
-    # be the output of the optimization run.
-    def __init__(self):
-        # Dict of all results that have been done calculated so far. The key of one individual is the decimal number of
-        # its binary gens (e.g. 0 0 1 0 1 --> key is 5)
-        self.individuals_evaluated = dict()
-        # The best fitness value.
-        self.best_fit_val = None
-        # Index of the individual with the best fitness value.
-        self.i_best_fit_val = None
-        # Gens of the individual with the best fitness value.
-        self.best_gens = None
-        # Smooth result of the individual with the best fitness value.
-        self.best_smooth_result = None
-        # Safe the stats of a run.
-        self.stats = None
+class Optimization:
 
-    def set_fitness_value(self, individual):
-        # Set the fitness value of an individual if that individual was already evaluated.
-        # Parameters:
-        #  individual: An individual object from deap [individual]
+    SAVE_ALL_SMOOTH_RESULTS = False  # ignored
 
-        # Get the integer value of the gens [int].
-        int_val = self.get_int(list(individual))
-        # Check if the int value is a key in the dictionary.
-        if int_val in self.individuals_evaluated and not individual.fitness.valid:
-            # Return the fitness value.
-            individual.fitness.values = self.individuals_evaluated[int_val].fitness.values
+    def __init__(self, iterable=(), **kwargs):
 
-    def set_stats(self, stats):
-        # After an optimization run the states are saved to the tracked individuals (which are then given out).
-        self.stats = stats
+        # set defaults
+        self.plot_progress = False
+        # objective functions: tuple with lambdas
+        # negative sign for minimizing
+        # defaults to minimum of annual costs and emissions
+        self.objectives = (
+            lambda x: -sum([c.results["annuity_total"] for c in x]),
+            lambda x: -sum([c.results["annual_total_emissions"] for c in x]),
+        )
+        # objective names for plotting
+        self.objective_names = ('costs', 'emissions')
 
-    def add_individual(self, individual):
-        # Add an individual to the dictionary of evaluated individuals if it wasn't evaluated yet.
-        # Parameters:
-        #  individual: An individual object from deap [individual]
+        # set parameters from args
+        self.__dict__.update(iterable, **kwargs)
 
-        # Get the integer value of the gens.
-        int_val = self.get_int(individual.gen)
+        # how many CPU cores to use
+        try:
+            assert(self.n_core)
+        except (AssertionError, AttributeError):
+            print("No CPU count (n_core) given. Using all cores.")
+            self.n_core = cpu_count()
+        if self.n_core == "max":
+            self.n_core = cpu_count()
 
-        if int_val not in self.individuals_evaluated:
-            # If this individual has the best fitness value so far, save it as the best.
-            if self.best_fit_val is None or individual.fitness.values < self.best_fit_val:
-                self.best_fit_val = individual.fitness.values
-                self.i_best_fit_val = int_val
-                self.best_gens = individual.gen
-                self.best_smooth_result = individual.smooth_result
+        # population size
+        try:
+            assert(self.population_size)
+        except (AssertionError, AttributeError):
+            raise AssertionError("No population size given")
 
-            # Then save the individual as an individual evaluated. If not all smooth results are supposed to be saved,
-            # delete the smooth result first (this drastically reduces the size of the result file).
-            if not save_all_smooth_results:
-                individual.smooth_result = None
+        # number of generations to run
+        # TODO run until no more change?
+        try:
+            assert(self.n_generation)
+        except (AssertionError, AttributeError):
+            raise AssertionError("Number of generations not set")
 
-            # Add the individual to the list of evaluated individuals.
-            self.individuals_evaluated[int_val] = IndividualShadow(
-                individual.gen, individual.fitness.values, individual.smooth_result, individual.attribute_variation)
+        # attribute variation
+        try:
+            assert(self.attribute_variation)
+        except (AssertionError, AttributeError):
+            raise AssertionError("No attribute variation given")
+        self.attribute_variation = [AttributeVariation(av) for av in self.attribute_variation]
 
+        # oemof model to solve
+        try:
+            assert(self.model)
+        except (AssertionError, AttributeError):
+            raise AssertionError("No model given.")
 
-    def get_int(self, gen):
-        # Calculate an integer by a given list of binary values.
-        # Parameter:
-        #  gen: A gen sequence of binary values [list].
+        # objectives
+        assert len(self.objectives) == 2, "Need exactly two objective functions"
+        assert len(self.objectives) == len(
+            self.objective_names), "Objective names don't match objective functions"
 
-        # Convert the genes to a string and then to an integer.
-        binary_string = ''.join((str(this_gen) for this_gen in gen))
-        # Return the integer value [int]
-        return int(binary_string, 2)
+        # Init population with random values between attribute variation
+        self.population = [Individual(
+            [random.randint(av.val_min, av.val_max) for av in self.attribute_variation])
+            for _ in range(self.population_size)]
+        self.evaluated = {}
 
+        # plot intermediate results?
+        if self.plot_progress:
+            self.ax = plt.figure().add_subplot(111)
 
-class IndividualShadow:
-    # While there are problems with pickling the "Individual" class from deap, a shadow for an individual can be created
-    # in order to use multiprocessing (which uses pickling).
-    def __init__(self, gen, fitness_val, smooth_result=None, attribute_var=None):
-        # The gen of the individual as list of binary values [list].
-        self.gen = gen
-        # The fitness value [Fitness object].
-        self.fitness = Fitness(fitness_val)
-        # The results of the smooth run [list].
-        self.smooth_result = smooth_result
-        # The parameter that were varied by the genetic algorithm [].
-        self.attribute_variation = attribute_var
+    def err_callback(self, err_msg):
+        # Async error callback
+        print('Callback error at parallel computing! The error message is: {}'.format(err_msg))
 
+    def set_fitness(self, result):
+        # Async success callback: update master individual
+        self.population[result[0]] = result[1]
+        self.evaluated[str(result[1])] = result[1]
 
-class Fitness:
-    # Track the fitness values in the style the "Individual" class from deap does.
-    def __init__(self, fitness_val):
-        self.values = fitness_val
-        if fitness_val is None:
-            self.valid = False
-        else:
-            self.valid = True
+    def compute_fitness(self):
+        # compute fitness of every individual in population
+        # open worker n_core threads
+        # set objective functions for each worker
+        pool = Pool(processes=self.n_core, initializer=worker_init, initargs=(self.objectives,))
+        for idx, ind in enumerate(self.population):
+            if ind.fitness is None:  # not evaluated yet
+                pool.apply_async(
+                    fitness_function,
+                    (idx, ind, self.model, self.attribute_variation),
+                    callback=self.set_fitness,
+                    error_callback=self.err_callback  # tb
+                )
+        pool.close()
+        pool.join()
+        # filter out individuals with invalid fitness values
+        self.population = list(
+            filter(lambda ind: ind is not None and ind.fitness is not None, self.population))
 
+    def run(self):
+        """
+        main GA function
+        """
+        random.seed()  # init RNG
 
-class GenerationEvaluationResult:
-    # This class tracks all the fitness evaluation results that are calculated in parallel.
-    def __init__(self, n_individuals):
-        self.individuals = [None] * n_individuals
+        print('\n+++++++ START GENETIC ALGORITHM +++++++')
+        print('The optimization parameters chosen are:')
+        print('  population_size: {}'.format(self.population_size))
+        print('  n_generation:    {}'.format(self.n_generation))
+        print('  n_core:          {}'.format(self.n_core))
+        print('+++++++++++++++++++++++++++++++++++++++\n')
 
-    def update_result(self, result):
-        # This function is the callback function to the parallel call of the fitness function.
-        self.individuals[result[0]] = result[1]
+        result = []
 
+        for gen in range(self.n_generation):
 
-def compute_fitness_values(_population, model, opt_params):
-    # While the deap type "individuals" leads to problems with the multiprocessing toolbox, the information is
-    # extracted.
-    population_shadow = []
-    for this_population in _population:
-        if this_population.fitness.valid:
-            fitness_value = this_population.fitness.values
-        else:
-            fitness_value = None
+            # generate offspring
+            population2 = self.population
+            tries = 0
+            # half are parents on front, so not computed again
+            while(len(population2) != 2*self.population_size) and gen > 0:
+                [parent1, parent2] = random.sample(self.population, 2)
+                child = mutate(crossover(parent1, parent2), self.attribute_variation)
+                fingerprint = str(child)
+                tries += 1
+                if fingerprint not in self.evaluated:
+                    # child config not seen so far
+                    population2.append(child)
+                    # block, so not in population again
+                    self.evaluated[fingerprint] = None
+                if tries > 1000 * self.population_size:
+                    print("Search room exhausted. Aborting.")
+                    break
+            else:
+                # New population successfully generated.
+                # evaluate generated population
+                self.population = population2
+                self.compute_fitness()
+                if len(self.population) == 0:
+                    print("No individuals left. Aborting.")
+                    break
 
-        # Get the genes of this population [list].
-        this_gens = list(this_population)
+                f1_vals2 = [i.fitness[0] for i in self.population]
+                f2_vals2 = [i.fitness[1] for i in self.population]
+                FNDS = fast_non_dominated_sort(self.population)
+                CDF_values = [CDF(f1_vals2, f2_vals2, len(NDS)) for NDS in FNDS]
 
-        population_shadow.append(IndividualShadow(this_gens, fitness_value))
+                # select individuals on pareto front, depending on fitness and distance
+                pop_idx = []
+                for i in range(0, len(FNDS)):
+                    FNDS2 = [FNDS[i].index(FNDS[i][j]) for j in range(0, len(FNDS[i]))]
+                    front22 = sort_by_values(len(FNDS2), CDF_values[i])
+                    front = [FNDS[i][front22[j]] for j in range(0, len(FNDS[i]))]
+                    front.reverse()
+                    pop_idx += [v for v in front[:self.population_size-len(pop_idx)]]
+                    if (len(pop_idx) == self.population_size):
+                        break
 
-    def err_callback(err_msg):
-        # Define an error callback function, that will be called if something goes wrong calling the normal callback
-        # function with the parallel pool. This happened before because of a pickle issue.
-        print('Callback error at parallel computing! The error message is: ')
-        print(err_msg)
+                # save pareto front
+                # values/fitness tuples for all non-dominated individuals
+                result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
 
+                # print info of current pareto front
+                print("The best front for Generation # {} / {} is".format(
+                    gen+1, self.n_generation))
+                for i, v in enumerate(FNDS[0]):
+                    print(i, self.population[v], self.population[v].fitness)
+                print("\n")
 
-    # Generate a result object that will catch the results of the function evaluation.
-    individuals_evaluated = GenerationEvaluationResult(len(_population))
-    # Generate a pool for using multiple cores.
-    pool = multiprocessing.Pool(processes=opt_params.ga_params.n_core)
-    # Start the fitness function evaluations in parallel.
-    for i_individual, this_individual in enumerate(population_shadow):
-        # Asynchronously call the fitness function for each individual. The results are saved by calling the callback
-        # function.
-        pool.apply_async(fitness_function, (i_individual, this_individual, model, opt_params),
-                         callback=individuals_evaluated.update_result, error_callback=err_callback)
+                # show current pareto front in plot
+                if self.plot_progress:
+                    # use abs(r[]) to display positive values
+                    f1_vals = [r[1][0] for r in result]
+                    f2_vals = [r[1][1] for r in result]
+                    self.ax.clear()
+                    self.ax.plot(f1_vals, f2_vals, '.b')
+                    plt.title('Front for Generation #{}'.format(gen+1))
+                    plt.xlabel(self.objective_names[0])
+                    plt.ylabel(self.objective_names[1])
+                    plt.draw()
+                    plt.pause(0.1)
 
-    # Close and join the pool make sure that the code is not continuing before each evaluation is finished.
-    pool.close()
-    pool.join()
+                self.population = [self.population[i] for i in pop_idx]
 
-    # Return the evaluated individuals.
-    return individuals_evaluated
+                continue
+
+            # generation broke off: stop GA
+            break
+
+        print('\n+++++++ GENETIC ALGORITHM FINISHED +++++++')
+        for i, attr in enumerate(self.attribute_variation):
+            print(' {} - {}'.format(
+                attr.comp_name, attr.comp_attribute))
+        result.sort(key=lambda v: -v[1][0])
+        for i, v in enumerate(result):
+            print(i, v[0], " -> ", dict(zip(self.objective_names, v[1])))
+        print('+++++++++++++++++++++++++++++++++++++++++++\n')
+
+        if self.plot_progress:
+            plt.show()
+
+        return result
 
 
 def run_optimization(opt_config, _model):
-    # Find optimal component parameters of a smooth model that minimize the total annuity.
-    # Parameter:
-    #  opt_config: Configuration of the optimization [dict].
-    #  model: smooth model [dict].
-    #  result_file_name: If given, the results will be saved to the file preceded by the current time [str].
-
-    # Create an object containing all the relevant information for the genetic algorithm.
-    opt_params = OptimizationParameters()
-    opt_params.set_params(opt_config)
-
-    # Set up a minimization problem.
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMin)
-    tbx = base.Toolbox()
-
-    # Number of bytes that make up the gens of an individual [-].
-    n_gen_per_individual = opt_params.n_gen_total
-
-    # Set each single gen to be initialized as a random value 0 or 1.
-    tbx.register("attr_int", random.randint, 0, 1)
-    # Define the properties of one individual.
-    tbx.register("individual",
-                 tools.initRepeat,
-                 creator.Individual,
-                 tbx.attr_int,
-                 n=n_gen_per_individual)
-    # Define the population.
-    tbx.register("population", tools.initRepeat, list, tbx.individual)
-
-    def map_fitness(this_evaluated_results):
-        return this_evaluated_results.fitness.values
-
-    # Set the evaluation function, the mating processing, the mutating process and the selection process for deap.
-    tbx.register("evaluate", map_fitness)
-    tbx.register("mate", tools.cxOnePoint)
-    tbx.register("mutate", tools.mutFlipBit, indpb=0.01)
-    tbx.register("select", tools.selTournament, tournsize=5)
-
-    # Create an object that will track all evaluated individuals.
-    track_individuals = TrackIndividuals()
-
-    def set_fitness(_population):
-        # Evaluate each individual of a population.
-        # Parameter:
-        #  population: List of individuals [list].
-
-        # While there is a problem with using deap with computing on multiple cores, first the fitness values are
-        # evaluated in parallel and the result is given back.
-        individuals_evaluated = compute_fitness_values(_population, _model, opt_params)
-
-        # The fitness function used by deap only maps the results already generated in the last step.
-        for i_individual in range(len(_population)):
-            # Assign the fitness value to this individual. Fitness value must be given as tuple (thus the comma).
-            _population[i_individual].fitness.values = tbx.evaluate(individuals_evaluated.individuals[i_individual])
-
-        # Add all evaluated tracked individuals to track_individuals.
-        for _this_individual in individuals_evaluated.individuals:
-            track_individuals.add_individual(_this_individual)
-
-    def pull_stats(_population, _iteration=1):
-        fitnesses = [individual.fitness.values[0] for individual in _population]
-        return {
-            'i': _iteration,
-            'mu': np.mean(fitnesses),
-            'std': np.std(fitnesses),
-            'max': np.max(fitnesses),
-            'min': np.min(fitnesses)
-        }
-
-    # Crate a random initial population.
-    population = tbx.population(n=opt_params.ga_params.population_size)
-
-    print('\n+++++++ START GENETIC ALGORITHM +++++++')
-    print('The optimization parameters chosen are:')
-    print('  population_size: {}'.format(opt_params.ga_params.population_size))
-    print('  n_generation:    {}'.format(opt_params.ga_params.n_generation))
-    print('  n_core:          {}'.format(opt_params.ga_params.n_core))
-    print('+++++++++++++++++++++++++++++++++++++++\n')
-
-    # Compute the fitness values for the initial population.
-    set_fitness(population)
-    # If no evaluation was successful, throw an error.
-    if track_individuals.best_fit_val == (float('inf'),):
-        raise ValueError('No evaluation of the initial population was successful!')
-
-    # globals,
-    stats = []
-
-    # Now run all populations.
-    iteration = 1
-    while iteration <= opt_params.ga_params.n_generation:
-        # Get the current population.
-        current_population = list(map(tbx.clone, population))
-        # Get offspring of the current population.
-        offspring = []
-        for _ in range(10):
-            i1, i2 = np.random.choice(range(len(population)), size=2, replace=False)
-            # Mate two individuals to generate two offspring.
-            offspring1, offspring2 = \
-                tbx.mate(population[i1], population[i2])
-            # While the fitness values of the parents are in the children, they have to be deleted.
-            del offspring1.fitness.values
-            del offspring2.fitness.values
-            # Save the new offspring individuals to the offspring list.
-            offspring.append(tbx.mutate(offspring1)[0])
-            offspring.append(tbx.mutate(offspring2)[0])
-
-        for child in offspring:
-            current_population.append(child)
-
-        # Set the fitness values for each individual in the population that has already been evaluated.
-        for this_individual in current_population:
-            track_individuals.set_fitness_value(this_individual)
-
-        # Calculate the fitness values for the current population.
-        set_fitness(current_population)
-
-        # Select the best individuals.
-        population[:] = tbx.select(current_population, len(population))
-
-        # set fitness on individuals in the population,
-        stats.append(
-            pull_stats(population, iteration))
-
-        # Print optimization progress info.
-        try:
-            print('Iteration {} finished. Best fit. val: {} Avg. fit. val: {}'.format(
-                iteration, math.floor(stats[-1]['min']), math.floor(stats[-1]['mu'])))
-        except:
-            # There are cases, when the average stat is infinity, therefor the floor command is failing.
-            print('Iteration {} finished. Best fit. val: {} Avg. fit. val: {}'.format(
-                iteration, stats[-1]['min'], stats[-1]['mu']))
-
-        iteration += 1
-
-    print('\n+++++++ GENETIC ALGORITHM FINISCHED +++++++')
-    print('The best individual is:')
-    print('  fit_val: {}'.format(track_individuals.best_fit_val))
-    best_attribute_vals = opt_params.get_attribute_values(track_individuals.best_gens)
-    for this_attribute in opt_params.attribute_var:
-        print(' attribute {} - {} value: {}'.format(
-            this_attribute.comp_name, this_attribute.comp_attribute, best_attribute_vals.pop(0)))
-
-    print('+++++++++++++++++++++++++++++++++++++++++++\n')
-
-    # Save the stats in the output.
-    track_individuals.set_stats(stats)
-
-    return track_individuals
+    # save GA params directly in config
+    opt_config.update(opt_config.pop("ga_params", dict))
+    if isinstance(_model["components"], list):
+        # simplify oemof model: instead of components array, have dict with component names as key
+        _names = [c.pop("name") for c in _model["components"]]
+        _model.update({'components': dict(zip(_names, _model["components"]))})
+    # save oemof model in config
+    opt_config.update({"model": _model})
+    # run GA
+    return Optimization(opt_config).run()

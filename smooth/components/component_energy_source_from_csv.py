@@ -6,6 +6,7 @@ import smooth.framework.functions.functions as func
 
 class EnergySourceFromCsv (Component):
     """ General energy sources are created through this class by importing csv files """
+
     def __init__(self, params):
 
         # Call the init function of the mother class.
@@ -15,6 +16,7 @@ class EnergySourceFromCsv (Component):
         self.name = 'General_energy_source'
 
         self.nominal_value = 1
+        self.reference_value = 1
         self.csv_filename = None
         self.csv_separator = ';'
         self.column_title = 0
@@ -25,7 +27,8 @@ class EnergySourceFromCsv (Component):
         self.set_parameters(params)
 
         """ READ CSV FILES """
-        self.data = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+        self.data = func.read_data_file(self.path, self.csv_filename,
+                                        self.csv_separator, self.column_title)
 
         """ STATES """
 
@@ -37,5 +40,3 @@ class EnergySourceFromCsv (Component):
                 nominal_value=self.nominal_value,
                 fixed=True)})
         return energy_source_from_csv
-
-

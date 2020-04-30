@@ -9,20 +9,30 @@ install:
   # Install CBC solver
   - sudo apt-get install coinor-cbc
 
-  # Install specific branch of oemof
-  - git clone https://github.com/oemof/oemof.git
-  - cd oemof
-  - git fetch origin pull/592/head:smoothbranch
-  - git checkout smoothbranch
+  # Install specific commit of branch features/piecewise_linear_transformer of oemof/oemof-solph
+  # To be merged with pull request pull/592
+  - git clone https://github.com/oemof/oemof-solph.git
+  - cd oemof-solph
+  - git checkout 585b123e3dc02b191fead4d202ba60c057c473fd
   - pip install .
   - cd ..
 
   # Install other smooth dependencies
   - pip install -r requirements.txt
 
+  # Install smooth itself
+  - python setup.py install
+
 script:
   # Run pytest in `tests` directory
   - pytest tests
 
-  #TODO re-enable flake8
-  #- flake8
+  # Run smooth example
+  - MPLBACKEND=SVG python smooth/examples/run_smooth_example.py
+
+  # Build docs
+  - pip install -r doc/requirements.txt
+  - make -C doc html
+
+  # Lint
+  - flake8 smooth tests doc/source *.py

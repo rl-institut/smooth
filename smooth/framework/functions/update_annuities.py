@@ -23,9 +23,11 @@ def update_annuities(component):
     else:
         op_emissions = component.op_emissions['cost']
 
-    # Then calculate the annuity of the variable costs. This is only needed if the simulation did not take a whole year.
-    # In case it was a different time period, the costs per year have to be estimated by assuming the variable costs of
-    # the simulation period can be used as an average over the simulation time.
+    # Then calculate the annuity of the variable costs. This is only needed if
+    # the simulation did not take a whole year. In case it was a different time
+    # period, the costs per year have to be estimated by assuming the variable
+    # costs of the simulation period can be used as an average over the
+    # simulation time.
 
     # Calculate the ratio of simulation time to one year (sim_time_span is in minutes) [-].
     time_ratio = component.sim_params.sim_time_span / (365 * 24 * 60)
@@ -48,7 +50,9 @@ def update_annuities(component):
     component.results['annual_fix_emissions'] = fix_emissions_annual
     component.results['annual_op_emissions'] = op_emissions
     component.results['annual_variable_emissions'] = variable_emissions_annual
-    component.results['annual_total_emissions'] = fix_emissions_annual + op_emissions + variable_emissions_annual
+    component.results['annual_total_emissions'] = fix_emissions_annual + \
+        op_emissions + variable_emissions_annual
+
 
 def calc_annuity(component, target):
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
@@ -66,6 +70,7 @@ def calc_annuity(component, target):
 
     return target_annuity
 
+
 def calc_annual_emissions(component, target):
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
     if not target:
@@ -73,6 +78,6 @@ def calc_annual_emissions(component, target):
         target_annuity = 0
     else:
         # Calculate the annuity of the target in [target]/a.
-        target_annuity = target['cost'] /component.life_time
+        target_annuity = target['cost'] / component.life_time
 
     return target_annuity
