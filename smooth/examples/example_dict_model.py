@@ -88,7 +88,8 @@ components = {
     },
     "h2_storage": {
         "component": "storage_h2",
-        "bus_in_and_out": "bh2_lp",
+        "bus_in": "bh2_lp",
+        "bus_out": "bh2_lp",
         "p_min": 5,
         "p_max": 450,
         "storage_capacity": 500,

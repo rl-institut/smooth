@@ -175,7 +175,8 @@ components.append({
     'component': 'storage_h2',
     'name': 'h2_storage',
     # Parameters
-    'bus_in_and_out': 'bh2_lp',
+    'bus_in': 'bh2_lp',
+    'bus_out': 'bh2_lp',
     # Parameters
     'p_min': 5,
     'p_max': 450,
