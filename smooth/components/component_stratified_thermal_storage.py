@@ -92,7 +92,7 @@ class StratifiedThermalStorage (Component):
         # Store the current artificial costs for input and output [EUR/kg].
         self.current_vac = [0, 0]
 
-        # ------------------- FURTHER STORAGE VALUES DEPENDING ON SPECIFIED PARAMETERS -------------------
+        # ------------------- FURTHER STORAGE VALUES DEPENDING ON SPECIFIED PARAME
         # Calculate the storage volume [m³].
         self.volume \
             = self.get_volume(
@@ -150,7 +150,7 @@ class StratifiedThermalStorage (Component):
         return volume
 
     def get_diameter(self, V, h_d_ratio):
-        diameter = ((4 * V)/(pi * h_d_ratio))**(1/3)
+        diameter = ((4 * V) / (pi * h_d_ratio))**(1 / 3)
         return diameter
 
     def calculate_storage_u_value(self, a_in, s_iso, l_iso, a_out):

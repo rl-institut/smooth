@@ -27,7 +27,6 @@ class Supply (Component):
         # level, under which the low level costs are used. Above the threshold,
         # the high level artificial costs are used.
 
-
         # Define the threshold value for the artificial costs.
         self.fs_threshold = None
         # Define the low and the high art. cost value e.g. [EUR/Wh], [EUR/kg]
