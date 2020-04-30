@@ -4,7 +4,6 @@ comp_dict_german = {
     'this_ely': 'Elektrolyseur',
     'this_pem_ely': 'PEM-Elektrolyseur',
     'pv_output': 'PV-Anlage',
-    'solar_output': 'PV-Anlage',
     'wind_output': 'WE-Anlage',
     'th_demand': 'Heizbedarf',
     'h2_demand': 'Wasserstoffbedarf',
@@ -16,10 +15,6 @@ comp_dict_german = {
     'CHP_Methane': 'Biogas-BHKW',
     'ch4_grid': 'Biogas-Zufuhr',
     'h2_compressor_from_ely': 'Wasserstoffkompressor (lower pressure)',
-    'dummy_2': 'Gebrauchte PV-Elektrizität',
-    'dummy_1': 'Gebrauchte Wind-Elektrizität',
-    'pv_to_grid': 'Überschüssige PV-Elektrizität',
-    'wind_to_grid': 'Überschüssige Wind-Elektrizität',
 }
 
 bus_dict_german = {
@@ -46,24 +41,41 @@ y_dict_german = {
 
 # ------------------- ENGLISH DICTIONARIES -------------------
 
-comp_dict_german = {
-    'this_ely': 'Elektrolyseur',
-    'this_pem_ely': 'PEM-Elektrolyseur',
-    'pv_output': 'PV-Anlage',
-    'solar_output': 'PV-Anlage',
-    'wind_output': 'WE-Anlage',
-    'th_demand': 'Heizbedarf',
-    'h2_demand': 'Wasserstoffbedarf',
-    'h2_compressor': 'Wasserstoffkompressor (higher pressure)',
-    'from_grid': 'Strombezug',
-    'to_grid': 'Stromeinspeisung',
-    'h2_storage': 'Wasserstoffspeicher',
-    'fuel_cell_chp': 'Brennstoffzelle',
-    'CHP_Methane': 'Biogas-BHKW',
-    'ch4_grid': 'Biogas-Zufuhr',
-    'h2_compressor_from_ely': 'Wasserstoffkompressor (lower pressure)',
-    'dummy_2': 'Gebrauchte PV-Elektrizität',
-    'dummy_1': 'Gebrauchte Wind-Elektrizität',
-    'pv_to_grid': 'Überschüssige PV-Elektrizität',
-    'wind_to_grid': 'Überschüssige Wind-Elektrizität',
+comp_dict_english = {
+    'this_ely': 'Electrolyser',
+    'this_pem_ely': 'PEM-Electrolyser',
+    'pv_output': 'PV System',
+    'wind_output': 'WE System',
+    'th_demand': 'Thermal demand',
+    'h2_demand': 'Hydrogen demand',
+    'h2_compressor': 'Hydrogen compressor (higher pressure)',
+    'from_grid': 'Grid supply',
+    'to_grid': 'Excess electricity feed',
+    'h2_storage': 'Hydrogen storage',
+    'fuel_cell_chp': 'Fuel cell CHP',
+    'CHP_Methane': 'Methane CHP',
+    'ch4_grid': 'Biogas supply',
+    'h2_compressor_from_ely': 'Hydrogen compressor (lower pressure)',
+}
+
+bus_dict_english = {
+    'bel': 'Electrical energy',
+    'bel_wind':	'Wind energy',
+    'bel_pv': 'PV energy',
+    'bth': 'Thermal energy',
+    'bh2_lp': 'Low pressure hydrogen flow',
+    'bh2_mp': 'Medium pressure hydrogen flow',
+    'bh2_hp': 'High pressure hydrogen flow',
+    'bch4': 'Biomethane flow',
+}
+
+y_dict_english = {
+    'bel': 'Energy in Wh',
+    'bel_wind':	'Energy in Wh',
+    'bel_pv': 'Energy in Wh',
+    'bth': 'Energy in Wh',
+    'bh2_lp': 'Hydrogen in kg',
+    'bh2_mp': 'Hydrogen in kg',
+    'bh2_hp': 'Hydrogen in kg',
+    'bch4': 'Biomethane in kg',
 }
