@@ -113,8 +113,9 @@ class TrailerH2Delivery(Component):
             # Obtains the origin storage capacity [kg]
             fs_origin_storage_capacity = self.get_foreign_state_value(components, index=1)
             # Obtains the available mass that can be taken from the origin storage [kg]
-            fs_origin_available_kg = fs_origin_storage_level_kg - \
-                                     (self.fs_origin_storage_threshold * fs_origin_storage_capacity)
+            fs_origin_available_kg = \
+                fs_origin_storage_level_kg - \
+                (self.fs_origin_storage_threshold * fs_origin_storage_capacity)
             # Obtains the destination storage level [kg]
             fs_destination_storage_level_kg = self.get_foreign_state_value(components, index=2)
             # Obtains the destination storage capacity [kg]
