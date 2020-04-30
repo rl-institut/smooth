@@ -78,8 +78,8 @@ class TrailerH2Delivery(Component):
         # First create an empty cost and art. cost array for this component, if it hasn't been
         # created before.
         if 'variable_costs' not in self.results:
-            # If this function is not overwritten in the component, then costs and art. costs are not
-            # part of the component and therefore set to 0.
+            # If this function is not overwritten in the component, then costs and art. costs are
+            # not part of the component and therefore set to 0.
             self.results['variable_costs'] = [0] * sim_params.n_intervals
             self.results['art_costs'] = [0] * sim_params.n_intervals
             # A list is created for the flow switch values
@@ -97,7 +97,8 @@ class TrailerH2Delivery(Component):
 
             # Update the artificial costs for this time step [EUR].
             if self.artificial_costs is not None:
-                this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
+                this_dependency_value = \
+                    self.flows[self.dependency_flow_costs][sim_params.i_interval]
                 self.results['art_costs'][sim_params.i_interval] = \
                     this_dependency_value * self.artificial_costs
 
@@ -113,14 +114,13 @@ class TrailerH2Delivery(Component):
             fs_origin_storage_capacity = self.get_foreign_state_value(components, index=1)
             # Obtains the available mass that can be taken from the origin storage [kg]
             fs_origin_available_kg = fs_origin_storage_level_kg - \
-                                          (self.fs_origin_storage_threshold *
-                                           fs_origin_storage_capacity)
+                                     (self.fs_origin_storage_threshold * fs_origin_storage_capacity)
             # Obtains the destination storage level [kg]
             fs_destination_storage_level_kg = self.get_foreign_state_value(components, index=2)
             # Obtains the destination storage capacity [kg]
             fs_destination_storage_capacity = self.get_foreign_state_value(components, index=3)
             # Obtains the available mass that can be delivered to the destination storage [kg]
-            fs_destination_available_storage =\
+            fs_destination_available_storage = \
                 fs_origin_storage_capacity - fs_destination_storage_level_kg
 
             # Checks if the destination storage level is below the threshold: if yes, low
@@ -153,7 +153,7 @@ class TrailerH2Delivery(Component):
             # enough that the trailer cannot complete the round trip plus refuelling in one hour,
             # delivery is not possible from this storage
             if fs_origin_storage_level_kg < \
-                    self.fs_origin_storage_threshold * fs_origin_storage_capacity\
+                    self.fs_origin_storage_threshold * fs_origin_storage_capacity \
                     or self.delivery_possible == 0:
                 self.hydrogen_transported = 0
             else:
@@ -191,9 +191,3 @@ class TrailerH2Delivery(Component):
                     self.delivery_possible = 1
 
                 self.states['is_delivery_possible'][sim_params.i_interval] = self.delivery_possible
-
-
-
-
-
-
