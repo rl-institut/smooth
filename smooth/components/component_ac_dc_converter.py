@@ -1,6 +1,5 @@
 import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
 
 
 class ACDCConverter(Component):
@@ -22,10 +21,11 @@ class ACDCConverter(Component):
         self.output_power_max = 10000
 
         # The efficiency of an AC-DC converter, stated in:
-        # Harrison, K.W. et. al. (2009). The Wind-to-Hydrogen Project: Operational Experience, Performance
-        # Testing, and Systems Integration, NREL. https://www.nrel.gov/docs/fy09osti/44082.pdf
-        # Hayashi, Y. (2013). High Power Density Rectifier for Highly Efficient Future DC Distribution
-        # System, NTT Facilities Japan.
+        # Harrison, K.W. et. al. (2009). The Wind-to-Hydrogen Project: Operational Experience,
+        # Performance Testing, and Systems Integration, NREL.
+        # https://www.nrel.gov/docs/fy09osti/44082.pdf
+        # Hayashi, Y. (2013). High Power Density Rectifier for Highly Efficient Future DC
+        # Distribution System, NTT Facilities Japan.
         self.efficiency = 0.95
 
     def create_oemof_model(self, busses, _):
