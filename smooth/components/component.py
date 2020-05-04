@@ -154,7 +154,7 @@ class Component:
             self.results['variable_emissions'][sim_params.i_interval] = \
                 this_dependency_value * self.variable_emissions
 
-    # ------ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMETER IF THEY ARE NOT NONE ------ 
+    # ------ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMETER IF THEY ARE NOT NONE ------
 
     def get_costs_and_art_costs(self):
         # Initialize the total variable costs and art. costs [EUR/???].
