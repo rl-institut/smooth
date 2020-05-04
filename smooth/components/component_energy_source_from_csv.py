@@ -12,7 +12,7 @@ class EnergySourceFromCsv (Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'General_energy_source'
 
         self.nominal_value = 1
@@ -23,14 +23,12 @@ class EnergySourceFromCsv (Component):
         self.path = os.path.dirname(__file__)
         self.bus_out = None
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
-        """ READ CSV FILES """
+        # ------------------- READ CSV FILES -------------------
         self.data = func.read_data_file(self.path, self.csv_filename,
                                         self.csv_separator, self.column_title)
-
-        """ STATES """
 
     def create_oemof_model(self, busses, _):
         energy_source_from_csv = solph.Source(

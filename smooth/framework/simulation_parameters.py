@@ -4,7 +4,7 @@ import smooth.framework.functions.functions as func
 class SimulationParameters:
 
     def __init__(self, params):
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.start_date = '1/1/2019'
         self.n_intervals = 24*7
         # Interval time [min].
@@ -16,7 +16,7 @@ class SimulationParameters:
         # Decide if last result values should be shown in case solver was not successful
         self.show_debug_flag = True
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
         # Date time index.

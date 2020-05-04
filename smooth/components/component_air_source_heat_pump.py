@@ -14,7 +14,7 @@ class AirSourceHeatPump(Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Heat_pump_default_name'
 
         self.bus_el = None
@@ -28,7 +28,7 @@ class AirSourceHeatPump(Component):
         self.column_title = 0
         self.path = os.path.dirname(__file__)
 
-        """ PARAMETERS BASED ON OEMOF THERMAL EXAMPLE """
+        # ------------------- PARAMETERS BASED ON OEMOF THERMAL EXAMPLE -------------------
         # Temperature below which icing occurs [K]
         self.temp_threshold_icing = 275.15
         # Convert to degrees C for oemof_thermal function
@@ -52,7 +52,7 @@ class AirSourceHeatPump(Component):
         # Ask Jann about this/look more into detail
         self.consider_icing = False
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
         if self.csv_filename is not None:
