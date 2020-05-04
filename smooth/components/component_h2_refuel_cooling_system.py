@@ -15,7 +15,7 @@ class H2RefuelCoolingSystem(Component):
 
         # Call the init function of the mother class.
         Component.__init__(self)
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'H2_refuel_default_name'
 
         self.bus_el = None
@@ -35,18 +35,16 @@ class H2RefuelCoolingSystem(Component):
         # number of units [-]
         self.number_of_units = 1
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
-        """ READ CSV FILES """
+        # ------------------- READ CSV FILES -------------------
         self.data = func.read_data_file(self.path, self.csv_filename,
                                         self.csv_separator, self.column_title)
 
         # calculate the electrical energy required for each hour [Wh]
         self.electrical_energy = \
             (self.data*self.cool_spec_energy + self.standby_energy) / 3.6
-
-        """ STATES """
 
     def create_oemof_model(self, busses, _):
         h2_refuel_cooling_system = solph.Sink(

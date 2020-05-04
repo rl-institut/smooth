@@ -7,7 +7,7 @@ class ElectricHeater(Component):
         # Call the init function of th mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Electric_heater_default_name'
 
         # Busses
@@ -26,7 +26,7 @@ class ElectricHeater(Component):
         # Generation'
         self.efficiency = 0.98
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
     def create_oemof_model(self, busses, _):
