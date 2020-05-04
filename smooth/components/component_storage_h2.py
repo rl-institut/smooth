@@ -51,7 +51,7 @@ class StorageH2 (Component):
         self.rk_a = 0.1428
         self.rk_b = 1.8208e-5
 
-        # ------------------- FURTHER STORAGE VALUES DEPENDANT ON THE PRESSURE/CAP
+        # ----- FURTHER STORAGE VALUES DEPENDANT ON THE PRESSURE/CAPACITY -----
         # Calculate the storage volume [m³].
         self.V = self.get_volume(self.p_max, self.storage_capacity)
         # Calculate the mass at p_min, which can't be used [kg].
