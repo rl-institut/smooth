@@ -83,7 +83,7 @@ def replace_at_idx(tup, i, val):
     #  val: The new value at index i
     tup_list = list(tup)
     tup_list[i] = val
-    
+
     return tuple(tup_list)
 
 
