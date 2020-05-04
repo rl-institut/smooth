@@ -7,14 +7,14 @@ comp_dict_german = {
     'wind_output': 'WE-Anlage',
     'th_demand': 'Heizbedarf',
     'h2_demand': 'Wasserstoffbedarf',
-    'h2_compressor': 'Wasserstoffkompressor (higher pressure)',
+    'h2_compressor': 'Wasserstoffkompressor (Hochdruck)',
     'from_grid': 'Strombezug',
     'to_grid': 'Stromeinspeisung',
     'h2_storage': 'Wasserstoffspeicher',
     'fuel_cell_chp': 'Brennstoffzelle',
     'CHP_Methane': 'Biogas-BHKW',
     'ch4_grid': 'Biogas-Zufuhr',
-    'h2_compressor_from_ely': 'Wasserstoffkompressor (lower pressure)',
+    'h2_compressor_from_ely': 'Wasserstoffkompressor (Niederdruck)',
 }
 
 bus_dict_german = {
@@ -43,9 +43,9 @@ y_dict_german = {
 
 comp_dict_english = {
     'this_ely': 'Electrolyser',
-    'this_pem_ely': 'PEM-Electrolyser',
-    'pv_output': 'PV System',
-    'wind_output': 'WE System',
+    'this_pem_ely': 'PEM electrolyser',
+    'pv_output': 'PV system',
+    'wind_output': 'WE system',
     'th_demand': 'Thermal demand',
     'h2_demand': 'Hydrogen demand',
     'h2_compressor': 'Hydrogen compressor (higher pressure)',
