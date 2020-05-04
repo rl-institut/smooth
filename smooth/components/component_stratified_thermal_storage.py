@@ -92,7 +92,7 @@ class StratifiedThermalStorage (Component):
         # Store the current artificial costs for input and output [EUR/kg].
         self.current_vac = [0, 0]
 
-        # ------------------- FURTHER STORAGE VALUES DEPENDING ON SPECIFIED PARAME
+        # -------- FURTHER STORAGE VALUES DEPENDING ON SPECIFIED PARAMETERS --------
         # Calculate the storage volume [m³].
         self.volume \
             = self.get_volume(
