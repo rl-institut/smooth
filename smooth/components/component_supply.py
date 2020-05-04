@@ -20,7 +20,7 @@ class Supply (Component):
 
         self.bus_out = None
 
-        # PARAMETERS ARTIFICIAL COSTS FOREIGN STATE
+        # ------------- PARAMETERS ARTIFICIAL COSTS FOREIGN STATE --------------
         # The artificial costs for supplying electricity can be dependant on a
         # foreign state, like a storage SoC. Therefore the name and the state
         # name of that foreign entity have to be defined as well as the threshold
