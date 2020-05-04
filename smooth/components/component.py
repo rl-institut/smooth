@@ -96,7 +96,7 @@ class Component:
         # function is overwritten in that component
         pass
 
-    # ------------------- UPDATE STATES (PLACEHOLDER FOR COMPONENTS WITHOUT ST
+    # ------ UPDATE STATES (PLACEHOLDER FOR COMPONENTS WITHOUT STATES) ------
 
     def update_states(self, results, sim_params):
         # If a component has states, this update_states function is overwritten in that component
@@ -154,7 +154,7 @@ class Component:
             self.results['variable_emissions'][sim_params.i_interval] = \
                 this_dependency_value * self.variable_emissions
 
-    # --------------- ADD COSTS AND ARTIFICIAL COSTS TO A PARAMETER IF THEY AR
+    # ------ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMETER IF THEY ARE NOT NONE ------ 
 
     def get_costs_and_art_costs(self):
         # Initialize the total variable costs and art. costs [EUR/???].
