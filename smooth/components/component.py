@@ -86,7 +86,9 @@ class Component:
 
         :param params: The set of parameters defined in the specific component class
         :type params: dict ToDo: make sure of this, maybe list
-        :return: Potential raised errors
+        :raises ValueError: Value error is raised if the parameter defined by the user
+        is not part of the component, or dependency flows are not defined
+        :return: None
         """
         for this_param in params:
             if not hasattr(self, this_param):
@@ -316,7 +318,9 @@ class Component:
         """This function is called immediately after the component object is created and
         checks if the component attributes are valid.
 
-        :return: Potential errors raised
+        :raises ValueError: Value error raised if the life time is not defined or is less
+        than or equal to 0
+        :return: None
         """
         # Check if a life time is given when there are CAPEX given.
         if self.capex or self.fix_emissions:
