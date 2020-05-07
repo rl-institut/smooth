@@ -5,7 +5,14 @@ import smooth.framework.functions.functions as func
 
 
 class EnergyDemandFromCsv(Component):
-    """ Energy demand created through this class from a csv file """
+    """ Energy demand components are created through this class by importing csv files.
+
+     :param name: The name given to the energy demand component
+     :type name: str
+     :param nominal_value: The value that the timeseries should be multipled by, default is 1
+     :type nominal_value: numerical
+
+     """
 
     def __init__(self, params):
 

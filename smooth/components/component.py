@@ -7,49 +7,45 @@ class Component:
     """The generic component class is the mother class for all of the components. The parameters and
     functions defined here can be applied to each of the specific components.
 
-    Parameters
-    ----------
-    param component: The component type
-    type component: str
-    param name: The specific name of the component (must be different to other component names in
-    system)
-    type name: str
-    param life_time: The lifetime of the component [a]
-    type life_time: float
-    param sim_params: The simulation parameters such as the interval time and interest rate
-    type sim_params: object ToDo: check this
+    :param component: The component type
+    :type component: str
+    :param name: The specific name of the component (must be different to other component names in the system)
+    :type name: str
+    :param life_time: The lifetime of the component [a]
+    :type life_time: float
+    :param sim_params: The simulation parameters such as the interval time and interest rate
+    :type sim_params: object ToDo: check this
 
-    param results: The dictionary containing the main results for the component
-    type results: dict
-    param states: The dictionary containing the varying states for the component
-    type states: dict
+    :param results: The dictionary containing the main results for the component
+    :type results: dict
+    :param states: The dictionary containing the varying states for the component
+    :type states: dict
 
-    param variable_costs: The variable costs of the component [EUR/*]
-    type variable_costs: float
-    param artificial_costs: The artificial costs of the component [EUR/*] (Note: these costs are
-    not included in the final financial analysis)
-    param artificial_costs: float
-    param dependency_flow_costs: The flow that the costs are dependent on
-    type dependency_flow_costs: str ToDo: maybe this changes with Timo's new pull request?
+    :param variable_costs: The variable costs of the component [EUR/*]
+    :type variable_costs: numeric
+    :param artificial_costs: The artificial costs of the component [EUR/*] (Note: these costs are not included in the final financial analysis)
+    :type artificial_costs: numeric
+    :param dependency_flow_costs: The flow that the costs are dependent on
+    :type dependency_flow_costs: str ToDo: maybe this changes with Timo's new pull request?
 
-    param capex: The capital costs ToDo: would the explanation of how CAPEX and OPEX works be described here?
-    type capex: dict
-    param opex: The operational and maintenance costs
-    type opex: dict
+    :param capex: The capital costs
+    :type capex: dict
+    :param opex: The operational and maintenance costs
+    :type opex: dict
 
-    param variable_emissions: The variable emissions of the component [kg/*]
-    type variable_emissions: float
-    param dependency_flow_emissions: The flow that the emissions are dependent on
-    type dependency_flow_emissions: str ToDo: maybe this changes with Timo's new pull request?
-    param op_emissions: The operational emission values
-    type op_emissions: dict
-    param fix_emissions: The fixed emission values
-    type fix_emissions: dict
+    :param variable_emissions: The variable emissions of the component [kg/*]
+    :type variable_emissions: float
+    :param dependency_flow_emissions: The flow that the emissions are dependent on
+    :type dependency_flow_emissions: str ToDo: maybe this changes with Timo's new pull request?
+    :param op_emissions: The operational emission values
+    :type op_emissions: dict
+    :param fix_emissions: The fixed emission values
+    :type fix_emissions: dict
 
-    param fs_component_name: The foreign state component name
-    type fs_component_name: str
-    param fs_attribute_name: The foreign state attribute name
-    type fs_attribute_name: str
+    :param fs_component_name: The foreign state component name
+    :type fs_component_name: str
+    :param fs_attribute_name: The foreign state attribute name
+    :type fs_attribute_name: str
 
     Notes
     -----
@@ -115,8 +111,7 @@ class Component:
         :type results: object
         :param sim_params: The simulation parameters for the energy system (defined by user)
         :type sim_params: object
-        :param comp_name: The name of the component - while components can generate
-        more than one oemof model, they sometimes need to give a custom name, defaults to None
+        :param comp_name: The name of the component - while components can generate more than one oemof model, they sometimes need to give a custom name, defaults to None
         :type comp_name: str, optional
         :return: updated flow values for each flow in the 'flows' dict
         """
@@ -148,8 +143,7 @@ class Component:
 
         :param components: List containing each component object
         :type components: list
-        :return: If used as a placeholder, nothing will be returned. Else, refer to
-        specific component that uses the prepare_simulation function for further detail.
+        :return: If used as a placeholder, nothing will be returned. Else, refer to specific component that uses the prepare_simulation function for further detail.
         """
         pass
 
@@ -176,12 +170,11 @@ class Component:
         which can be written here. Else, this function is used as placeholder for
         components without constraints.
 
-        :param busses: The virtual buses used in the energy system
+        :param busses: List of the virtual buses used in the energy system
         :type busses: list
         :param model_to_solve: ToDo: look this up in oemof
         :type model_to_solve:
-        :return: If used as a placeholder, nothing will be returned. Else, refer to
-        specific component that uses the update_constraints function for further detail.
+        :return: If used as a placeholder, nothing will be returned. Else, refer to specific component that uses the update_constraints function for further detail.
         """
         pass
 
@@ -195,8 +188,7 @@ class Component:
         :type results: object
         :param sim_params: The simulation parameters for the energy system (defined by user)
         :type sim_params: object
-        :return: New values for the updated variable and artificial costs stored in
-        results['variable_costs'] and results['art_costs'] respectively
+        :return: New values for the updated variable and artificial costs stored in results['variable_costs'] and results['art_costs'] respectively
         """
 
 
@@ -248,7 +240,7 @@ class Component:
     def get_costs_and_art_costs(self):
         """Initialize the total variable costs and art. costs [EUR/*]
 
-        :return: the total variable costs (including artificial costs)
+        :return: The total variable costs (including artificial costs)
         """
         variable_costs_total = 0
         # Add costs and art. costs to an attribute
@@ -266,10 +258,9 @@ class Component:
 
         :param components: List containing each component object
         :type components: object
-        :param index: Index of the foreign state (should be None if there is only
-        one foreign state) [-]
+        :param index: Index of the foreign state (should be None if there is only one foreign state) [-]
         :type index: int, optional
-        :return: Foreign state value returned
+        :return: Foreign state value
         """
         if index is None:
             fs_component_name = self.fs_component_name
@@ -303,7 +294,7 @@ class Component:
     def generate_results(self):
         """Generates the results after the simulation.
 
-        :return: Results for the computed emissions, financials and annuities
+        :return: Results for the calculated emissions, financials and annuities
         """
         # Compute the emissions due to installation and operation.
         update_emissions(self, self.fix_emissions)
@@ -315,12 +306,10 @@ class Component:
         update_annuities(self)
 
     def check_validity(self):
-        """This function is called immediately after the component object is created and
-        checks if the component attributes are valid.
+        """This function is called immediately after the component object is created
+        and checks if the component attributes are valid.
 
-        :raises ValueError: Value error raised if the life time is not defined or is less
-        than or equal to 0
-        :return: None
+        :raises ValueError: Value error raised if the life time is not defined or is less than or equal to 0
         """
         # Check if a life time is given when there are CAPEX given.
         if self.capex or self.fix_emissions:

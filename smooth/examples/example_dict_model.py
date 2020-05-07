@@ -41,7 +41,7 @@ components = {
             "dependant_value": "capex"
         }
     },
-    "solar_output": {
+    "pv_output": {
         "component": "energy_source_from_csv",
         "bus_out": "bel",
         "csv_filename": "ts_pv.csv",
@@ -54,6 +54,7 @@ components = {
         "component": "energy_source_from_csv",
         "bus_out": "bel",
         "csv_filename": "ts_wind.csv",
+        "csv_separator": ";",
         "nominal_value": 0.25,
         "column_title": "Power output",
         "path": my_path
