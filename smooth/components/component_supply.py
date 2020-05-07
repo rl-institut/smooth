@@ -12,7 +12,7 @@ class Supply (Component):
         """ PARAMETERS """
         self.name = 'Grid_default_name'
 
-        self.power_max = 8000000
+        self.power_max = 80000000
 
         self.bus_out = None
 

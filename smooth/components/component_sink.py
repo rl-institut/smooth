@@ -13,7 +13,7 @@ class Sink(Component):
         self.name = 'Grid_default_name'
 
         # Max. power that can be taken by the sink [W]
-        self.power_max = 800000000
+        self.power_max = 8000000000000000000
 
         self.bus_in = None
 

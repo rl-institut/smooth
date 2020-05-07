@@ -125,6 +125,3 @@ def run_smooth(model):
 
 
 
-
-
-

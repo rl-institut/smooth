@@ -1,9 +1,10 @@
-from oemof.outputlib import views
 import oemof.solph as solph
 from .component import Component
 import math
 import numpy as np
 import warnings
+from oemof.outputlib import views
+
 
 class Electrolyzer (Component):
     """ Electrolyzer agents are created through this class """
