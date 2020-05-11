@@ -81,7 +81,7 @@ class Component:
         for i_result in this_df:
             # Check if this result is a flow
             if i_result[1] == 'flow':
-                this_flow_name = 'flow: ' + i_result[0][0] + '-->' + i_result[0][1]
+                this_flow_name = i_result[0][:]
                 # Check if there already is an array to store the flow
                 # information, if not, create one.
                 if this_flow_name not in self.flows:
