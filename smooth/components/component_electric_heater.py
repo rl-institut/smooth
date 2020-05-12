@@ -3,6 +3,23 @@ from .component import Component
 
 
 class ElectricHeater(Component):
+    """A simple electric heater component that converts electricity to heat is created through this class.
+
+    :param name: The name given to the electric heater component
+    :type name: str
+    :param bus_el: The electricity bus that is the input of the electric heater
+    :type bus_el: str
+    :param bus_th: The thermal bus that is the output of the electric heater
+    :type bus_th: str
+    :param power_max: The maximum thermal output [W]
+    :type power_max: numerical
+    :param life_time: The life time of the component [a]
+    :type life_time: numerical
+    :param efficiency: The constant efficiency of the heater [-]
+    :type efficiency: float (0-1)
+    :param set_parameters(params): Updates parameter default values (see generic Component class)
+    :type set_parameters(params): function
+    """
     def __init__(self, params):
         # Call the init function of th mother class.
         Component.__init__(self)
@@ -30,6 +47,11 @@ class ElectricHeater(Component):
         self.set_parameters(params)
 
     def create_oemof_model(self, busses, _):
+        """Creates an oemof Transformer component from the information given in the ElectricHeater class, to be used in the oemof model
+
+        :param busses: List of the virtual buses used in the energy system
+        :type busses: list
+        """
         electric_heater = solph.Transformer(
             label=self.name,
             inputs={busses[self.bus_el]: solph.Flow()},

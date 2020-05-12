@@ -13,16 +13,16 @@ class EnergySourceFromCsv (Component):
     :type nominal_value: numerical
     :param csv_filename: The csv filename containing the desired timeseries, e.g. 'my_filename.csv'
     :type csv_filename: str
-    :param csv_separator: The separator of the csv file, e.g. ';' or ',' (default is ';')
+    :param csv_separator: The separator of the csv file, e.g. ',' or ';' (default is ',')
     :type csv_separator: str
     :param column_title: The column title (or index) of the timeseries, default is 0
     :type column_title: str or int
     :param path: The path where the timeseries csv file can be located
     :type path: str
-    :param bus_out: The virtual bus that leaves the energy source component (e.g. the electricity bus, 'bel')
+    :param bus_out: The virtual bus that leaves the energy source component (e.g. the electricity bus)
     :type bus_out: str
-    :param set_parameters(params): Updates parameter default values
-    :type set_parameters(params): function (see generic Component class)
+    :param set_parameters(params): Updates parameter default values (see generic Component class)
+    :type set_parameters(params): function
     :param data: Dataframe containing data from timeseries
     :type data: pandas dataframe
     """
