@@ -105,12 +105,12 @@ class Battery(Component):
         # inflow_conversion_factor (in "create oemof model") the battery will
         # then receive right amount.
         self.e_in_max = min(
-                self.c_rate_charge * self.battery_capacity * self.sim_params.interval_time / 60,
-                self.battery_capacity - self.soc * self.battery_capacity) / \
+            self.c_rate_charge * self.battery_capacity * self.sim_params.interval_time / 60,
+            self.battery_capacity - self.soc * self.battery_capacity) / \
             self.efficiency_charge
         self.e_out_max = min(
-                self.c_rate_discharge * self.battery_capacity * self.sim_params.interval_time / 60,
-                self.soc * self.battery_capacity)
+            self.c_rate_discharge * self.battery_capacity * self.sim_params.interval_time / 60,
+            self.soc * self.battery_capacity)
 
     def create_oemof_model(self, busses, _):
         """ Create oemof model """
