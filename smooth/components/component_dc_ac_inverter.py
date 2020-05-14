@@ -32,3 +32,4 @@ class DCACInverter(Component):
             )},
             conversion_factors={busses[self.bus_el_ac]: self.efficiency})
         return dc_ac_inverter
+    
