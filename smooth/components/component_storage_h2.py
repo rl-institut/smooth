@@ -21,8 +21,6 @@ class StorageH2 (Component):
         # Storage capacity capacity at p_max (assuming all the can be used,
         # p_min is not included here) [kg].
         self.storage_capacity = 500
-        # Initial USABLE storage level [kg].
-        self.storage_level_init = 200
         # Life time [a].
         self.life_time = 20
 
@@ -40,6 +38,8 @@ class StorageH2 (Component):
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
+        # Initial storage level [kg].
+        self.storage_level_init = 0.5 * self.storage_capacity
 
         # ------------------- CONSTANTS FOR REAL GAS EQUATION -------------------
         # Critical temperature [K] and pressure [Pa], molar mass of H2
@@ -60,8 +60,7 @@ class StorageH2 (Component):
 
         # ------------------- STATES -------------------
         # Storage level [kg of h2]
-        self.storage_level = min(self.storage_level_init +
-                                 self.storage_level_min, self.storage_capacity)
+        self.storage_level = min(self.storage_level_init, self.storage_capacity)
         # Storage pressure [bar].
         self.pressure = self.get_pressure(self.storage_level)
 

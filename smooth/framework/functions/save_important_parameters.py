@@ -53,3 +53,5 @@ def save_important_parameters(optimization_results, result_file_name):
                 total_h2_demand = sum(component.flows['flow: bth-->th_demand'])
                 entry = [name, 'total demand (thermal)', total_h2_demand]
                 writer.writerow(entry)
+
+    u
