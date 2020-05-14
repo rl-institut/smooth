@@ -16,7 +16,7 @@ components.append({
     'name': 'this_ely',
     'bus_el': 'bel',
     'bus_h2': 'bh2_lp',
-    'power_max': 100e3,
+    'power_max': 2000e3,
     'temp_init': 293.15,
     'life_time': 20,
     'capex': {
@@ -31,7 +31,7 @@ components.append({
     }
 })
 
-components.append({
+'''components.append({
     'component': 'energy_source_from_csv',
     'name': 'solar_output',
     'bus_out': 'bel',
@@ -50,7 +50,7 @@ components.append({
     'nominal_value': 1/4,
     'column_title': 'Power output',
     'path': my_path
-})
+})'''
 
 components.append({
     'component': 'energy_demand_from_csv',
@@ -68,11 +68,6 @@ components.append({
     'bus_out': 'bel',
     'output_max': 5000000,
     'variable_costs': 0.00016,
-    'fs_component_name': 'h2_storage',
-    'fs_attribute_name': 'storage_level',
-    'fs_threshold': 200,
-    'fs_low_art_cost': -0.001,
-    'fs_high_art_cost': 50,
     'dependency_flow_costs': ('from_grid', 'bel'),
 })
 
@@ -92,7 +87,11 @@ components.append({
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
-    'storage_level_init': 300,
+    'storage_level_init': 400,
+    'storage_level_wanted': 500,
+    'vac_low_in': -0.2,
+    'delta_max': 500,
+    'dependency_flow_costs': ('bh2_lp', 'h2_storage'),
     'life_time': 30,
     'capex': {
         'key': ['poly', 'spec'],
