@@ -157,7 +157,12 @@ def mutate(parent, attribute_variation):
     return child
 
 
-def fitness_function(index, individual, model, attribute_variation, dill_objectives, save_results=False):
+def fitness_function(
+        index, individual,
+        model,
+        attribute_variation,
+        dill_objectives,
+        save_results=False):
     # compute fitness for one individual
     # called async -> copies of individual and model given
     # program makes computer freeze when this is a class function?
@@ -270,7 +275,8 @@ class Optimization:
             if ind.fitness is None:  # not evaluated yet
                 pool.apply_async(
                     fitness_function,
-                    (idx, ind, self.model, self.attribute_variation, dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
+                    (idx, ind, self.model, self.attribute_variation,
+                     dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
                     callback=self.set_fitness,
                     error_callback=self.err_callback  # tb
                 )
