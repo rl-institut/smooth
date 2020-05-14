@@ -90,8 +90,10 @@ class StorageH2 (Component):
     def create_oemof_model(self, busses, _):
         storage = solph.components.GenericStorage(
             label=self.name,
-            outputs={busses[self.bus_out]: solph.Flow(nominal_value=self.delta_max, variable_costs=self.current_vac[1])},
-            inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.delta_max, variable_costs=self.current_vac[0])},
+            outputs={busses[self.bus_out]: solph.Flow(
+                nominal_value=self.delta_max, variable_costs=self.current_vac[1])},
+            inputs={busses[self.bus_in]: solph.Flow(
+                nominal_value=self.delta_max, variable_costs=self.current_vac[0])},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
