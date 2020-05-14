@@ -74,7 +74,7 @@ components.append({
     'fs_threshold': 200,
     'fs_low_art_cost': -0.001,
     'fs_high_art_cost': 50,
-    'dependency_flow_costs': 'flow: from_grid-->bel',
+    'dependency_flow_costs': ('from_grid', 'bel'),
 })
 
 components.append({
@@ -82,7 +82,7 @@ components.append({
     'name': 'to_grid',
     'bus_in': 'bel',
     'artificial_costs': 10,
-    'dependency_flow_costs': 'flow: bel-->to_grid',
+    'dependency_flow_costs': ('bel', 'to_grid'),
 })
 
 components.append({
