@@ -1,6 +1,7 @@
 from multiprocessing import Pool, cpu_count
 import random
 import matplotlib.pyplot as plt  # only needed when plot_progress is set
+import dill
 
 # import traceback
 # def tb(e):
@@ -156,17 +157,7 @@ def mutate(parent, attribute_variation):
     return child
 
 
-# hack to have custom lambda objectives in pool worker
-# lambda's can't be pickled, but globals can be set when pool is init
-_objectives = None
-
-
-def worker_init(f):
-    global _objectives
-    _objectives = f
-
-
-def fitness_function(index, individual, model, attribute_variation):
+def fitness_function(index, individual, model, attribute_variation, dill_objectives):
     # compute fitness for one individual
     # called async -> copies of individual and model given
     # program makes computer freeze when this is a class function?
@@ -180,7 +171,8 @@ def fitness_function(index, individual, model, attribute_variation):
         # TODO: SAVE_ALL_SMOOTH_RESULTS can be given as arg if necessary
         # individual.smooth_result = smooth_result if SAVE_ALL_SMOOTH_RESULTS else None
         # update fitness with given objective functions
-        individual.fitness = tuple(f(smooth_result) for f in _objectives)
+        objectives = dill.loads(dill_objectives)
+        individual.fitness = tuple(f(smooth_result) for f in objectives)
 
     except Exception as e:
         # The smooth run failed.The fitness score remains None.
@@ -272,12 +264,13 @@ class Optimization:
         # compute fitness of every individual in population
         # open worker n_core threads
         # set objective functions for each worker
-        pool = Pool(processes=self.n_core, initializer=worker_init, initargs=(self.objectives,))
+        pool = Pool(processes=self.n_core)
+        dill_objectives = dill.dumps(self.objectives)
         for idx, ind in enumerate(self.population):
             if ind.fitness is None:  # not evaluated yet
                 pool.apply_async(
                     fitness_function,
-                    (idx, ind, self.model, self.attribute_variation),
+                    (idx, ind, self.model, self.attribute_variation, dill_objectives,),
                     callback=self.set_fitness,
                     error_callback=self.err_callback  # tb
                 )
