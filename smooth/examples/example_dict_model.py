@@ -76,15 +76,15 @@ components = {
         "fs_threshold": 200,
         "fs_low_art_cost": -0.001,
         "fs_high_art_cost": 50,
-        "dependency_flow_costs": "flow: from_grid-->bel",
-        "dependency_flow_emissions": "flow: from_grid-->bel"
+        "dependency_flow_costs": ("from_grid", "bel"),
+        "dependency_flow_emissions": ("from_grid", "bel")
     },
     "to_grid": {
         "component": "sink",
         "bus_in": "bel",
         "artificial_costs": 10,
-        "dependency_flow_costs": "flow: bel-->to_grid",
-        "dependency_flow_emissions": "flow: bel-->to_grid"
+        "dependency_flow_costs": ("bel", "to_grid"),
+        "dependency_flow_emissions": ("bel", "to_grid")
     },
     "h2_storage": {
         "component": "storage_h2",

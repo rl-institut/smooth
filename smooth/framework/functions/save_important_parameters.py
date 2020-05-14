@@ -33,24 +33,24 @@ def save_important_parameters(optimization_results, result_file_name):
 
             # looks through all components to check for the supply component,
             # and calculates the annual power supply
-            if component.flows.get('flow: from_grid-->bel') is not None:
-                total_from_grid = sum(component.flows['flow: from_grid-->bel'])
+            if component.flows.get(tuple('from_grid, bel')) is not None:
+                total_from_grid = sum(component.flows[tuple('from_grid, bel')])
                 entry = [name, 'annual grid supply', total_from_grid]
                 writer.writerow(entry)
             # looks through all components to check for h2 demand component,
             # and calculates the annual demand and the maximum hourly demand in
             # the year
-            elif component.flows.get('flow: bh2_hp-->h2_demand') is not None:
-                total_h2_demand = sum(component.flows['flow: bh2_hp-->h2_demand'])
+            elif component.flows.get(tuple('bh2_hp, h2_demand')) is not None:
+                total_h2_demand = sum(component.flows[tuple('bh2_hp, h2_demand')])
                 entry = [name, 'total demand (hydrogen)', total_h2_demand]
                 writer.writerow(entry)
-                maximum_flow = max(component.flows['flow: bh2_hp-->h2_demand'])
+                maximum_flow = max(component.flows[tuple('bh2_hp, h2_demand')])
                 entry = [name, 'maximum hourly demand', maximum_flow]
                 writer.writerow(entry)
             # looks through all components to check for thermal demand
             # component, and calculates annual demand
-            elif component.flows.get('flow: bth-->th_demand') is not None:
-                total_h2_demand = sum(component.flows['flow: bth-->th_demand'])
+            elif component.flows.get(tuple('bth, th_demand')) is not None:
+                total_h2_demand = sum(component.flows[tuple('bth, th_demand')])
                 entry = [name, 'total demand (thermal)', total_h2_demand]
                 writer.writerow(entry)
 
