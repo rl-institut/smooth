@@ -25,6 +25,8 @@ class StorageH2 (Component):
         self.storage_level_init = 200
         # Life time [a].
         self.life_time = 20
+        # max chargeable hydrogen in one time step in kg/h
+        self.delta_max = None
 
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].
@@ -82,11 +84,14 @@ class StorageH2 (Component):
 
         self.current_vac = [vac_in, vac_out]
 
+        # max chargeable hydrogen in one time step in kg/h
+        self.delta_max = self.storage_capacity
+
     def create_oemof_model(self, busses, _):
         storage = solph.components.GenericStorage(
             label=self.name,
-            outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_vac[1])},
-            inputs={busses[self.bus_in]: solph.Flow(variable_costs=self.current_vac[0])},
+            outputs={busses[self.bus_out]: solph.Flow(nominal_value=self.delta_max, variable_costs=self.current_vac[1])},
+            inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.delta_max, variable_costs=self.current_vac[0])},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
