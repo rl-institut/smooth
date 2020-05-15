@@ -23,6 +23,9 @@ class StorageH2 (Component):
         self.storage_capacity = 500
         # Life time [a].
         self.life_time = 20
+        # The initial storage level (usable and not usable), as a percentage of the
+        # capacity
+        self.initial_storage_factor = 0.5
 
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].
@@ -39,7 +42,7 @@ class StorageH2 (Component):
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
         # Initial storage level [kg].
-        self.storage_level_init = 0.5 * self.storage_capacity
+        self.storage_level_init = self.initial_storage_factor * self.storage_capacity
 
         # ------------------- CONSTANTS FOR REAL GAS EQUATION -------------------
         # Critical temperature [K] and pressure [Pa], molar mass of H2
@@ -57,6 +60,9 @@ class StorageH2 (Component):
         self.V = self.get_volume(self.p_max, self.storage_capacity)
         # Calculate the mass at p_min, which can't be used [kg].
         self.storage_level_min = self.get_mass(self.p_min)
+        # Asserts that the initial storage level must be greater than the minimum storage
+        # level 
+        assert self.storage_level_init >= self.storage_level_min
 
         # ------------------- STATES -------------------
         # Storage level [kg of h2]
