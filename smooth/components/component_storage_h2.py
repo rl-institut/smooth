@@ -36,7 +36,7 @@ class StorageH2 (Component):
         self.vac_out = 0
         # If a storage level is set as wanted, the vac_low costs apply if the
         # storage is below that level [kg].
-        self.storage_level_wanted = self.slw_factor * self.storage_capacity
+        self.storage_level_wanted = None
         # Var. art. costs that apply if the storage level is below the wanted
         # storage level [EUR/kg].
         self.vac_low_in = 0
@@ -46,6 +46,10 @@ class StorageH2 (Component):
         self.set_parameters(params)
         # Initial storage level [kg].
         self.storage_level_init = self.initial_storage_factor * self.storage_capacity
+        if self.slw_factor is not None:
+            self.storage_level_wanted = self.slw_factor * self.storage_capacity
+        else:
+            self.storage_level_wanted = None
 
         # ------------------- CONSTANTS FOR REAL GAS EQUATION -------------------
         # Critical temperature [K] and pressure [Pa], molar mass of H2
