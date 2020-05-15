@@ -51,7 +51,7 @@ class GasEngineChpBiogas(Component):
         # the LHV of CH4
         self.heating_value_biogas = ((self.ch4_share * self.mol_mass_ch4) /
                                      ((self.ch4_share * self.mol_mass_ch4) +
-                                     (self.co2_share*self.mol_mass_co2))) * self.heating_value_ch4
+                                      (self.co2_share*self.mol_mass_co2))) * self.heating_value_ch4
 
         # The CHP an electrical efficiency and a thermal efficiency
         # Source: 2G Energy AG Technical specification agenitor 206 BG,

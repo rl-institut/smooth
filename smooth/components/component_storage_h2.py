@@ -18,14 +18,17 @@ class StorageH2 (Component):
         # Min. and max. pressure [bar].
         self.p_min = 0
         self.p_max = 450
-        # Storage capacity capacity at p_max (assuming all the can be used,
+        # Storage capacity at p_max (assuming all the can be used,
         # p_min is not included here) [kg].
         self.storage_capacity = 500
         # Life time [a].
         self.life_time = 20
-        # The initial storage level (usable and not usable), as a percentage of the
-        # capacity
+        # The initial storage level as a factor of the capacity [-]
         self.initial_storage_factor = 0.5
+        # Max chargeable hydrogen in one time step in kg/h
+        self.delta_max = None
+        # The storage level wanted as a factor of the capacity
+        self.slw_factor = None
 
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].
@@ -33,7 +36,7 @@ class StorageH2 (Component):
         self.vac_out = 0
         # If a storage level is set as wanted, the vac_low costs apply if the
         # storage is below that level [kg].
-        self.storage_level_wanted = None
+        self.storage_level_wanted = self.slw_factor * self.storage_capacity
         # Var. art. costs that apply if the storage level is below the wanted
         # storage level [EUR/kg].
         self.vac_low_in = 0
@@ -87,11 +90,16 @@ class StorageH2 (Component):
 
         self.current_vac = [vac_in, vac_out]
 
+        # max chargeable hydrogen in one time step in kg/h
+        self.delta_max = self.storage_capacity
+
     def create_oemof_model(self, busses, _):
         storage = solph.components.GenericStorage(
             label=self.name,
-            outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_vac[1])},
-            inputs={busses[self.bus_in]: solph.Flow(variable_costs=self.current_vac[0])},
+            outputs={busses[self.bus_out]: solph.Flow(
+                nominal_value=self.delta_max, variable_costs=self.current_vac[1])},
+            inputs={busses[self.bus_in]: solph.Flow(
+                nominal_value=self.delta_max, variable_costs=self.current_vac[0])},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
