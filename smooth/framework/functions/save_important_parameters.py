@@ -1,7 +1,12 @@
 import csv
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set()
 
 
-def save_important_parameters(optimization_results, result_file_name):
+def save_important_parameters(optimization_results, result_index, result_file_name, comp_dict):
     # Saves the most important parameters from optimization results in a csv file
     # Parameter:
     # optimization_results: file containing all information about the optimization results
@@ -9,11 +14,19 @@ def save_important_parameters(optimization_results, result_file_name):
     if result_file_name.endswith('.pickle'):
         result_file_name = result_file_name[:-7]
     # create an empty csv file
-    with open('important_params_' + str(result_file_name), 'w', newline='') as file:
+    with open(str(result_file_name + '_important_params'), 'w', newline='') as file:
         writer = csv.writer(file)
         headers = ['Component', 'Parameter', 'Value']
         writer.writerow(headers)
-        for component in optimization_results.best_smooth_result:
+
+        # Lists used in pie plots
+        component_names = []
+        component_annuities = []
+        component_emissions = []
+        component_elec_use = []
+        component_elec_use_names = []
+
+        for component in optimization_results[result_index].smooth_result:
             name = component.name
             # looks through all components to find the maximum power attributes
             if hasattr(component, 'power_max'):
@@ -53,3 +66,65 @@ def save_important_parameters(optimization_results, result_file_name):
                 total_h2_demand = sum(component.flows[tuple('bth, th_demand')])
                 entry = [name, 'total demand (thermal)', total_h2_demand]
                 writer.writerow(entry)
+
+            this_annuity = component.results['annuity_total']
+            this_emission = component.results['annual_total_emissions']
+            if name in comp_dict.keys():
+                name = comp_dict[name]
+
+            for this_tuple in component.flows:
+                if this_tuple[0] == 'bel':
+                    total_elec_use = sum(component.flows[tuple(this_tuple)])
+                    component_elec_use.append(total_elec_use)
+                    component_elec_use_names.append(name)
+
+            component_names.append(name)
+            component_annuities.append(this_annuity)
+            component_emissions.append(this_emission)
+
+    # Sets the colour palette for the pie plots
+    palette = sns.color_palette()
+
+    # ---------------- FINANCIAL ANNUITY PIE PLOT ---------------
+    component_names = np.char.array(component_names)
+    component_annuities = np.array(component_annuities)
+    annuity_shares = 100.*component_annuities/component_annuities.sum()
+
+    patches_1, texts_1 = plt.pie(component_annuities, startangle=90, colors=palette)
+    labels = ['{0}: {1:1.2f} %'.format(i, j) for i, j in zip(component_names, annuity_shares)]
+    plt.legend(patches_1, labels, loc='best', bbox_to_anchor=(-0.1, 1.),
+               fontsize=8)
+    plt.title('Percentage share of total annuity')
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(str(result_file_name) + '_annuity_breakdown.png')
+
+    # ---------------- EMISSION ANNUITY PIE PLOT ---------------
+    component_emissions = np.array(component_emissions)
+    emission_shares = 100.*component_emissions/component_emissions.sum()
+
+    patches_2, texts_2 = plt.pie(component_emissions, startangle=90, colors=palette)
+    labels = ['{0}: {1:1.2f} %'.format(i, j) for i, j in zip(component_names, emission_shares)]
+    plt.legend(patches_2, labels, loc='best', bbox_to_anchor=(-0.1, 1.),
+               fontsize=8)
+    plt.title('Percentage share of total emissions')
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(str(result_file_name) + '_emissions_breakdown.png')
+
+    # ---------------- ELECTRICITY USE PIE PLOT ---------------
+    component_elec_use_names = np.char.array(component_elec_use_names)
+    component_elec_use = np.array(component_elec_use)
+    elec_use_shares = 100.*component_elec_use/component_elec_use.sum()
+
+    patches_3, texts_3 = plt.pie(component_elec_use, startangle=90, colors=palette)
+    labels = ['{0}: {1:1.2f} %'.format(i, j)
+              for i, j in zip(component_elec_use_names, elec_use_shares)]
+    plt.legend(patches_3, labels, loc='best', bbox_to_anchor=(-0.1, 1.),
+               fontsize=8)
+    plt.title('Percentage share of electricity use')
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(str(result_file_name) + '_electricity_use_breakdown.png')
+
+    return
