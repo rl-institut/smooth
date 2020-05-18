@@ -18,8 +18,7 @@ class StorageH2 (Component):
         # Min. and max. pressure [bar].
         self.p_min = 0
         self.p_max = 450
-        # Storage capacity at p_max (assuming all the can be used,
-        # p_min is not included here) [kg].
+        # Storage capacity at p_max (usable storage + min storage) [kg].
         self.storage_capacity = 500
         # Life time [a].
         self.life_time = 20
@@ -34,9 +33,6 @@ class StorageH2 (Component):
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].
         self.vac_in = 0
         self.vac_out = 0
-        # If a storage level is set as wanted, the vac_low costs apply if the
-        # storage is below that level [kg].
-        self.storage_level_wanted = None
         # Var. art. costs that apply if the storage level is below the wanted
         # storage level [EUR/kg].
         self.vac_low_in = 0
