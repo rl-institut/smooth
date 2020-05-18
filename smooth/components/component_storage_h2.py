@@ -12,6 +12,10 @@ class StorageH2 (Component):
         # ------------------- PARAMETERS -------------------
         self.name = 'Storage_default_name'
 
+        # run on MPC
+        self.operate_on_mpc = False
+        self.mpc_data = 0
+
         # Define the hydrogen bus the storage is connected to.
         self.bus_in = None
         self.bus_out = None
@@ -83,10 +87,28 @@ class StorageH2 (Component):
         self.current_vac = [vac_in, vac_out]
 
     def create_oemof_model(self, busses, _):
+
+        # when operating on mpc the input and output hydrogen flow is fixed
+        if self.operate_on_mpc:
+            flow_h2_in = solph.Flow(
+                actual_value=max(0,self.mpc_data),
+                fixed=True,
+                nominal_value=self.storage_capacity,
+                variable_costs=self.current_vac[0])
+            flow_h2_out = solph.Flow(
+                actual_value=min(0,self.mpc_data),
+                fixed=True,
+                nominal_value=self.storage_capacity,
+                variable_costs=self.current_vac[1])
+        # otherwise all flows are solved by oemof
+        else:
+            flow_h2_in = solph.Flow(nominal_value=self.storage_capacity,variable_costs=self.current_vac[0])
+            flow_h2_out = solph.Flow(nominal_value=self.storage_capacity, variable_costs=self.current_vac[1])
+
         storage = solph.components.GenericStorage(
             label=self.name,
-            outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_vac[1])},
-            inputs={busses[self.bus_in]: solph.Flow(variable_costs=self.current_vac[0])},
+            outputs={busses[self.bus_out]: flow_h2_out},
+            inputs={busses[self.bus_in]: flow_h2_in},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
