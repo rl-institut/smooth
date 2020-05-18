@@ -68,7 +68,7 @@ class StorageH2 (Component):
         # Calculate the mass at p_min, which can't be used [kg].
         self.storage_level_min = self.get_mass(self.p_min)
         # Asserts that the initial storage level must be greater than the minimum storage
-        # level 
+        # level
         assert self.storage_level_init >= self.storage_level_min
 
         # ------------------- STATES -------------------
