@@ -42,6 +42,8 @@ class StorageH2 (Component):
         self.set_parameters(params)
         # Initial storage level [kg].
         self.storage_level_init = self.initial_storage_factor * self.storage_capacity
+        # If a storage level is set as wanted, the vac_low costs apply if the
+        # storage is below that level [kg].
         if self.slw_factor is not None:
             self.storage_level_wanted = self.slw_factor * self.storage_capacity
         else:
