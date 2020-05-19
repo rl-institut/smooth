@@ -12,7 +12,7 @@ class FuelCellChp(Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         # PARAMETERS TO CHANGE BY THE USER
         self.name = 'Fuel cell CHP default name'
 

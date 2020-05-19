@@ -23,7 +23,7 @@ class CompressorH2(Component):
         # Call the init function of th mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Compressor_default_name'
 
         # Busses
@@ -46,14 +46,14 @@ class CompressorH2(Component):
         # Overall efficiency of the compressor (value taken from MATLAB) [-]
         self.efficiency = 0.88829
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
-        """ ENERGY NEED FOR COMPRESSION """
+        # ------------------- ENERGY NEED FOR COMPRESSION -------------------
         # Specific compression energy (electrical energy needed per kg H2) [Wh/kg].
         self.spec_compression_energy = None
 
-        """ CONSTANT PARAMETERS """
+        # ------------------- CONSTANT PARAMETERS -------------------
         # Mr_H2 = Molar mass of H2 [kg/mol], R = the gas constant (R) [J/(K*mol)]
         self.R = 8.314
         self.Mr_H2 = 2.016 * 1e-3

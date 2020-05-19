@@ -1,6 +1,7 @@
 from multiprocessing import Pool, cpu_count
 import random
 import matplotlib.pyplot as plt  # only needed when plot_progress is set
+import dill
 
 # import traceback
 # def tb(e):
@@ -156,17 +157,12 @@ def mutate(parent, attribute_variation):
     return child
 
 
-# hack to have custom lambda objectives in pool worker
-# lambda's can't be pickled, but globals can be set when pool is init
-_objectives = None
-
-
-def worker_init(f):
-    global _objectives
-    _objectives = f
-
-
-def fitness_function(index, individual, model, attribute_variation):
+def fitness_function(
+        index, individual,
+        model,
+        attribute_variation,
+        dill_objectives,
+        save_results=False):
     # compute fitness for one individual
     # called async -> copies of individual and model given
     # program makes computer freeze when this is a class function?
@@ -177,10 +173,11 @@ def fitness_function(index, individual, model, attribute_variation):
     # Now that the model is updated according to the genes given by the GA, smooth can be run.
     try:
         smooth_result = run_smooth(model)[0]
-        # TODO: SAVE_ALL_SMOOTH_RESULTS can be given as arg if necessary
-        # individual.smooth_result = smooth_result if SAVE_ALL_SMOOTH_RESULTS else None
+        # SAVE_ALL_SMOOTH_RESULTS can be given as arg if necessary
+        individual.smooth_result = smooth_result if save_results else None
         # update fitness with given objective functions
-        individual.fitness = tuple(f(smooth_result) for f in _objectives)
+        objectives = dill.loads(dill_objectives)
+        individual.fitness = tuple(f(smooth_result) for f in objectives)
 
     except Exception as e:
         # The smooth run failed.The fitness score remains None.
@@ -190,12 +187,12 @@ def fitness_function(index, individual, model, attribute_variation):
 
 class Optimization:
 
-    SAVE_ALL_SMOOTH_RESULTS = False  # ignored
-
     def __init__(self, iterable=(), **kwargs):
 
         # set defaults
         self.plot_progress = False
+        self.SAVE_ALL_SMOOTH_RESULTS = False
+
         # objective functions: tuple with lambdas
         # negative sign for minimizing
         # defaults to minimum of annual costs and emissions
@@ -272,12 +269,14 @@ class Optimization:
         # compute fitness of every individual in population
         # open worker n_core threads
         # set objective functions for each worker
-        pool = Pool(processes=self.n_core, initializer=worker_init, initargs=(self.objectives,))
+        pool = Pool(processes=self.n_core)
+        dill_objectives = dill.dumps(self.objectives)
         for idx, ind in enumerate(self.population):
             if ind.fitness is None:  # not evaluated yet
                 pool.apply_async(
                     fitness_function,
-                    (idx, ind, self.model, self.attribute_variation),
+                    (idx, ind, self.model, self.attribute_variation,
+                     dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
                     callback=self.set_fitness,
                     error_callback=self.err_callback  # tb
                 )
@@ -348,7 +347,7 @@ class Optimization:
 
                 # save pareto front
                 # values/fitness tuples for all non-dominated individuals
-                result = [(self.population[i].values, self.population[i].fitness) for i in FNDS[0]]
+                result = [self.population[i] for i in FNDS[0]]
 
                 # print info of current pareto front
                 print("The best front for Generation # {} / {} is".format(
@@ -360,8 +359,8 @@ class Optimization:
                 # show current pareto front in plot
                 if self.plot_progress:
                     # use abs(r[]) to display positive values
-                    f1_vals = [r[1][0] for r in result]
-                    f2_vals = [r[1][1] for r in result]
+                    f1_vals = [r.fitness[0] for r in result]
+                    f2_vals = [r.fitness[1] for r in result]
                     self.ax.clear()
                     self.ax.plot(f1_vals, f2_vals, '.b')
                     plt.title('Front for Generation #{}'.format(gen+1))
@@ -381,9 +380,9 @@ class Optimization:
         for i, attr in enumerate(self.attribute_variation):
             print(' {} - {}'.format(
                 attr.comp_name, attr.comp_attribute))
-        result.sort(key=lambda v: -v[1][0])
+        result.sort(key=lambda v: -v.fitness[0])
         for i, v in enumerate(result):
-            print(i, v[0], " -> ", dict(zip(self.objective_names, v[1])))
+            print(i, v.values, " -> ", dict(zip(self.objective_names, v.fitness)))
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
         if self.plot_progress:
