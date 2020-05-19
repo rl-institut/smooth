@@ -7,9 +7,11 @@ sns.set()
 
 
 def save_important_parameters(optimization_results, result_index, result_file_name, comp_dict):
-    # Saves the most important parameters from optimization results in a csv file
-    # Parameter:
-    # optimization_results: file containing all information about the optimization results
+    """Saves the most important parameters from optimization results in a csv file, and
+    automatically generates pie plots containing the results of financial annuity shares,
+    emission shares and electricity usage shares.
+
+    :param: optimization_results: file containing all information about the optimization results"""
 
     if result_file_name.endswith('.pickle'):
         result_file_name = result_file_name[:-7]
