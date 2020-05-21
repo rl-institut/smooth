@@ -27,9 +27,9 @@ components.append({
     'bus_out': 'bel',
     'output_max': 5000000,
     'variable_costs': 0.00016,
-    'dependency_flow_costs': 'flow: from_grid-->bel',
+    'dependency_flow_costs': ('from_grid', 'bel'),
     'variable_emissions': 0.341,
-    'dependency_flow_emissions': 'flow: from_grid-->bel',
+    'dependency_flow_emissions': ('from_grid', 'bel'),
     # Foreign states
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
@@ -43,7 +43,7 @@ components.append({
     'name': 'to_grid',
     'bus_in': 'bel',
     'artificial_costs': 10,
-    'dependency_flow_costs': 'flow: bel-->to_grid',
+    'dependency_flow_costs': ('bel', 'to_grid'),
 })
 
 # Electicity generators
@@ -93,7 +93,7 @@ components.append({
     'bus_th': 'bth',
     'power_max': 500e3,
     'variable_emissions': 0.778,
-    'dependency_flow_emissions': 'flow: fuel_cell_chp_electric-->bel',
+    'dependency_flow_emissions': ('fuel_cell_chp_electric', 'bel'),
     'life_time': 20,
     'fix_emissions': {
         'key': ['free', 'spec'],
@@ -181,7 +181,6 @@ components.append({
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
-    'storage_level_init': 300,
     'life_time': 30,
     # Financials
     'capex': {

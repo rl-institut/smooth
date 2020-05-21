@@ -188,7 +188,10 @@ def get_free(component, fitting_dict, index, dependant_value):
 
 def get_dependant_value(component, fitting_dict, index, fixedCost):
     # Get an attribute of the component as the dependant value.
-    dependant_value = getattr(component, fitting_dict['dependant_value'][index], None)
+    if fitting_dict['key'][index] != 'fix':
+        dependant_value = getattr(component, fitting_dict['dependant_value'][index], None)
+    else:
+        dependant_value = None
 
     if fitting_dict['dependant_value'][index] == fixedCost:
         # If the capex are chosen as the dependant value, the capex costs are meant.

@@ -22,21 +22,21 @@ class StorageH2 (Component):
         # Min. and max. pressure [bar].
         self.p_min = 0
         self.p_max = 450
-        # Storage capacity capacity at p_max (assuming all the can be used,
-        # p_min is not included here) [kg].
+        # Storage capacity at p_max (usable storage + min storage) [kg].
         self.storage_capacity = 500
-        # Initial USABLE storage level [kg].
-        self.storage_level_init = 200
         # Life time [a].
         self.life_time = 20
+        # The initial storage level as a factor of the capacity [-]
+        self.initial_storage_factor = 0.5
+        # Max chargeable hydrogen in one time step in kg/h
+        self.delta_max = None
+        # The storage level wanted as a factor of the capacity
+        self.slw_factor = None
 
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].
         self.vac_in = 0
         self.vac_out = 0
-        # If a storage level is set as wanted, the vac_low costs apply if the
-        # storage is below that level [kg].
-        self.storage_level_wanted = None
         # Var. art. costs that apply if the storage level is below the wanted
         # storage level [EUR/kg].
         self.vac_low_in = 0
@@ -44,6 +44,14 @@ class StorageH2 (Component):
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
+        # Initial storage level [kg].
+        self.storage_level_init = self.initial_storage_factor * self.storage_capacity
+        # If a storage level is set as wanted, the vac_low costs apply if the
+        # storage is below that level [kg].
+        if self.slw_factor is not None:
+            self.storage_level_wanted = self.slw_factor * self.storage_capacity
+        else:
+            self.storage_level_wanted = None
 
         # ------------------- CONSTANTS FOR REAL GAS EQUATION -------------------
         # Critical temperature [K] and pressure [Pa], molar mass of H2
@@ -61,11 +69,13 @@ class StorageH2 (Component):
         self.V = self.get_volume(self.p_max, self.storage_capacity)
         # Calculate the mass at p_min, which can't be used [kg].
         self.storage_level_min = self.get_mass(self.p_min)
+        # Asserts that the initial storage level must be greater than the minimum storage
+        # level
+        assert self.storage_level_init >= self.storage_level_min
 
         # ------------------- STATES -------------------
         # Storage level [kg of h2]
-        self.storage_level = min(self.storage_level_init +
-                                 self.storage_level_min, self.storage_capacity)
+        self.storage_level = min(self.storage_level_init, self.storage_capacity)
         # Storage pressure [bar].
         self.pressure = self.get_pressure(self.storage_level)
 
@@ -86,6 +96,9 @@ class StorageH2 (Component):
 
         self.current_vac = [vac_in, vac_out]
 
+        # max chargeable hydrogen in one time step in kg/h
+        self.delta_max = self.storage_capacity
+
     def create_oemof_model(self, busses, _):
 
         # when operating on mpc the input and output hydrogen flow is fixed
@@ -93,17 +106,17 @@ class StorageH2 (Component):
             flow_h2_in = solph.Flow(
                 actual_value=max(0,self.mpc_data),
                 fixed=True,
-                nominal_value=self.storage_capacity,
+                nominal_value=self.delta_max,
                 variable_costs=self.current_vac[0])
             flow_h2_out = solph.Flow(
                 actual_value=min(0,self.mpc_data),
                 fixed=True,
-                nominal_value=self.storage_capacity,
+                nominal_value=self.delta_max,
                 variable_costs=self.current_vac[1])
         # otherwise all flows are solved by oemof
         else:
-            flow_h2_in = solph.Flow(nominal_value=self.storage_capacity,variable_costs=self.current_vac[0])
-            flow_h2_out = solph.Flow(nominal_value=self.storage_capacity, variable_costs=self.current_vac[1])
+            flow_h2_in = solph.Flow(nominal_value=self.delta_max,variable_costs=self.current_vac[0])
+            flow_h2_out = solph.Flow(nominal_value=self.delta_max, variable_costs=self.current_vac[1])
 
         storage = solph.components.GenericStorage(
             label=self.name,
