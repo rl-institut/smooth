@@ -66,7 +66,5 @@ def main():
 if __name__ == '__main__':
     freeze_support()
     optimization_results = main()
-    for r in optimization_results:
-        print(r.smooth_result)
     save_results('optimization_result', optimization_results)
 
