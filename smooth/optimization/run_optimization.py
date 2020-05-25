@@ -13,9 +13,17 @@ from smooth import run_smooth
 class AttributeVariation:
     # Class that contain all information about the attribute that is varied by
     # the genetic algorithm.
-    # Recommended attributes: comp_name, comp_attribute, val_min, val_max
+    # attributes: comp_name, comp_attribute, val_min, val_max
+    # optional: val_step
     def __init__(self, iterable=(), **kwargs):
+        self.val_step = None
         self.__dict__.update(iterable, **kwargs)
+        assert hasattr(self, "comp_name"), "comp_name missing"
+        assert hasattr(self, "comp_attribute"), "{}: comp_attribute missing".format(self.comp_name)
+        assert hasattr(
+            self, "val_min"), "{} - {}: val_min missing".format(self.comp_name, self.comp_attribute)
+        assert hasattr(
+            self, "val_max"), "{} - {}: val_max missing".format(self.comp_name, self.comp_attribute)
 
 
 class Individual:
@@ -142,18 +150,25 @@ def mutate(parent, attribute_variation):
     # get indices of genes to change
     genes_to_change = random.sample(range(len(child)), num_genes_to_change)
     for mut_gene_idx in genes_to_change:
+        value = child[mut_gene_idx]
         # compute smallest distance to min/max of attribute
         val_min = attribute_variation[mut_gene_idx].val_min
         val_max = attribute_variation[mut_gene_idx].val_max
-        delta_min = child[mut_gene_idx] - val_min
-        delta_max = val_max - child[mut_gene_idx]
+        delta_min = value - val_min
+        delta_max = val_max - value
         delta = min(delta_min, delta_max)
         # sigma influences spread of random numbers
         # try to keep between min and max of attribute
         sigma = delta / 3 if delta > 0 else 1
-        # mutate gene with normal distributaion around current value
-        child[mut_gene_idx] = int(
-            min(max(random.gauss(child[mut_gene_idx], sigma), val_min), val_max))
+        # get integer within normal distribution around current value
+        value = random.gauss(value, sigma)
+        if attribute_variation[mut_gene_idx].val_step:
+            # quantized value
+            step = attribute_variation[mut_gene_idx].val_step
+            value = round(delta_min / step) * step + val_min
+        # clip value to bounds
+        value = int(min(max(value, val_min), val_max))
+        child[mut_gene_idx] = value
     return child
 
 
@@ -247,9 +262,17 @@ class Optimization:
             self.objective_names), "Objective names don't match objective functions"
 
         # Init population with random values between attribute variation
-        self.population = [Individual(
-            [random.randint(av.val_min, av.val_max) for av in self.attribute_variation])
-            for _ in range(self.population_size)]
+        self.population = []
+        for _ in range(self.population_size):
+            individual = []
+            for av in self.attribute_variation:
+                if av.val_step:
+                    value = random.randrange(av.val_min, av.val_max+1, av.val_step)
+                else:
+                    value = random.randint(av.val_min, av.val_max)
+                individual.append(value)
+            self.population.append(Individual(individual))
+
         self.evaluated = {}
 
         # plot intermediate results?
