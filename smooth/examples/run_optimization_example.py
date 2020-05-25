@@ -67,4 +67,3 @@ if __name__ == '__main__':
     freeze_support()
     optimization_results = main()
     save_results('optimization_result', optimization_results)
-
