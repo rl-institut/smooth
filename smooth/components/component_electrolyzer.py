@@ -1,4 +1,4 @@
-from oemof.outputlib import views
+from oemof.solph import views
 import oemof.solph as solph
 from .component import Component
 import math

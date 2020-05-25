@@ -1,6 +1,6 @@
 import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
+from oemof.solph import views
 
 
 class StorageH2 (Component):
