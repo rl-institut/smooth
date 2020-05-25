@@ -10,7 +10,7 @@ class Sink(Component):
 
         # Call the init function of the mother class.
         Component.__init__(self)
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Grid_default_name'
 
         # Maximum input per timestep of commodity:
@@ -19,10 +19,10 @@ class Sink(Component):
 
         self.bus_in = None
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
-        """ COSTS """
+        # ------------------- COSTS -------------------
         # Define the costs for the commodities (negative means earning money)
         # e.g. [EUR/Wh], [EUR/kg].
         self.commodity_costs = self.get_costs_and_art_costs()

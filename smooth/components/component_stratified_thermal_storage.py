@@ -12,7 +12,7 @@ class StratifiedThermalStorage (Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Stratified_thermal_storage_default_name'
 
         # Define the heat bus the storage is connected to.
@@ -38,7 +38,7 @@ class StratifiedThermalStorage (Component):
         self.column_title = 0
         self.path = os.path.dirname(__file__)
 
-        """ PARAMETERS TAKEN FROM OEMOF THERMAL EXAMPLE FILE """
+        # ------------------- PARAMETERS TAKEN FROM OEMOF THERMAL EXAMPLE FILE -------------------
         # Density of the storage medium [kg/m3]
         self.density = 971.78
         # Heat capacity of the storage medium [J/(kg*K)]
@@ -60,7 +60,7 @@ class StratifiedThermalStorage (Component):
         # Heat transfer coefficient outside [W/(m*K)]
         self.alpha_outside = 1
 
-        """ PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) """
+        # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/Wh.
         self.vac_in = 0
         self.vac_out = 0
@@ -72,7 +72,7 @@ class StratifiedThermalStorage (Component):
         self.vac_low_in = 0
         self.vac_low_out = 0
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
         # Check to see if the environmental temperature has been given as a
@@ -83,16 +83,16 @@ class StratifiedThermalStorage (Component):
                 self.path, self.csv_filename, self.csv_separator, self.column_title)
             self.temp_env = self.temp_env[self.column_title].values.tolist()
 
-        """ STATES """
+        # ------------------- STATES -------------------
         # Storage level [kg of h2]
         self.storage_level = min(self.storage_level_init +
                                  self.storage_level_min, self.storage_capacity)
 
-        """ VARIABLE ARTIFICIAL COSTS """
+        # ------------------- VARIABLE ARTIFICIAL COSTS -------------------
         # Store the current artificial costs for input and output [EUR/kg].
         self.current_vac = [0, 0]
 
-        """FURTHER STORAGE VALUES DEPENDING ON SPECIFIED PARAMETERS """
+        # -------- FURTHER STORAGE VALUES DEPENDING ON SPECIFIED PARAMETERS --------
         # Calculate the storage volume [m³].
         self.volume \
             = self.get_volume(
@@ -150,7 +150,7 @@ class StratifiedThermalStorage (Component):
         return volume
 
     def get_diameter(self, V, h_d_ratio):
-        diameter = ((4 * V)/(pi * h_d_ratio))**(1/3)
+        diameter = ((4 * V) / (pi * h_d_ratio))**(1 / 3)
         return diameter
 
     def calculate_storage_u_value(self, a_in, s_iso, l_iso, a_out):

@@ -11,7 +11,7 @@ class EnergyDemandFromCsv(Component):
 
         # Call the init function of the mother class.
         Component.__init__(self)
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Demand_default_name'
 
         self.nominal_value = 1
@@ -22,14 +22,12 @@ class EnergyDemandFromCsv(Component):
 
         self.bus_in = None
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
-        """ READ CSV FILES """
+        # ------------------- READ CSV FILES -------------------
         self.data = func.read_data_file(self.path, self.csv_filename,
                                         self.csv_separator, self.column_title)
-
-        """ STATES """
 
     def create_oemof_model(self, busses, _):
         energy_demand_from_csv = solph.Sink(
