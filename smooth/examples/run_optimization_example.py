@@ -1,6 +1,6 @@
 from smooth.examples.example_model import mymodel
-from smooth import run_optimization
 from multiprocessing import freeze_support
+from smooth import run_optimization, save_results
 
 import logging
 logging.getLogger('pyomo.core').setLevel(logging.ERROR)
@@ -31,7 +31,7 @@ def main():
             lambda x: -sum([c.results["annual_total_emissions"] for c in x]),
         ),
         'objective_names': ('costs', 'emissions'),
-        'SAVE_ALL_SMOOTH_RESULTS': True,
+        'SAVE_ALL_SMOOTH_RESULTS': False,
     }
     # Define the attribute variation information that will be used by the genetic algorithm.
     #  comp_name: Name of the component [string].
@@ -68,8 +68,5 @@ if __name__ == '__main__':
     optimization_results = main()
     for r in optimization_results:
         print(r.smooth_result)
-
-    import smooth
-    smooth.save_results('optimization_result', optimization_results)
-    # smooth.plot_optimization_results(optimization_results)
+    save_results('optimization_result', optimization_results)
 
