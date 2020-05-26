@@ -41,7 +41,7 @@ def run_smooth(model):
             print('Simulating interval {}/{}'.format(i_interval+1, sim_params.n_intervals))
 
         # run mpc
-        mp.run_mpc_dummy(model,components,system_outputs,i_interval)
+        mp.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
@@ -104,7 +104,7 @@ def run_smooth(model):
         df_results = processing.create_dataframe(model_to_solve)
 
         # track system outputs for mpc
-        # system_outputs = mpc.get_system_output_mpc(results,results_dict,df_results)
+        system_outputs = mp.get_system_output_mpc(results,system_outputs)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:
@@ -121,4 +121,4 @@ def run_smooth(model):
     for this_comp in components:
         this_comp.generate_results()
 
-    return components, status
+    return components, status, system_outputs
