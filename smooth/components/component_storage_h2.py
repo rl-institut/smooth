@@ -109,7 +109,7 @@ class StorageH2 (Component):
                 nominal_value=self.delta_max,
                 variable_costs=self.current_vac[0])
             flow_h2_out = solph.Flow(
-                actual_value=min(0,self.mpc_data),
+                actual_value=abs(min(0,self.mpc_data)),
                 fixed=True,
                 nominal_value=self.delta_max,
                 variable_costs=self.current_vac[1])
