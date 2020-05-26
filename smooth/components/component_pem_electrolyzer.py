@@ -3,8 +3,9 @@ from .component import Component
 import pyomo.environ as po
 
 
-class PemElectrolyzer (Component):
+class PemElectrolyzer(Component):
     """ PEM Electrolyzer agents are created through this class """
+
     def __init__(self, params):
 
         # Call the init function of the mother class.
@@ -22,7 +23,7 @@ class PemElectrolyzer (Component):
         self.power_max = 6000000
 
         # pressure of hydrogen in the system in [Pa]
-        self.pressure = 35*10e5  # CHECK WHERE TO INCLUDE (IF NEEDED)
+        self.pressure = 35 * 10e5  # CHECK WHERE TO INCLUDE (IF NEEDED)
         # Initial temperature [K].
         self.temp_init = 273.15 + 25  # CHECK WHERE TO INCLUDE (IF NEEDED)
         # Life time [a].
@@ -43,12 +44,12 @@ class PemElectrolyzer (Component):
         # System efficiency load break points in terms of hydrogen production
         # (e.g. 0.05 --> 5 %) [-]
         self.bp_load_h2_prod = [0.0255, 0.0398, 0.0582, 0.0797, 0.0991, 0.1267, 0.1624, 0.2257,
-                0.3565, 0.4545, 0.5832, 0.6803, 0.8151, 0.9418, 1.0]
+                                0.3565, 0.4545, 0.5832, 0.6803, 0.8151, 0.9418, 1.0]
 
         # System efficiency break points in terms of hydrogen production
         # (e.g. 0.05 --> 5 %) [-]
         self.bp_eff_h2_prod = [0, 0.2157, 0.4762, 0.563, 0.6303, 0.6751, 0.6947, 0.6863, 0.6779,
-                0.6583, 0.6387, 0.6218, 0.6022, 0.5854, 0.5798]
+                               0.6583, 0.6387, 0.6218, 0.6022, 0.5854, 0.5798]
 
         # The (approximated) efficiency curve for the waste heat efficiency
         # over the load point of a PEM electrolyzer,
@@ -73,7 +74,7 @@ class PemElectrolyzer (Component):
         for i_bp in range(len(self.bp_load_h2_prod)):
             this_hydrogen_production = \
                 (self.bp_elec_consumed_h2_prod[i_bp]
-                 * self.bp_eff_h2_prod[i_bp])/(self.heating_value * 1000)
+                 * self.bp_eff_h2_prod[i_bp]) / (self.heating_value * 1000)
             self.bp_h2_production.append(this_hydrogen_production)
 
         # Now get the absolute waste heat energy values over the load points [Wh]
@@ -125,7 +126,7 @@ class PemElectrolyzer (Component):
 
         # First create the main PEM electrolyzer oemof component.
         pem_electrolyzer_h2_prod = solph.custom.PiecewiseLinearTransformer(
-            label=self.name+'_h2_prod',
+            label=self.name + '_h2_prod',
             inputs={busses[self.bus_el]: flow_h2},
             outputs={busses[self.bus_h2]: solph.Flow()},
             in_breakpoints=self.bp_elec_consumed_h2_prod_half,
@@ -134,7 +135,7 @@ class PemElectrolyzer (Component):
 
         # Then create the waste heat PEM electrolyzer oemof component.
         pem_electrolyzer_waste_heat = solph.custom.PiecewiseLinearTransformer(
-            label=self.name+'_waste_heat',
+            label=self.name + '_waste_heat',
             inputs={busses[self.bus_el]: flow_waste_heat},
             outputs={busses[self.bus_th]: solph.Flow()},
             in_breakpoints=self.bp_elec_consumed_waste_heat_half,
