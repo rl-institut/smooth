@@ -422,4 +422,3 @@ class Electrolyzer (Component):
         self.states['temperature'][sim_params.i_interval] = this_temp
         # Update the water consumption state for this time step.
         self.states['water_consumption'][sim_params.i_interval] = this_water_consumption
-
