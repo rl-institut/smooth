@@ -2,10 +2,11 @@ import pandas as pd
 from oemof.outputlib import views
 from oemof import solph
 from oemof.outputlib import processing
+import math
 
 
 #--------------------MPC FUNCTIONS--------------------------------------------------------------------------------------
-def run_mpc_dummy(this_model,components,system_outputs,iteration):
+def run_mpc_dummy(this_model,components,system_outputs,iteration,sim_params):
     # function calculating the system inputs (control variables) based on the system outputs
     # (controlled process variables) and a (dummy) mpc algorithm
 
@@ -16,33 +17,65 @@ def run_mpc_dummy(this_model,components,system_outputs,iteration):
         system_outputs = define_system_outputs_mpc()
 
     # system inputs
+    time_end = sim_params.n_intervals
     system_inputs = define_system_inputs_mpc() # auslagern und Aufruf in run_smooth???!!!
-    system_inputs['power_electrolyzer']['mpc_data'] = 0.85
-    system_inputs['mflow_h2_storage']['mpc_data'] = step_input_mpc(0,0.1,iteration) # 0.50
-    for this_in in system_inputs:
-        # Loop through all components of the model dict until the right component is found.
-        for this_comp in components:
-            if this_comp.name == system_inputs[this_in]['comp_name']:
-                # idx = this_model['components'].index(this_comp)
-                setattr(this_comp,'mpc_data',system_inputs[this_in]['mpc_data'])
+    system_inputs['power_electrolyzer']['mpc_data'] = [0.6]*time_end
+    system_inputs['mflow_h2_storage']['mpc_data'] = sine_list_input_mpc(0,0.01,time_end) # 0.50
+    set_system_input_mpc(components,system_inputs,iteration)
+    # for this_in in system_inputs:
+    #    # Loop through all components of the model dict until the right component is found.
+    #    for this_comp in components:
+    #        if this_comp.name == system_inputs[this_in]['comp_name']:
+    #            # idx = this_model['components'].index(this_comp)
+    #            setattr(this_comp,'mpc_data',system_inputs[this_in]['mpc_data'])
+    return
+
+def set_system_input_mpc(components,system_inputs,iteration):
+    # rufe die function mit get_system_input_mpc(components,system_inputs,[]) auf,
+    # wenn system_inputs nicht mit Vektoren verwendet wird
+    if iteration==[]:
+        for this_in in system_inputs:
+            # Loop through all components of the model dict until the right component is found.
+            for this_comp in components:
+                if this_comp.name == system_inputs[this_in]['comp_name']:
+                    setattr(this_comp, 'mpc_data', system_inputs[this_in]['mpc_data'])
+    else:
+        for this_in in system_inputs:
+            # Loop through all components of the model dict until the right component is found.
+            for this_comp in components:
+                if this_comp.name == system_inputs[this_in]['comp_name']:
+                    setattr(this_comp, 'mpc_data', system_inputs[this_in]['mpc_data'][iteration])
     return
 
 
-def get_system_output_mpc(results,results_dict,df_results):
-    # function tracking the system outputs and returning them for use in run_mpc_dummy
-    # system outputs are defined in an auxiliary function
-    system_outputs = define_system_outputs_mpc()
-    # loop through all system outputs and get the current flow values
-    for this_out in system_outputs:
-        this_comp_node = views.node(results, this_out['node1_name'])
-        this_df = this_comp_node['sequences']
-        for i_result in this_df:
-            # check if i_result is the desired flow
-            # oemof-Doku zu outputlib: flow-keys: (node1,node2); node-keys: (node,None)
-            if i_result[0][0] == this_out['node1_name'] and i_result[0][1] == this_out['node2_name']:
-                # flow from node1 to node2
-                this_out['flow_value'] = this_df[i_result][0]
-                # print(this_out['flow_value'])
+def get_system_output_mpc(results,system_outputs):
+    # rufe die function mit get_system_output_mpc(results,[]) auf, um system_outputs nur für den aktuelle Zeitschritt
+    # zu speichern
+    # sonst werden die aktuellen Werte an die Liste der vorherigen Werte angehängt
+    if not system_outputs:
+        system_outputs = define_system_outputs_mpc()
+        # loop through all system outputs and get the current flow values
+        for this_out in system_outputs:
+            this_comp_node = views.node(results, this_out['node1_name'])
+            this_df = this_comp_node['sequences']
+            for i_result in this_df:
+                # check if i_result is the desired flow
+                # oemof-Doku zu outputlib: flow-keys: (node1,node2); node-keys: (node,None)
+                if i_result[0][0] == this_out['node1_name'] and i_result[0][1] == this_out['node2_name']:
+                    # flow from node1 to node2
+                    this_out['flow_value'] = [this_df[i_result][0]]
+                    # print(this_out['flow_value'])
+    else:
+        # loop through all system outputs and get the current flow values
+        for this_out in system_outputs:
+            this_comp_node = views.node(results, this_out['node1_name'])
+            this_df = this_comp_node['sequences']
+            for i_result in this_df:
+                # check if i_result is the desired flow
+                # oemof-Doku zu outputlib: flow-keys: (node1,node2); node-keys: (node,None)
+                if i_result[0][0] == this_out['node1_name'] and i_result[0][1] == this_out['node2_name']:
+                    # flow from node1 to node2
+                    this_out['flow_value'] = this_out['flow_value'] + [this_df[i_result][0]]
     return system_outputs
 
 
@@ -65,113 +98,168 @@ def define_system_outputs_mpc():
     supply_el = {
         'node1_name': 'from_grid',
         'node2_name': 'bel',
-        'flow_value': 0,
+        'flow_value': [0],
     }
     sink_el = {
         'node1_name': 'bel',
         'node2_name': 'to_grid',
-        'flow_value': 0,
+        'flow_value': [0],
     }
     to_demand_h2_mp = {
         'node1_name': 'bh2_mp',
         'node2_name': 'h2_demand_mp',
-        'flow_value': 0,
+        'flow_value': [0],
     }
     system_outputs = [supply_el,sink_el,to_demand_h2_mp]
     # To Do: initialize flow values with NaN and set starting values only when requested when the method is called
     return system_outputs
 
 
-def step_input_mpc(operating_point,step_size,iteration):
+def step_input_mpc(operating_point,step_size,iteration,time_end):
     # function returning the current value of a step signal
     # start in operation point, step up and down with specified step size
-    step = [operating_point]*5+[operating_point+step_size]*5+[operating_point-step_size]*5+[operating_point]*9
-    # TO DO: an beliebige Simulationszeiträume anpassen
+    step = [operating_point]*5+[operating_point+step_size]*5+[operating_point-step_size]*5+[operating_point]*(time_end-15) # *(9+6*24)
     return step[iteration]
 
 
-def cost_function_mpc(this_model,components,system_inputs,u_vec,prediction_horizon,sim_params):
-    for this_in in system_inputs:
-        # Loop through all components of the model dict until the right component is found.
-        for this_comp in this_model['components']:
-            if this_comp['name'] == this_in['comp_name']:
-                idx = this_model['components'].index(this_comp)
-                setattr(components[idx],this_in['comp_attribute'],u_vec[this_in])
-    # Frage: oemof modell kann für beliebig viele Zeitschritte eine Vorgabe der Fixed Flows bekommen!!?
-    # also kann ich direkt die gesamte Steuertrajektorie in das eine oemof-modell zu dem Zeitpunkt geben?!!
-    # gesamte Steuertrajektorie: u1 = u1,0 u1,1 ... u1,(control_horizon-1), u1,(control_horizon), u1,(control_horizon),
-    # ...,u1,(control_horizon) --> Anzahl der Einträge: prediction_horizon
-    system_outputs = run_model_mpc(this_model,components,sim_params, prediction_horizon)
+def sine_input_mpc(operating_point,amplitude,iteration,time_end):
+    time = range(1,time_end+1)
+    time_sine = [math.sin(t) for t in time]
+    sine = [operating_point + amplitude*y for y in time_sine]
+    return sine[iteration]
+
+
+def sine_list_input_mpc(operating_point,amplitude,time_end):
+    time = range(1,time_end+1)
+    time_sine = [math.sin(t) for t in time]
+    sine = [operating_point + amplitude*y for y in time_sine]
+    return sine
+
+
+def rolling_horizon(components,control_horizon,prediction_horizon,sim_params):
+    # a. constraints definieren
+
+    # b. cost_function_mpc() als nested function definieren
+    def cost_function_mpc(u_vec):
+        # a. Steuerfolge für Prädiktionshorizont erweitern
+        power_electrolyzer = u_vec[0:control_horizon-1]
+        mflow_h2_storage = u_vec[control_horizon:(2*control_horizon)-1]
+        power_electrolyzer.append([power_electrolyzer(-1)] * (prediction_horizon - control_horizon))
+        mflow_h2_storage.append([mflow_h2_storage(-1)] * (prediction_horizon - control_horizon))
+        # b. run_model_mpc() aufrufen  Rückgabe: Regelgrößen für aktuellen Prädiktionsschritt
+        system_outputs = run_model_mpc(components,sim_params,prediction_horizon,system_inputs)
+        mass_h2_avl = []
+        mass_h2_demand = []
+        power_supply = []
+        power_sink = []
+        # c. Teil-Kostenfunktionen als nested functions definieren
+        def cost_fuction_demand(iteration):
+            return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 2
+        def cost_fuction_supply(iteration):
+            return (power_supply[iteration] - 0) ** 2
+        def cost_fuction_sink(iteration):
+            return (power_sink[iteration] - 0) ** 2
+        # d. Iteration über Prädiktionshorizont:
+        cost = 0
+        for k in range(0, prediction_horizon):
+            cost = cost + cost_fuction_demand(k) + cost_fuction_supply(k) + cost_fuction_sink(k)
+        return cost
+    # c. Optimierer aufrufen mit cost_function_mpc()
+
+    # d. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
+
     return
 
 
-def run_model_mpc(this_model,components,sim_params, prediction_horizon):
-    # Initialize the oemof energy system for a number of timesteps according to the prediction horizon
-    date_time_index = pd.date_range('1/1/2012', periods=prediction_horizon,
-                                    freq='{}min'.format(sim_params.interval_time)) # freq = 'H' --> Stündlich? Vorerst ok, aber was muss man machen, um das zu ändern?
-     # i_interval brauchen wir nicht mehr, wir starten bei Null (mit Anfangswerte sind system_outputs bei i_interval)
-    oemof_model = solph.EnergySystem(timeindex=date_time_index)
+def run_model_mpc(model,components,sim_params,prediction_horizon,system_inputs):
+    # a. system_outputs leer initialisieren
+    system_outputs = []
+    # b. Smooth laufen lassen über alle Prädiktionsschritte (import from run_smooth)
+    # ------------------- SIMULATION -------------------
+    for i_interval in range(prediction_horizon):
+        # Save the interval index of this run to the sim_params to make it usable later on.
+        sim_params.i_interval = i_interval
+        if sim_params.print_progress:
+            print('Simulating interval {}/{}'.format(i_interval+1, prediction_horizon))
 
-    # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
-    # Create all busses and save them to a dict for later use in the components.
-    busses = {}
+        # i. Stellgrößen setzen (Wert aus Steuerfolge für aktuellen Prädiktionsschritt)
+        # set system_inputs
+        set_system_input_mpc(components,system_inputs,i_interval)
 
-    for i_bus in this_model['busses']:
-        # Create this bus and append it to the "busses" dict.
-        busses[i_bus] = solph.Bus(label=i_bus)
-        # Add the bus to the simulation model.
-        oemof_model.add(busses[i_bus])
-    # vielleicht busse im run_smooth erstellen lassen und übergeben!
+        # Initialize the oemof energy system for this time step.
+        this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
+        oemof_model = solph.EnergySystem(timeindex=this_time_index,
+                                         freq='{}min'.format(sim_params.interval_time))
 
-    # Prepare the simulation.
-    for this_comp in components:
-        # Execute the prepare simulation step (if this component has one).
-        this_comp.prepare_simulation(components)
-        # Get the oemof representation of this component.
-        this_oemof_model = this_comp.create_oemof_model(busses, oemof_model)
-        if this_oemof_model is not None:
-            # Add the component to the oemof model.
-            oemof_model.add(this_oemof_model)
-        else:
-            # If None is given back, no model is supposed to be added.
-            pass
+        # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
+        # Create all busses and save them to a dict for later use in the components.
+        busses = {}
 
-    # ------------------- RUN THE SIMULATION -------------------
-    # Do the simulation for this time step.
-    model_to_solve = solph.Model(oemof_model)
+        for i_bus in model['busses']:
+            # Create this bus and append it to the "busses" dict.
+            busses[i_bus] = solph.Bus(label=i_bus)
+            # Add the bus to the simulation model.
+            oemof_model.add(busses[i_bus])
 
-    for this_comp in components:
-        this_comp.update_constraints(busses, model_to_solve)
+        # Prepare the simulation.
+        for this_comp in components:
+            # Execute the prepare simulation step (if this component has one).
+            this_comp.prepare_simulation(components)
+            # Get the oemof representation of this component.
+            this_oemof_model = this_comp.create_oemof_model(busses, oemof_model)
+            if this_oemof_model is not None:
+                # Add the component to the oemof model.
+                oemof_model.add(this_oemof_model)
+            else:
+                # If None is given back, no model is supposed to be added.
+                pass
 
-    # brauchen wird das hier?
-    # if i_interval == 0:
-    #     # Save the set of linear equations for the first interval.
-    #     model_to_solve.write('./oemof_model.lp', io_options={'symbolic_solver_labels': True})
+        # ------------------- RUN THE SIMULATION -------------------
+        # Do the simulation for this time step.
+        model_to_solve = solph.Model(oemof_model)
 
-    oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
+        for this_comp in components:
+            this_comp.update_constraints(busses, model_to_solve)
 
-    # später anschauen, ob und wie das hier sinnvoll ist
-    # # ------------------- CHECK IF SOLVING WAS SUCCESSFUL -------------------
-    # # If the status and temination condition is not ok/optimal, get and
-    # # print the current flows and status
-    # status = oemof_results["Solver"][0]["Status"].key
-    # termination_condition = oemof_results["Solver"][0]["Termination condition"].key
-    # if status != "ok" and termination_condition != "optimal":
-    #     if sim_params.show_debug_flag:
-    #         new_df_results = processing.create_dataframe(model_to_solve)
-    #         df_debug = get_df_debug(df_results, results_dict, new_df_results)
-    #         show_debug(df_debug, components)
-    #     raise SolverNonOptimalError('solver status: ' + status +
-    #                                 " / termination condition: " + termination_condition)
+        oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
-    # ------------------- HANDLE RESULTS -------------------
-    # Get the results of this oemof run.
-    results = processing.results(model_to_solve)
-    # results_dict = processing.parameter_as_dict(model_to_solve)
-    # df_results = processing.create_dataframe(model_to_solve)
+        # ------------------- CHECK IF SOLVING WAS SUCCESSFUL -------------------
+        # If the status and temination condition is not ok/optimal, get and
+        # print the current flows and status
+        status = oemof_results["Solver"][0]["Status"].key
+        # termination_condition = oemof_results["Solver"][0]["Termination condition"].key
+        # if status != "ok" and termination_condition != "optimal":
+        #     if sim_params.show_debug_flag:
+        #         new_df_results = processing.create_dataframe(model_to_solve)
+        #         df_debug = get_df_debug(df_results, results_dict, new_df_results)
+        #         show_debug(df_debug, components)
+        #     raise SolverNonOptimalError('solver status: ' + status +
+        #                                 " / termination condition: " + termination_condition)
 
+        # ------------------- HANDLE RESULTS -------------------
+        # Get the results of this oemof run.
+        results = processing.results(model_to_solve)
+        results_dict = processing.parameter_as_dict(model_to_solve)
+        df_results = processing.create_dataframe(model_to_solve)
+
+        # ii. Regelgrößen abgreifen und in Vektor speichern
+        # track system outputs for mpc
+        system_outputs = get_system_output_mpc(results,system_outputs)
+
+        # Loop through every component and call the result handling functions
+        for this_comp in components:
+            # Update the flows
+            this_comp.update_flows(results, sim_params)
+            # Update the states.
+            this_comp.update_states(results, sim_params)
+            # Update the costs and artificial costs.
+            this_comp.update_var_costs(results, sim_params)
+            # Update the costs and artificial costs.
+            this_comp.update_var_emissions(results, sim_params)
+
+    # d. Rückgabe der Vektoren der Regelgröße über Prädiktionshorizont
     # track system outputs for mpc
-    return get_system_output_mpc(results)
+    return system_outputs
 
 
 #---------END MPC FUNCTIONS---------------------------------------------------------------------------------------------
