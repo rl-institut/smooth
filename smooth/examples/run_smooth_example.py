@@ -1,4 +1,5 @@
-from smooth.examples.example_dict_model import mymodel
+from testing_waste_heat_ely import mymodel
+# from smooth.examples.example_model_waste_heat import mymodel
 from smooth import run_smooth
 from smooth import plot_smooth_results
 from smooth import print_smooth_results

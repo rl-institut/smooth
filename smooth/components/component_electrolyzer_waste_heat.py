@@ -6,6 +6,7 @@ import numpy as np
 import warnings
 import pyomo.environ as po
 
+
 class ElectrolyzerWasteHeat (Electrolyzer):
     """ Electrolyzer agents with waste heat model are created through this subclass of the Electrolyzer class """
     def __init__(self, params):
@@ -14,16 +15,11 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         param_bus_th = {'bus_th': params.pop('bus_th')}
 
         # Call the init function of the mother class.
-        Electrolyzer.__init__(self,params)
+        Electrolyzer.__init__(self, params)
 
         """ PARAMETERS """
         # Define the additional thermal bus
         self.bus_th = None
-
-        # resistance to heat transfer R_t [K/W]
-        self.resistance_to_heat_transfer = 0.164
-        # source: Dieguez et al., 'Thermal Performance of a commercial alkaline water electrolyzer: Experimental study
-        # and mathematical modeling', Int. J. Hydrogen Energy, 2008
 
         """ UPDATE PARAMETER DEFAULT VALUES """
         self.set_parameters(param_bus_th)
@@ -34,8 +30,6 @@ class ElectrolyzerWasteHeat (Electrolyzer):
 
         """  CONSTANT PARAMETERS (PHYSICS) """
         # constant parameters for calculating sensible heat:
-        # molar mass M_O2
-        self.molar_mass_O2 = 31.99880
         # specific heat at constant pressure [J/(kg*K)]
         self.c_p_H2 = 14304
         self.c_p_O2 = 920
@@ -45,10 +39,9 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         self.model_h2 = None
         self.model_th = None
 
-
     def conversion_fun_thermal(self, ely_energy):
-        # Create a function that will give out the thermal energy values for the electric energy values at the breakpoints.
-
+        # Create a function that will give out the thermal energy values for the electric energy values at the
+        # breakpoints.
         # Check the index of this ely_energy entry.
         this_index = self.supporting_points['energy'].index(ely_energy)
         # Return the according hydrogen production value [kg].
@@ -88,7 +81,6 @@ class ElectrolyzerWasteHeat (Electrolyzer):
 
         return None
 
-
     def update_nonlinear_behaviour(self):
         # Set up the breakpoints for the electrolyzer conversion of electricity to hydrogen.
         n_supporting_point = 10
@@ -116,35 +108,44 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         self.supporting_points['energy'] = bp_ely_energy
         self.supporting_points['thermal_energy'] = bp_ely_thermal
 
-
     def get_waste_heat(self, energy_used, h2_produced, new_ely_temp):
         # source: Dieguez et al., 'Thermal Performance of a commercial alkaline water electrolyzer: Experimental study
         # and mathematical modeling', Int. J. Hydrogen Energy, 2008
-        # parameters:
-        # energy_used [kWh], h2_produced [kg], new_ely_temp [K]
-        # return value:
-        # waste_heat [kWh]
-
-        # waste heat is heat that is removed through cooling, cooling only takes place if the elctrolyzer is near to its
-        # maximum temperature, factor 0.999 is chosen since newtons law of cooling describes an exponential convergency
-        # towards the aimed temperature, therefore temperatures near the max. temperature are reached quite fast whereas
-        # the max. temperature itself is reached after a longer period of time
+        # energy_used [kWh] --> internal_heat_generation [kWh]
+        internal_heat_generation = energy_used - h2_produced * self.upp_heat_val * 1e6 / 3600 / 1000  # [kWh]
+        # heat losses:
+        dT = (new_ely_temp - self.temp_min)  # [K]
+        diameter_cell = (4 * self.area_cell / 3.14) ** 0.5 / 100  # m
+        # equation from Dieguez et al:
+        heat_transfer_coefficient = 1.32 * (dT / diameter_cell) ** 0.25  # [W/(m^2*K)]
+        # The height of the end of the stack which is not part of the cells is assumed to have a
+        # dependence on the diameter of the cell. The ratio is taken as 7 : 120
+        # (stack_end_height : diameter_cell), which is based on De Silva, Y.S.K. (2017). Design
+        # of an Alkaline Electrolysis Stack, University of Agder.
+        stack_end_height = 0.058 * diameter_cell
+        # The height of an individual cell in relation to cell diameter is calculated using example
+        # data from Vogt, U.F. et al. (2014). Novel Developments in Alkaline Water Electrolysis,
+        # Empa Laboratory of Hydrogen and Energy. The individual cell height is estimated and
+        # compared with the given cell radius, and a ratio of 1 : 75.5 is obtained.
+        height_cell = diameter_cell / 75.5
+        # The total stack height is calculated by taking the cell stack and the two ends of the
+        # stack into consideration
+        height_stack = (height_cell * self.z_cell) + (2 * stack_end_height)
+        # The external surface of the electrolysis stack is calculated assuming that it is
+        # cylindrical
+        area_stack = 2 * self.area_cell / 10000 + 3.14 * diameter_cell * height_stack  # [m^2]
+        # The overall surface area exposed by the gas separators and the pipe communicating
+        # them is assumed to be in a ratio of 1 : 0.42 with the area of the stack (taken from
+        # Dieguez et al)
+        area_separator = 2.38 * area_stack
+        heat_losses = heat_transfer_coefficient * (area_stack + area_separator) * dT * self.interval_time \
+                      / 60 / 1000  # [kWh]
+        [sensible_heat, latent_heat] = self.sensible_and_latent_heats(h2_produced, new_ely_temp)  # [kWh]
         if new_ely_temp >= (0.999 * self.temp_max):
-            # calcualting the internal heat generation out of the relation Q = E_el*(1-eta_stack) with eta_stack = m_H2
-            # * HHV / E_el, eta_I (ac/dc conversion) is neglected for a first approximation
-            internal_heat_generation = energy_used - h2_produced * self.upp_heat_val / 3.6  # [kWh]
-            # heat losses modeled trough an overall convective-radiative heat transfer coeffiecient
-            heat_losses = (new_ely_temp - self.temp_min) / (self.resistance_to_heat_transfer * 1000) \
-                          * (self.interval_time / 60)  # [kWh]
-            # sensible heat is calculated using water decomposition stoichiometry, mass balance and constant specific
-            # heat, latent heat is neglected for a first approximation
-            [sensible_heat, latent_heat] = self.sensible_and_latent_heats(h2_produced, new_ely_temp)  # [kWh]
-            # the waste heat follows from the energy balance
             waste_heat = internal_heat_generation - heat_losses + sensible_heat
         else:
             waste_heat = 0
         return waste_heat
-
 
     def sensible_and_latent_heats(self, mass_H2, new_ely_temp):
         # mass of H2, O2 and H2O is related by the water decomposition stoichiometry and the mass balance
@@ -154,12 +155,12 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         mass_H2O = mass_H2 + mass_O2
         # sensible heat removed from the system with the H2 and O2 streams, as well as the sensible heat required to
         # warm the deionized water from room temperature to the stack operating temperature
-        sensible_heat = (mass_H2O * self.c_p_H2O * (self.temp_min - new_ely_temp) \
-                        - mass_H2 * self.c_p_H2 * (new_ely_temp - self.temp_min) \
+        sensible_heat = (mass_H2O * self.c_p_H2O * (self.temp_min - new_ely_temp)
+                        - mass_H2 * self.c_p_H2 * (new_ely_temp - self.temp_min)
                         - mass_O2 * self.c_p_O2 * (new_ely_temp - self.temp_min)) / 3.6e6 # [kWh], 1J = 1/3.6e6 kWh
         # latent heat is neglected since mass_H2O_vapor is neglected
-        return [sensible_heat, 0]
-
+        latent_heat = 0
+        return [sensible_heat, latent_heat]
 
     def update_constraints(self, busses, model_to_solve):
         # Set a constraint so that the electric inflow of the hydrogen producing and the thermal part are always the same (which

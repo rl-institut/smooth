@@ -12,10 +12,11 @@ busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
 """ Define components """
 components = list()
 components.append({
-    'component': 'electrolyzer',
+    'component': 'electrolyzer_waste_heat',
     'name': 'this_ely',
     'bus_el': 'bel',
     'bus_h2': 'bh2_lp',
+    'bus_th': 'bth',
     'power_max': 100e3,
     'temp_init': 293.15,
     'life_time': 20,
@@ -85,6 +86,14 @@ components.append({
 })
 
 components.append({
+    'component': 'sink',
+    'name': 'excess_heat',
+    'bus_in': 'bth',
+    'artificial_costs': 0,
+    'dependency_flow_costs': ('bth', 'excess_heat'),
+})
+
+components.append({
     'component': 'storage_h2',
     'name': 'h2_storage',
     'bus_in': 'bh2_lp',
@@ -132,6 +141,8 @@ components.append({
     }
 
 })
+
+
 
 """components.append({
     'component': 'energy_demand_from_csv',
