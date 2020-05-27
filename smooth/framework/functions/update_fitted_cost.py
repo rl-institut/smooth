@@ -58,6 +58,7 @@ def update_emissions(component, emissions):
     # "exp"      --> exponential cost fitting
     # "poly"     --> polynomial cost fitting
     # "free"     --> polynomial cost fitting with free choosable exponents
+    # "lin"      --> linear function: cost = x * dependant value + y
     #
     # If multiple keys are defined, the calculations are done sequentially in order.
 
