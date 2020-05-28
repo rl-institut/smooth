@@ -11,7 +11,7 @@ from smooth import run_smooth
 
 
 class AttributeVariation:
-    """Class that contain all information about an attribute that is varied by the genetic algorithm.
+    """Class that contains all information about an attribute that is varied by the genetic algorithm
 
     :param comp_name: name of component that gets varied
     :type comp_name: string
@@ -37,7 +37,7 @@ class AttributeVariation:
 
 
 class Individual:
-    """ Class for individuals evaluated by the genetic algorithm.
+    """ Class for individuals evaluated by the genetic algorithm
 
     :param values: attribute values (individual configuration)
     :type values: list
