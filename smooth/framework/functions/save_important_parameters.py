@@ -6,17 +6,23 @@ import seaborn as sns
 sns.set()
 
 
-def save_important_parameters(optimization_results, result_index, result_file_name, comp_dict):
-    """Saves the most important parameters from optimization results in a csv file, and
+def save_important_parameters(optimization_results, result_index, result_filename, comp_dict):
+    """Saves the most important parameters from the optimization results in a csv file, and
     automatically generates pie plots containing the results of financial annuity shares,
-    emission shares and electricity usage shares.
+    emission shares and electricity usage shares between components in the energy system.
 
-    :param: optimization_results: file containing all information about the optimization results"""
+    :param optimization_results: The file containing all information about the optimization results
+    :type optimization_results: ?
+    :param result_index: The index number that relates to the specific optimization result
+    :type result_index: int
+    :param result_filename: The result filename e.g. 'my_optimization_results.pickle'
+    :type result_filename: pickle
+    """
 
-    if result_file_name.endswith('.pickle'):
-        result_file_name = result_file_name[:-7]
+    if result_filename.endswith('.pickle'):
+        result_file_name = result_filename[:-7]
     # create an empty csv file
-    with open(str(result_file_name + '_important_params'), 'w', newline='') as file:
+    with open(str(result_filename + '_important_params'), 'w', newline='') as file:
         writer = csv.writer(file)
         headers = ['Component', 'Parameter', 'Value']
         writer.writerow(headers)
@@ -99,7 +105,7 @@ def save_important_parameters(optimization_results, result_index, result_file_na
     plt.title('Percentage share of total annuity')
     plt.tight_layout()
     plt.show()
-    plt.savefig(str(result_file_name) + '_annuity_breakdown.png')
+    plt.savefig(str(result_filename) + '_annuity_breakdown.png')
 
     # ---------------- EMISSION ANNUITY PIE PLOT ---------------
     component_emissions = np.array(component_emissions)
@@ -112,7 +118,7 @@ def save_important_parameters(optimization_results, result_index, result_file_na
     plt.title('Percentage share of total emissions')
     plt.tight_layout()
     plt.show()
-    plt.savefig(str(result_file_name) + '_emissions_breakdown.png')
+    plt.savefig(str(result_filename) + '_emissions_breakdown.png')
 
     # ---------------- ELECTRICITY USE PIE PLOT ---------------
     component_elec_use_names = np.char.array(component_elec_use_names)
@@ -127,6 +133,6 @@ def save_important_parameters(optimization_results, result_index, result_file_na
     plt.title('Percentage share of electricity use')
     plt.tight_layout()
     plt.show()
-    plt.savefig(str(result_file_name) + '_electricity_use_breakdown.png')
+    plt.savefig(str(result_filename) + '_electricity_use_breakdown.png')
 
     return
