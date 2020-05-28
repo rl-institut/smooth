@@ -7,8 +7,9 @@ import warnings
 import pyomo.environ as po
 
 
-class ElectrolyzerWasteHeat (Electrolyzer):
+class ElectrolyzerWasteHeat(Electrolyzer):
     """ Electrolyzer agents with waste heat model are created through this subclass of the Electrolyzer class """
+
     def __init__(self, params):
 
         # Split the params dict
@@ -26,7 +27,7 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         # Interval time [min].
         self.interval_time = self.sim_params.interval_time
         # Calculate the max. energy the electrolyzer can use in one time step [Wh].
-        self.energy_max = self.power_max * self.interval_time/60
+        self.energy_max = self.power_max * self.interval_time / 60
 
         """  CONSTANT PARAMETERS (PHYSICS) """
         # constant parameters for calculating sensible heat:
@@ -63,8 +64,8 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         electrolyzer = solph.custom.PiecewiseLinearTransformer(
             label=self.name,
             inputs={busses[self.bus_el]: solph.Flow(
-               nominal_value=self.energy_max / 2,
-               variable_costs=0)},
+                nominal_value=self.energy_max / 2,
+                variable_costs=0)},
             outputs={busses[self.bus_h2]: solph.Flow()},
             in_breakpoints=self.supporting_points['energy_halved'],
             conversion_function=self.conversion_fun_ely,
@@ -72,10 +73,10 @@ class ElectrolyzerWasteHeat (Electrolyzer):
 
         # Then create the thermal oemof component.
         electrolyzer_thermal = solph.custom.PiecewiseLinearTransformer(
-            label=self.name+'_thermal',
+            label=self.name + '_thermal',
             inputs={busses[self.bus_el]: solph.Flow(
-               nominal_value=self.energy_max / 2,
-               variable_costs=0)},
+                nominal_value=self.energy_max / 2,
+                variable_costs=0)},
             outputs={busses[self.bus_th]: solph.Flow()},
             in_breakpoints=self.supporting_points['energy_halved'],
             conversion_function=self.conversion_fun_thermal,
@@ -108,7 +109,7 @@ class ElectrolyzerWasteHeat (Electrolyzer):
             bp_ely_temp.append(this_temp)
             # Calculate the waste heat [Wh] with the energy, hydrogen produced and resulting temperature of this
             # breakpoint at the current temperature.
-            this_waste_heat = self.get_waste_heat(this_energy / 1000, this_mass, this_temp) * 1000 # [Wh]
+            this_waste_heat = self.get_waste_heat(this_energy / 1000, this_mass, this_temp) * 1000  # [Wh]
             bp_ely_thermal.append(this_waste_heat)
 
         self.supporting_points['temperature'] = bp_ely_temp
@@ -165,8 +166,8 @@ class ElectrolyzerWasteHeat (Electrolyzer):
         # sensible heat removed from the system with the H2 and O2 streams, as well as the sensible heat required to
         # warm the deionized water from room temperature to the stack operating temperature
         sensible_heat = (mass_H2O * self.c_p_H2O * (self.temp_min - new_ely_temp)
-                        - mass_H2 * self.c_p_H2 * (new_ely_temp - self.temp_min)
-                        - mass_O2 * self.c_p_O2 * (new_ely_temp - self.temp_min)) / 3.6e6 # [kWh], 1J = 1/3.6e6 kWh
+                         - mass_H2 * self.c_p_H2 * (new_ely_temp - self.temp_min)
+                         - mass_O2 * self.c_p_O2 * (new_ely_temp - self.temp_min)) / 3.6e6  # [kWh], 1J = 1/3.6e6 kWh
         # latent heat is neglected since mass_H2O_vapor is neglected
         latent_heat = 0
         return [sensible_heat, latent_heat]
@@ -183,12 +184,10 @@ class ElectrolyzerWasteHeat (Electrolyzer):
             expr += - model.flow[busses[self.bus_el], self.model_h2, t]
             return (expr == 0)
 
-        model_to_solve.electrolyzer_flow_ratio_fix = po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
+        model_to_solve.electrolyzer_flow_ratio_fix = po.Constraint(model_to_solve.TIMESTEPS,
+                                                                   rule=electrolyzer_ratio_rule)
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
         Electrolyzer.update_flows(self, results, sim_params, self.name)
         Electrolyzer.update_flows(self, results, sim_params, self.name + '_thermal')
-
-
-
