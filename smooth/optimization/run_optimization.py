@@ -1,3 +1,112 @@
+"""This is the core of the genetic algorith (GA) used for optimization.
+It uses the `NSGA-II <https://www.sciencedirect.com/science/article/pii/S1877705811022466>`_
+algorithm for multi-objective optimization of smooth components.
+
+**********
+How to use
+**********
+To use, call run_optimzation with a configuration dictionary and your smooth model.
+You will receive a list of :class:`Individual` in return. These individuals are
+pareto-optimal in regard to the given objective functions (limited to two functions).
+
+An example configuration can be seen in smooth/example/run_optimization_example.py.
+
+Objective functions
+-------------------
+You may specify your custom objective functions for optimization.
+These should be lambdas that take the result from run_smooth and return a value.
+Keep in mind that this algorithm always tries to maximize.
+In order to minimize a value, return the negative value.
+
+Example 1: maximize *power_max* of the first component::
+
+    lambda x: x[0].power_max
+
+Example 2: minimize the annual costs::
+
+    lambda x: -sum([component.results['annuity_total'] for component in x])
+
+Result
+------
+After the given number of generations or aborting, the result is printed to the terminal.
+All individuals currently on the pareto front are returned in a list.
+Their `values` member contain the component attribute values in the order
+given by the `attribute_variation` dictionary from the optimization params.
+In addition, when `SAVE_ALL_SMOOTH_RESULTS` was set to True, the `smooth_result`
+member of each individual contains the value returned by run_smooth.
+
+.. warning::
+    Using SAVE_ALL_SMOOTH_RESULTS and writing the result
+    to a file will generally lead to a large file size.
+
+**************
+Implementation
+**************
+Like any GA, this implementation simulates a population which converges
+to an optimal solution over multiple generations.
+As there are multiple objectives, the solution takes the form of a pareto-front,
+where no solution is dominated by another while maintaining distance to each other.
+We take care to compute each individual configuration only once.
+The normal phases of a GA still apply:
+
+* selection
+* crossover
+* mutation
+
+Population initialisation
+-------------------------
+At the start, a population is generated.
+The size of the population must be declared (`population_size`).
+Each component attribute to be varied in the smooth_model corresponds
+to a gene in an individual. The genes are initialized randomly with a uniform
+distribution between the minimum and maximum value of its component attribute.
+
+Selection
+---------
+We compute the fitness of all individuals in parallel.
+You must set `n_core` to specify how many threads should be active at the same time.
+This can be either a number or 'max' to use all virtual cores on your machine.
+The fitness evaluation follows these steps:
+
+#. change your smooth model according to the individual's component attribute values
+#. run smooth
+#. on success, compute the objective functions using the smooth result. \
+These are the fitness values. On failure, print the error
+#. update the master individual on the main thread with the fitness values
+#. update the reference in the dictionary containing all evaluated individuals
+
+After all individuals in the current generation have been evaluated,
+they are sorted into tiers by NSGA-II fast non-dominated sorting algorithm.
+Only individuals on the pareto front are retained,
+depending on their distance to their neighbors.
+
+Crossover
+---------
+These individuals form the base of the next generation, they are parents.
+For each child in the next generation, genes from two randomly selected parents
+are taken (uniform crossover of independent genes).
+
+Mutation
+--------
+After crossover, each child has a random number of genes mutated.
+The mutated value is around the original value, taken from a normal distribution.
+Special care must be taken to stay within the component atrribute's range
+and to adhere to a strict step size.
+
+After crossover and mutation, we check that this individual's gene sequence
+has not been encountered before (as this would not lead to new information
+and waste computing time). Only then is it admitted into the new generation.
+
+We impose an upper limit of 1000 * `population_size` on the number of tries to
+find new children. This counter is reset for each generation. If it is exceeded
+and no new gene sequences have been found, the algorithm aborts and returns the current result.
+
+The algorithm will also abort if no individuals had a valid smooth result.
+This can only happen in the first generation.
+
+The parent individuals stay in the population, so they can appear in the pareto front again.
+"""
+
 from multiprocessing import Pool, cpu_count
 import random
 import matplotlib.pyplot as plt  # only needed when plot_progress is set
@@ -468,7 +577,7 @@ class Optimization:
             # only children not seen before allowed in population
             # set upper bound for maximum number of generated children
             # population may not be pop_size big (invalid individuals)
-            for tries in range(10 * self.population_size):
+            for tries in range(1000 * self.population_size):
                 if (len(children) == self.population_size) or gen == 0:
                     # population full (pop_size new individuals)
                     break
