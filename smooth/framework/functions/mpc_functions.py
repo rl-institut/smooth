@@ -3,6 +3,7 @@ from oemof.outputlib import views
 from oemof import solph
 from oemof.outputlib import processing
 import math
+from scipy.optimize import Bounds, minimize
 
 
 #--------------------MPC FUNCTIONS--------------------------------------------------------------------------------------
@@ -110,7 +111,12 @@ def define_system_outputs_mpc():
         'node2_name': 'h2_demand_mp',
         'flow_value': [0],
     }
-    system_outputs = [supply_el,sink_el,to_demand_h2_mp]
+    compressor_h2_mp = {
+        'node1_name': 'h2_compressor_mp',
+        'node2_name': 'bh2_mp',
+        'flow_value': [0],
+    }
+    system_outputs = [supply_el,sink_el,to_demand_h2_mp, compressor_h2_mp]
     # To Do: initialize flow values with NaN and set starting values only when requested when the method is called
     return system_outputs
 
@@ -136,39 +142,49 @@ def sine_list_input_mpc(operating_point,amplitude,time_end):
     return sine
 
 
-def rolling_horizon(components,control_horizon,prediction_horizon,sim_params):
+def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_params):
+    system_inputs = define_system_inputs_mpc()
     # a. constraints definieren
-
-    # b. cost_function_mpc() als nested function definieren
+    lb = [0] * control_horizon + [-1] * control_horizon # lower bound
+    ub = [1] * control_horizon + [1] * control_horizon # upper bound
+    bounds = Bounds(lb, ub)
+    # b. Startwerte u_vec_0 vorgeben
+    u_vec_0 = [0.5] * control_horizon + [0] * control_horizon # erster Veruch: jeweils in der Mitte der Grenzen
+    # c. cost_function_mpc() als nested function definieren
     def cost_function_mpc(u_vec):
-        # a. Steuerfolge für Prädiktionshorizont erweitern
-        power_electrolyzer = u_vec[0:control_horizon-1]
-        mflow_h2_storage = u_vec[control_horizon:(2*control_horizon)-1]
-        power_electrolyzer.append([power_electrolyzer(-1)] * (prediction_horizon - control_horizon))
-        mflow_h2_storage.append([mflow_h2_storage(-1)] * (prediction_horizon - control_horizon))
-        # b. run_model_mpc() aufrufen  Rückgabe: Regelgrößen für aktuellen Prädiktionsschritt
-        system_outputs = run_model_mpc(components,sim_params,prediction_horizon,system_inputs)
-        mass_h2_avl = []
-        mass_h2_demand = []
-        power_supply = []
-        power_sink = []
-        # c. Teil-Kostenfunktionen als nested functions definieren
+        # a. Steuerfolge für Prädiktionshorizont erweitern und
+        # b. Iteration durch system_inputs und nacheinander aufteilen und speichern von u_vec in den einzelnen Inputs
+        u_vec = u_vec.tolist()
+        iter = 0
+        for this_in in system_inputs:
+            control_data = u_vec[(iter * control_horizon):((iter + 1) * control_horizon)]
+            iter = iter + 1
+            control_data.extend([control_data[-1]] * (prediction_horizon - control_horizon))
+            system_inputs[this_in]['mpc_data'] = control_data
+        # c. run_model_mpc() aufrufen  Rückgabe: Regelgrößen-Vektoren für Prädiktionshorizont
+        system_outputs = run_model_mpc(model,components,sim_params,prediction_horizon,system_inputs)
+        mass_h2_avl = system_outputs[3]['flow_value']
+        mass_h2_demand = system_outputs[2]['flow_value']
+        power_supply = system_outputs[0]['flow_value']
+        power_sink = system_outputs[1]['flow_value']
+        # d. Teil-Kostenfunktionen als nested functions definieren
         def cost_fuction_demand(iteration):
             return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 2
         def cost_fuction_supply(iteration):
             return (power_supply[iteration] - 0) ** 2
         def cost_fuction_sink(iteration):
             return (power_sink[iteration] - 0) ** 2
-        # d. Iteration über Prädiktionshorizont:
+        # e. Iteration über Prädiktionshorizont:
         cost = 0
         for k in range(0, prediction_horizon):
             cost = cost + cost_fuction_demand(k) + cost_fuction_supply(k) + cost_fuction_sink(k)
+        # f. Rückgabe der Kosten
         return cost
-    # c. Optimierer aufrufen mit cost_function_mpc()
+    # d. Optimierer aufrufen mit cost_function_mpc()
+    res = minimize(cost_function_mpc, u_vec_0, method='trust-constr', options = {'verbose': 1}, bounds = bounds)
+    # e. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
 
-    # d. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
-
-    return
+    return res
 
 
 def run_model_mpc(model,components,sim_params,prediction_horizon,system_inputs):
