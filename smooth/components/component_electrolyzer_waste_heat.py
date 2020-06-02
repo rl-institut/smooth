@@ -33,6 +33,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         self.c_p_O2 = 920
         self.c_p_H2O = 4183
 
+        """ ELECTROLYZER GEOMETRY PARAMETERS """
         self.diameter_cell = (4 * self.area_cell / 3.14) ** 0.5 / 100  # m
         # The height of the end of the stack which is not part of the cells is assumed to have a
         # dependence on the diameter of the cell. The ratio is taken as 7 : 120
@@ -47,7 +48,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         # The total stack height is calculated by taking the cell stack and the two ends of the
         # stack into consideration
         self.height_stack = (self.height_cell * self.z_cell) + (2 * self.stack_end_height)
-        # The external surface of the electrolysis stack is calculated assuming that it is
+        # The external surface area of the electrolysis stack is calculated assuming that it is
         # cylindrical
         self.area_stack = (
                 2 * self.area_cell / 10000 + 3.14 * self.diameter_cell * self.height_stack
@@ -170,11 +171,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         heat_losses = (
             heat_transfer_coefficient
             * (self.area_stack + self.area_separator)
-            * dT
-            * self.interval_time
-            / 60
-            / 1000
-        )  # [kWh]
+            * dT * self.interval_time / 60 / 1000)  # [kWh]
         [sensible_heat, latent_heat] = self.sensible_and_latent_heats(
             h2_produced, new_ely_temp
         )  # [kWh]
