@@ -4,7 +4,8 @@ import pyomo.environ as po
 
 
 class ElectrolyzerWasteHeat(Electrolyzer):
-    """ Electrolyzer agents with waste heat model are created through this subclass of the Electrolyzer class """
+    """ Electrolyzer agents with waste heat model are created through this subclass of the
+    Electrolyzer class """
 
     def __init__(self, params):
 
@@ -31,6 +32,30 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         self.c_p_H2 = 14304
         self.c_p_O2 = 920
         self.c_p_H2O = 4183
+
+        self.diameter_cell = (4 * self.area_cell / 3.14) ** 0.5 / 100  # m
+        # The height of the end of the stack which is not part of the cells is assumed to have a
+        # dependence on the diameter of the cell. The ratio is taken as 7 : 120
+        # (stack_end_height : diameter_cell), which is based on De Silva, Y.S.K. (2017). Design
+        # of an Alkaline Electrolysis Stack, University of Agder.
+        self.stack_end_height = 0.058 * self.diameter_cell
+        # The height of an individual cell in relation to cell diameter is calculated using example
+        # data from Vogt, U.F. et al. (2014). Novel Developments in Alkaline Water Electrolysis,
+        # Empa Laboratory of Hydrogen and Energy. The individual cell height is estimated and
+        # compared with the given cell radius, and a ratio of 1 : 75.5 is obtained.
+        self.height_cell = self.diameter_cell / 75.5
+        # The total stack height is calculated by taking the cell stack and the two ends of the
+        # stack into consideration
+        self.height_stack = (self.height_cell * self.z_cell) + (2 * self.stack_end_height)
+        # The external surface of the electrolysis stack is calculated assuming that it is
+        # cylindrical
+        self.area_stack = (
+                2 * self.area_cell / 10000 + 3.14 * self.diameter_cell * self.height_stack
+        )  # [m^2]
+        # The overall surface area exposed by the gas separators and the pipe communicating
+        # them is assumed to be in a ratio of 1 : 0.42 with the area of the stack (taken from
+        # Dieguez et al)
+        self.area_separator = 2.38 * self.area_stack
 
         # Save the two models to set constraints later.
         self.model_h2 = None
@@ -137,36 +162,14 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         )  # [kWh]
         # heat losses:
         dT = new_ely_temp - self.temp_min  # [K]
-        diameter_cell = (4 * self.area_cell / 3.14) ** 0.5 / 100  # m
         # equation from Dieguez et al:
         heat_transfer_coefficient = (
-            1.32 * (dT / diameter_cell) ** 0.25
+            1.32 * (dT / self.diameter_cell) ** 0.25
         )  # [W/(m^2*K)]
-        # The height of the end of the stack which is not part of the cells is assumed to have a
-        # dependence on the diameter of the cell. The ratio is taken as 7 : 120
-        # (stack_end_height : diameter_cell), which is based on De Silva, Y.S.K. (2017). Design
-        # of an Alkaline Electrolysis Stack, University of Agder.
-        stack_end_height = 0.058 * diameter_cell
-        # The height of an individual cell in relation to cell diameter is calculated using example
-        # data from Vogt, U.F. et al. (2014). Novel Developments in Alkaline Water Electrolysis,
-        # Empa Laboratory of Hydrogen and Energy. The individual cell height is estimated and
-        # compared with the given cell radius, and a ratio of 1 : 75.5 is obtained.
-        height_cell = diameter_cell / 75.5
-        # The total stack height is calculated by taking the cell stack and the two ends of the
-        # stack into consideration
-        height_stack = (height_cell * self.z_cell) + (2 * stack_end_height)
-        # The external surface of the electrolysis stack is calculated assuming that it is
-        # cylindrical
-        area_stack = (
-            2 * self.area_cell / 10000 + 3.14 * diameter_cell * height_stack
-        )  # [m^2]
-        # The overall surface area exposed by the gas separators and the pipe communicating
-        # them is assumed to be in a ratio of 1 : 0.42 with the area of the stack (taken from
-        # Dieguez et al)
-        area_separator = 2.38 * area_stack
+
         heat_losses = (
             heat_transfer_coefficient
-            * (area_stack + area_separator)
+            * (self.area_stack + self.area_separator)
             * dT
             * self.interval_time
             / 60
