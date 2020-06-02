@@ -37,7 +37,8 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         self.model_th = None
 
     def conversion_fun_ely(self, ely_energy):
-        # Create a function that will give out the mass values for the electric energy values at the breakpoints.
+        # Create a function that will give out the mass values for the electric energy
+        # values at the breakpoints.
 
         # Check the index of this ely_energy entry.
         this_index = self.supporting_points["energy_halved"].index(ely_energy)
@@ -45,8 +46,8 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         return self.supporting_points["h2_produced"][this_index]
 
     def conversion_fun_thermal(self, ely_energy):
-        # Create a function that will give out the thermal energy values for the electric energy values at the
-        # breakpoints.
+        # Create a function that will give out the thermal energy values for the electric
+        # energy values at the breakpoints.
         # Check the index of this ely_energy entry.
         this_index = self.supporting_points["energy_halved"].index(ely_energy)
         # Return the according hydrogen production value [kg].
@@ -102,17 +103,20 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         bp_ely_thermal = []
         for i_supporting_point in range(n_supporting_point + 1):
             # Calculate the energy for this breakpoint [Wh].
-            this_energy = i_supporting_point / n_supporting_point * self.energy_max
+            this_energy = (
+                i_supporting_point / n_supporting_point * self.energy_max
+            )
             bp_ely_energy.append(this_energy)
-            # Calculate the hydrogen produced [kg] and resulting temperature [K] with the energy of this breakpoint
-            # and at the current temperature.
+            # Calculate the hydrogen produced [kg] and resulting temperature [K] with the
+            # energy of this breakpoint and at the current temperature.
             [this_mass, this_temp] = self.get_mass_and_temp(this_energy / 1000)
             bp_ely_h2.append(this_mass)
             bp_ely_temp.append(this_temp)
-            # Calculate the waste heat [Wh] with the energy, hydrogen produced and resulting temperature of this
-            # breakpoint at the current temperature.
+            # Calculate the waste heat [Wh] with the energy, hydrogen produced and resulting
+            # temperature of this breakpoint at the current temperature.
             this_waste_heat = (
-                self.get_waste_heat(this_energy / 1000, this_mass, this_temp) * 1000
+                self.get_waste_heat(this_energy / 1000, this_mass, this_temp)
+                * 1000
             )  # [Wh]
             bp_ely_thermal.append(this_waste_heat)
 
@@ -125,9 +129,9 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         ]
 
     def get_waste_heat(self, energy_used, h2_produced, new_ely_temp):
-        # source: Dieguez et al., 'Thermal Performance of a commercial alkaline water electrolyzer: Experimental study
-        # and mathematical modeling', Int. J. Hydrogen Energy, 2008
-        # energy_used [kWh] --> internal_heat_generation [kWh]
+        # source: Dieguez et al., 'Thermal Performance of a commercial alkaline
+        # water electrolyzer: Experimental study and mathematical modeling',
+        # Int. J. Hydrogen Energy, 2008 energy_used [kWh] --> internal_heat_generation [kWh]
         internal_heat_generation = (
             energy_used - h2_produced * self.upp_heat_val * 1e6 / 3600 / 1000
         )  # [kWh]
@@ -135,7 +139,9 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         dT = new_ely_temp - self.temp_min  # [K]
         diameter_cell = (4 * self.area_cell / 3.14) ** 0.5 / 100  # m
         # equation from Dieguez et al:
-        heat_transfer_coefficient = 1.32 * (dT / diameter_cell) ** 0.25  # [W/(m^2*K)]
+        heat_transfer_coefficient = (
+            1.32 * (dT / diameter_cell) ** 0.25
+        )  # [W/(m^2*K)]
         # The height of the end of the stack which is not part of the cells is assumed to have a
         # dependence on the diameter of the cell. The ratio is taken as 7 : 120
         # (stack_end_height : diameter_cell), which is based on De Silva, Y.S.K. (2017). Design
@@ -176,13 +182,15 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         return waste_heat
 
     def sensible_and_latent_heats(self, mass_H2, new_ely_temp):
-        # mass of H2, O2 and H2O is related by the water decomposition stoichiometry and the mass balance
+        # mass of H2, O2 and H2O is related by the water decomposition stoichiometry
+        # and the mass balance
         mass_O2 = mass_H2 * 0.5 * self.molar_mass_O2 / self.molarity
-        # as a first approximation mass_H2O_vapor is neglected in the mass balance, since condensers temperature and
-        # pressure are not known
+        # as a first approximation mass_H2O_vapor is neglected in the mass balance,
+        # since condensers temperature and pressure are not known
         mass_H2O = mass_H2 + mass_O2
-        # sensible heat removed from the system with the H2 and O2 streams, as well as the sensible heat required to
-        # warm the deionized water from room temperature to the stack operating temperature
+        # sensible heat removed from the system with the H2 and O2 streams, as well
+        # as the sensible heat required to warm the deionized water from room temperature
+        # to the stack operating temperature
         sensible_heat = (
             mass_H2O * self.c_p_H2O * (self.temp_min - new_ely_temp)
             - mass_H2 * self.c_p_H2 * (new_ely_temp - self.temp_min)
@@ -193,9 +201,10 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         return [sensible_heat, latent_heat]
 
     def update_constraints(self, busses, model_to_solve):
-        # Set a constraint so that the electric inflow of the hydrogen producing and the thermal part
-        # are always the same (which is necessary while the piecewise linear transformer cannot have
-        # two outputs yet and therefore the two parts need to be separate components).
+        # Set a constraint so that the electric inflow of the hydrogen producing and the
+        # thermal part are always the same (which is necessary while the piecewise linear
+        # transformer cannot have two outputs yet and therefore the two parts need to be
+        # separate components).
         def electrolyzer_ratio_rule(model, t):
             # Inverter flow
             expr = 0
@@ -211,4 +220,6 @@ class ElectrolyzerWasteHeat(Electrolyzer):
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
         Electrolyzer.update_flows(self, results, sim_params, self.name)
-        Electrolyzer.update_flows(self, results, sim_params, self.name + "_thermal")
+        Electrolyzer.update_flows(
+            self, results, sim_params, self.name + "_thermal"
+        )
