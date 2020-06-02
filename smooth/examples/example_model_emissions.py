@@ -182,7 +182,6 @@ components.append({
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
-    'storage_level_init': 300,
     'life_time': 30,
     # Financials
     'capex': {
