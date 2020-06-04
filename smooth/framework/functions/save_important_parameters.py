@@ -86,7 +86,8 @@ def save_important_parameters(optimization_results, result_index, result_filenam
                     component_elec_use.append(total_elec_use)
                     component_elec_use_names.append(name)
 
-            component_names.append(name)
+            if component.component != 'gate':
+                component_names.append(name)
             component_annuities.append(this_annuity)
             component_emissions.append(this_emission)
 
