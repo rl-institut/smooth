@@ -70,6 +70,7 @@ def calc_annuity(component, target):
 
     return target_annuity
 
+
 def update_external_annuities(component):
     # Convert the CAPEX to annuities - MAYBE CHANGE THE NAME?
     # Parameter:
@@ -89,6 +90,7 @@ def update_external_annuities(component):
     component.results['annuity_capex'] = capex_annuity
     component.results['annuity_opex'] = opex
     component.results['annuity_total'] = capex_annuity + opex
+
 
 def calc_annual_emissions(component, target):
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
