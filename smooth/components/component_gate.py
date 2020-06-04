@@ -11,6 +11,8 @@ class Gate(Component):
         """ PARAMERTERS """
         self.name = 'Gate_default_name'
 
+        self.max_input = None
+
         # Busses
         self.bus_in = None
         self.bus_out = None
@@ -21,7 +23,7 @@ class Gate(Component):
     def create_oemof_model(self, busses, _):
         gate = solph.Transformer(
             label=self.name,
-            inputs={busses[self.bus_in]: solph.Flow()},
+            inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.max_input)},
             outputs={busses[self.bus_out]: solph.Flow()}
           )
         return gate
