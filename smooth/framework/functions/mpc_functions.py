@@ -58,14 +58,19 @@ def get_system_output_mpc(results,system_outputs):
         # loop through all system outputs and get the current flow values
         for this_out in system_outputs:
             this_comp_node = views.node(results, this_out['node1_name'])
-            this_df = this_comp_node['sequences']
-            for i_result in this_df:
-                # check if i_result is the desired flow
-                # oemof-Doku zu outputlib: flow-keys: (node1,node2); node-keys: (node,None)
-                if i_result[0][0] == this_out['node1_name'] and i_result[0][1] == this_out['node2_name']:
-                    # flow from node1 to node2
-                    this_out['flow_value'] = [this_df[i_result][0]]
-                    # print(this_out['flow_value'])
+            try:
+                this_df = this_comp_node['sequences']
+                for i_result in this_df:
+                    # check if i_result is the desired flow
+                    # oemof-Doku zu outputlib: flow-keys: (node1,node2); node-keys: (node,None)
+                    if i_result[0][0] == this_out['node1_name'] and i_result[0][1] == this_out['node2_name']:
+                        # flow from node1 to node2
+                        this_out['flow_value'] = [this_df[i_result][0]]
+                        # print(this_out['flow_value'])
+                break
+            except KeyError:
+                print('KeyError( sequences) in ', this_out)
+                # this_out['flow_value'] = [math.nan]
     else:
         # loop through all system outputs and get the current flow values
         for this_out in system_outputs:
@@ -171,9 +176,15 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_para
         def cost_fuction_demand(iteration):
             return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 2
         def cost_fuction_supply(iteration):
+            return power_supply[iteration] * 0.000195
+        def cost_fuction_sink(iteration):
+            return power_sink[iteration] * (-0.00004)
+        """
+        def cost_fuction_supply(iteration):
             return (power_supply[iteration] - 0) ** 2
         def cost_fuction_sink(iteration):
             return (power_sink[iteration] - 0) ** 2
+         """
         # e. Iteration über Prädiktionshorizont:
         cost = 0
         for k in range(0, prediction_horizon):
@@ -181,7 +192,9 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_para
         # f. Rückgabe der Kosten
         return cost
     # d. Optimierer aufrufen mit cost_function_mpc()
-    res = minimize(cost_function_mpc, u_vec_0, method='trust-constr', options = {'verbose': 1}, bounds = bounds)
+    # res = minimize(cost_function_mpc, u_vec_0, method='trust-constr', options = {'verbose': 1}, bounds = bounds)
+    res = minimize(cost_function_mpc, u_vec_0, method='L-BFGS-B', options = {'maxiter': 10, 'disp': True},
+                   bounds = bounds)
     # e. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
 
     return res
