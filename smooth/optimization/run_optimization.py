@@ -60,6 +60,7 @@ The size of the population must be declared (`population_size`).
 Each component attribute to be varied in the smooth_model corresponds
 to a gene in an individual. The genes are initialized randomly with a uniform
 distribution between the minimum and maximum value of its component attribute.
+These values may adhere to a step size (*val_step* in :class:`AttributeVariation`).
 
 Selection
 ---------
@@ -127,15 +128,17 @@ class AttributeVariation:
     :param comp_attribute: component attribute that gets varied
     :type comp_attribute: string
     :param val_min: minimum value of component attribute
-    :type val_min: int
+    :type val_min: number
     :param val_max: maximum value of component attribute (inklusive)
-    :type val_max: int
-    :param val_step: step size of component attribute. Defaults to 1
-    :type val_step: int, optional
-    :raises: AssertionError when any non-optional parameter is missing
+    :type val_max: number
+    :param val_step: step size of component attribute
+    :type val_step: number, optional
+    :var num_steps: number of steps if *val_step* is set and not zero
+    :type num_steps: int
+    :raises: AssertionError when any non-optional parameter is missing or *val_step* is negative
     """
     def __init__(self, iterable=(), **kwargs):
-        self.val_step = 1
+        self.val_step = None
         self.__dict__.update(iterable, **kwargs)
         assert hasattr(self, "comp_name"), "comp_name missing"
         assert hasattr(self, "comp_attribute"), "{}: comp_attribute missing".format(self.comp_name)
@@ -143,6 +146,13 @@ class AttributeVariation:
             self, "val_min"), "{} - {}: val_min missing".format(self.comp_name, self.comp_attribute)
         assert hasattr(
             self, "val_max"), "{} - {}: val_max missing".format(self.comp_name, self.comp_attribute)
+
+        if self.val_step == 0:
+            print("{} - {}: ignore val_step".format(self.comp_name, self.comp_attribute))
+        if self.val_step:
+            assert self.val_step >= 0, "{} - {}: val_step < 0".format(
+                self.comp_name, self.comp_attribute)
+            self.num_steps = int((self.val_max - self.val_min)/self.val_step) + 1
 
 
 class Individual:
@@ -338,14 +348,14 @@ def mutate(parent, attribute_variation):
         # sigma influences spread of random numbers
         # try to keep between min and max of attribute
         sigma = delta / 3 if delta > 0 else 1
-        # get integer within normal distribution around current value
+        # get new value within normal distribution around current value
         value = random.gauss(value, sigma)
         if attribute_variation[mut_gene_idx].val_step:
             # quantized value
             step = attribute_variation[mut_gene_idx].val_step
             value = round(delta_min / step) * step + val_min
         # clip value to bounds
-        value = int(min(max(value, val_min), val_max))
+        value = min(max(value, val_min), val_max)
         child[mut_gene_idx] = value
     return child
 
@@ -498,9 +508,9 @@ class Optimization:
             individual = []
             for av in self.attribute_variation:
                 if av.val_step:
-                    value = random.randrange(av.val_min, av.val_max+1, av.val_step)
+                    value = random.randrange(0, av.num_steps) * av.val_step + av.val_min
                 else:
-                    value = random.randint(av.val_min, av.val_max)
+                    value = random.uniform(av.val_min, av.val_max)
                 individual.append(value)
             self.population.append(Individual(individual))
 
