@@ -1,5 +1,6 @@
 import math
 
+
 def print_smooth_results(smooth_results):
     # Print the financial results of a smooth run.
     # Parameter:
@@ -29,11 +30,11 @@ def print_smooth_results(smooth_results):
             math.floor(this_comp.results['annual_total_emissions'])
         ))
         # print('Comp: {}: flow: {}'.format(this_comp.name, this_comp.flows))
+        # print('Comp: {}: states: {}'.format(this_comp.name, this_comp.states))
+        # print('Comp: {}: results: {}'.format(this_comp.name, this_comp.results))
+
         sum_of_tot_annuity += this_comp.results['annuity_total']
         sum_of_tot_ann_emission += this_comp.results['annual_total_emissions']
-
-
-
 
     print('\nSum of total annuity is {} EUR/a'.format(math.floor(sum_of_tot_annuity)))
     print('\nSum of total annual emission is {} kg/a'.format(math.floor(sum_of_tot_ann_emission)))

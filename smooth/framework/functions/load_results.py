@@ -1,5 +1,6 @@
 import pickle
 
+
 def load_results(file_path):
     # Load the result of either a smooth run or an optimization run by the genetic algorithm.
     # Parameter:

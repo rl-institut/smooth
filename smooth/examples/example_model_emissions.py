@@ -25,11 +25,11 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'power_max': 5000000,
+    'output_max': 5000000,
     'variable_costs': 0.00016,
-    'dependency_flow_costs': 'flow: from_grid-->bel',
+    'dependency_flow_costs': ('from_grid', 'bel'),
     'variable_emissions': 0.341,
-    'dependency_flow_emissions': 'flow: from_grid-->bel',
+    'dependency_flow_emissions': ('from_grid', 'bel'),
     # Foreign states
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
@@ -43,7 +43,7 @@ components.append({
     'name': 'to_grid',
     'bus_in': 'bel',
     'artificial_costs': 10,
-    'dependency_flow_costs': 'flow: bel-->to_grid',
+    'dependency_flow_costs': ('bel', 'to_grid'),
 })
 
 # Electicity generators
@@ -93,7 +93,7 @@ components.append({
     'bus_th': 'bth',
     'power_max': 500e3,
     'variable_emissions': 0.778,
-    'dependency_flow_emissions': 'flow: fuel_cell_chp_electric-->bel',
+    'dependency_flow_emissions': ('fuel_cell_chp_electric', 'bel'),
     'life_time': 20,
     'fix_emissions': {
         'key': ['free', 'spec'],
@@ -175,12 +175,12 @@ components.append({
     'component': 'storage_h2',
     'name': 'h2_storage',
     # Parameters
-    'bus_in_and_out': 'bh2_lp',
+    'bus_in': 'bh2_lp',
+    'bus_out': 'bh2_lp',
     # Parameters
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
-    'storage_level_init': 300,
     'life_time': 30,
     # Financials
     'capex': {
@@ -240,7 +240,8 @@ sim_params = {
     'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03,
-    'print_progress': True
+    'print_progress': True,
+    'show_debug_flag': True,
 }
 
 mymodel = {
@@ -248,4 +249,3 @@ mymodel = {
     'components': components,
     'sim_params': sim_params,
 }
-
