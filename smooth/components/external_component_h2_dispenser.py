@@ -33,7 +33,8 @@ class H2Dispenser(ExternalComponent):
 
         # ------------------- READ CSV FILES -------------------
         # The demand csv file is read
-        self.data = func.read_data_file(self.path, self.csv_filename, self.csv_separator, self.column_title)
+        self.data = func.read_data_file(self.path, self.csv_filename,
+                                        self.csv_separator, self.column_title)
 
         # ------------------- CALCULATED PARAMETERS -------------------
         # The maximum value per timestep is found
@@ -44,4 +45,5 @@ class H2Dispenser(ExternalComponent):
         self.max_number_of_vehicles = self.max_hourly_h2_demand/self.vehicle_tank_size
         # Calculates number of dispenser units required in order to satisfy the demand
         self.number_of_units =\
-            ceil(self.max_number_of_vehicles/(self.number_of_hoses * self.number_of_refuels_per_hour))
+            ceil(self.max_number_of_vehicles/(self.number_of_hoses *
+                                              self.number_of_refuels_per_hour))

@@ -5,6 +5,7 @@ from smooth.framework.functions.debug import get_df_debug, show_debug
 from smooth.framework.exceptions import SolverNonOptimalError
 from smooth.framework.functions.functions import create_component_obj
 
+
 def run_smooth(model):
     # Run the smooth simulation framework.
     # Parameters:
@@ -110,4 +111,3 @@ def run_smooth(model):
         this_comp.generate_results()
 
     return components, status
-

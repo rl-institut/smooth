@@ -172,4 +172,3 @@ mymodel = {
     'sim_params': sim_params,
     'external_components': external_components
 }
-

@@ -68,7 +68,6 @@ components.append({
     'bus_out': 'bel',
     'output_max': 5000000,
     'variable_costs': 0.00016,
-    'dependency_flow_costs': 'flow: from_grid-->bel',
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
     'fs_threshold': 200,
@@ -153,7 +152,6 @@ components.append({
     'power_max': 500e3
 })"""
 
-
 sim_params = {
     'start_date': '1/1/2019',
     'n_intervals': 10,
@@ -162,8 +160,6 @@ sim_params = {
     'print_progress': False,
     'show_debug_flag': False,
 }
-
-
 
 mymodel = {
     'busses': busses,

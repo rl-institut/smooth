@@ -10,7 +10,8 @@ class ExternalComponent:
         # PARAMETERS
         # Define the external component type
         self.external_component = None
-        # Define a name (needs to different from the other names of components in this energy system).
+        # Define a name (needs to different from the other names of components in
+        # this energy system).
         self.name = None
         # Life time [a].
         self.life_time = None
@@ -27,8 +28,10 @@ class ExternalComponent:
     def set_parameters(self, params):
         for this_param in params:
             if not hasattr(self, this_param):
-                # Raise an error if the given parameter is not part of the component (interval time is an exception).
-                raise ValueError('The parameter "{}" is not part of the component'.format(this_param))
+                # Raise an error if the given parameter is not part of the
+                # component (interval time is an exception).
+                raise ValueError('The parameter "{}" is not part of the '
+                                 'component'.format(this_param))
 
             setattr(self, this_param, params[this_param])
 
@@ -42,11 +45,13 @@ class ExternalComponent:
         update_external_annuities(self)
 
     def check_validity(self):
-        # This function is called immediately after the component object is created and checks if the component
-        # attributes are valid.
+        # This function is called immediately after the component object is created and checks
+        # if the component attributes are valid.
 
         # Check if a life time is given when there are CAPEX given.
         if self.capex:
             if self.life_time is None or self.life_time <= 0:
-                raise ValueError('In component {} CAPEX or fix_emissions are given but the life_time is either None or '
-                                 'not greater than zero. Please choose another life_time value!'.format(self.name))
+                raise ValueError('In component {} CAPEX or fix_emissions are given'
+                                 ' but the life_time is either None or '
+                                 'not greater than zero. Please choose another'
+                                 ' life_time value!'.format(self.name))
