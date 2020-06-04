@@ -104,12 +104,12 @@ class StorageH2 (Component):
         # when operating on mpc the input and output hydrogen flow is fixed
         if self.operate_on_mpc:
             flow_h2_in = solph.Flow(
-                actual_value=max(0,self.mpc_data),
+                actual_value=min(max(0,self.mpc_data),(self.storage_capacity-self.storage_level)),
                 fixed=True,
                 nominal_value=self.delta_max,
                 variable_costs=self.current_vac[0])
             flow_h2_out = solph.Flow(
-                actual_value=abs(min(0,self.mpc_data)),
+                actual_value=min(abs(min(0,self.mpc_data)),(self.storage_level-self.storage_level_min)),
                 fixed=True,
                 nominal_value=self.delta_max,
                 variable_costs=self.current_vac[1])
