@@ -22,6 +22,7 @@ class AirSourceHeatPump(Component):
 
         # Max. heating output [W]
         self.power_max = 1000e3
+        self.life_time = 20
 
         self.csv_filename = None
         self.csv_separator = ','

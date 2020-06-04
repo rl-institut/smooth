@@ -5,7 +5,36 @@ import pyomo.environ as po
 
 class ElectrolyzerWasteHeat(Electrolyzer):
     """ Electrolyzer agents with waste heat model are created through this subclass of the
-    Electrolyzer class """
+    Electrolyzer class.
+
+     :param param_bus_th: ToDo: ask Ulrike what the purpose of this is
+     :type param_bus_th: ?
+     :param bus_th: The thermal bus that is the output of the electrolyzer
+     :type bus_th: str
+     :param set_parameters(params): Updates parameter default values (see generic Component class)
+     :type set_parameters(params): function
+     :param interval_time: The interval time [min]
+     :type interval_time: numerical
+     :param energy_max: The maximum energy that the electrolyzer can use in one time step [Wh]
+     :type energy_max: numerical
+     :param c_p_H2: The specific heat of hydrogen at constant pressure [J/(kg*K)]
+     :type c_p_H2: numerical
+     :param c_p_O2: The specific heat of oxygen at constant pressure [J/(kg*K)]
+     :type c_p_O2: numerical
+     :param c_p_H2O: The specific heat of water at constant pressure [J/(kg*K)]
+     :type c_p_H2O: numerical
+     :param diameter_cell: The diameter of the electrolyzer cell [m]
+     :type diameter_cell: numerical
+     :param stack_end_height: The height of the two stack ends that are not part of the cells,
+     from the perspective of the total stack height [m]. The height of the end of the stack which
+     is not part of the cells is assumed to have a dependence on the diameter of the cell.
+     The ratio is taken as 7 : 120 [1]
+     :type stack_end_height: numerical
+
+     References
+     ----------
+     [1] De Silva, Y.S.K. (2017). Design of an Alkaline Electrolysis Stack, University of Agder.
+     """
 
     def __init__(self, params):
 
