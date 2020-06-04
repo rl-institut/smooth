@@ -20,7 +20,7 @@ def save_important_parameters(optimization_results, result_index, result_filenam
     """
 
     if result_filename.endswith('.pickle'):
-        result_file_name = result_filename[:-7]
+        result_filename = result_filename[:-7]
     # create an empty csv file
     with open(str(result_filename + '_important_params'), 'w', newline='') as file:
         writer = csv.writer(file)
