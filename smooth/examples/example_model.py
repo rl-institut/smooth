@@ -6,7 +6,7 @@ my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
 """ Create busses """
 # create hydrogen bus
-busses = ['bel', 'bh2_lp', 'bh2_hp']
+busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
 
 
 """ Define components """
@@ -132,8 +132,8 @@ components.append({
     }
 
 })
-"""
-components.append({
+
+"""components.append({
     'component': 'energy_demand_from_csv',
     'name': 'thermal_demand',
     'bus_in': 'bth',
@@ -151,8 +151,8 @@ components.append({
     'bus_h2': 'bh2_hp',
     'bus_th': 'bth',
     'power_max': 500e3
-})
-"""
+})"""
+
 
 sim_params = {
     'start_date': '1/1/2019',
