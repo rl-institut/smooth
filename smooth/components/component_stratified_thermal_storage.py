@@ -26,8 +26,8 @@ class StratifiedThermalStorage (Component):
         self.storage_level_min = 0.5 * self.nonusable_storage_volume * self.storage_capacity
         # Calculate the maximum storage level relative to storage capacity [Wh]
         self.storage_level_max = 1 - 0.5 * self.nonusable_storage_volume * self.storage_capacity
-        # Initial USABLE storage level [Wh]
-        self.storage_level_init = 200e3
+        # Initial USABLE storage level factor in relation to the capacity
+        self.initial_storage_factor = 0.5
         # Lifetime [a]
         self.life_time = 20
 
@@ -74,6 +74,7 @@ class StratifiedThermalStorage (Component):
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
+        self.storage_level_init = self.initial_storage_factor * self.storage_capacity
 
         # Check to see if the environmental temperature has been given as a
         # timeseries or a singular value
