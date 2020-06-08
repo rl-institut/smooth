@@ -52,7 +52,7 @@ class AirSourceHeatPump(Component):
         # COP reduction caused by icing [-]
         self.factor_icing = 0.8
         # Ask Jann about this/look more into detail
-        #self.consider_icing = False
+        # self.consider_icing = False
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
@@ -75,7 +75,7 @@ class AirSourceHeatPump(Component):
             self.temp_low_series_C,
             self.quality_grade,
             self.temp_threshold_icing_C,
-            #self.consider_icing,
+            # self.consider_icing,
             self.factor_icing)
 
     def create_oemof_model(self, busses, _):
