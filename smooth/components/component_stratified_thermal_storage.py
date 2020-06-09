@@ -26,9 +26,9 @@ class StratifiedThermalStorage (Component):
         # Calculate the maximum storage level relative to storage capacity [Wh]
         self.storage_level_max = 0.975
         # The maximum heat charged into the storage per timestep [Wh]
-        self.maximum_heat_flow_charging = self.storage_level_max * self.storage_capacity
+        self.max_heat_flow_charge = self.storage_level_max * self.storage_capacity
         # The maximum heat discharged into the storage per timestep [Wh]
-        self.maximum_heat_flow_discharging = (1 - self.storage_level_min) * self.storage_capacity
+        self.max_heat_flow_discharge = (1 - self.storage_level_min) * self.storage_capacity
         # Initial USABLE storage level factor in relation to the capacity
         self.initial_storage_factor = 0.5
         # Lifetime [a]
@@ -137,9 +137,9 @@ class StratifiedThermalStorage (Component):
         thermal_storage = solph.components.GenericStorage(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_vac[1],
-                                nominal_value=self.maximum_heat_flow_discharging)},
+                                                      nominal_value=self.max_heat_flow_discharge)},
             inputs={busses[self.bus_in]: solph.Flow(variable_costs=self.current_vac[0],
-                               nominal_value=self.maximum_heat_flow_charging)},
+                                                    nominal_value=self.max_heat_flow_charge)},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
