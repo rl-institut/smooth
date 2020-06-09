@@ -50,8 +50,8 @@ class StratifiedThermalStorage (Component):
         self.temp_h = 368.15
         # The cold temperature level of the stratified storage tank [K]
         self.temp_c = 333.15
-        # The environment temperature value [K}
-        self.temp_env = 283.15
+        # The environment temperature value [C] because timeseries is usually in degrees C
+        self.temp_env = 25
         # The chosen height to diameter ratio [-]
         self.height_diameter_ratio = 3
         # Thickness of isolation layer [m]
