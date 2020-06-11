@@ -80,6 +80,7 @@ After all individuals in the current generation have been evaluated,
 they are sorted into tiers by NSGA-II fast non-dominated sorting algorithm.
 Only individuals on the pareto front are retained,
 depending on their distance to their neighbors.
+The parent individuals stay in the population, so they can appear in the pareto front again.
 
 Crossover
 ---------
@@ -98,14 +99,15 @@ After crossover and mutation, we check that this individual's gene sequence
 has not been encountered before (as this would not lead to new information
 and waste computing time). Only then is it admitted into the new generation.
 
+Special cases
+-------------
 We impose an upper limit of 1000 * `population_size` on the number of tries to
 find new children. This counter is reset for each generation. If it is exceeded
 and no new gene sequences have been found, the algorithm aborts and returns the current result.
 
-The algorithm will also abort if no individuals had a valid smooth result.
-This can only happen in the first generation.
-
-The parent individuals stay in the population, so they can appear in the pareto front again.
+In case no individuals have a valid smooth result, an entirely new population is generated.
+No plot will be shown.
+If only one individual is valid, the population is filled up with random individuals.
 """
 
 from multiprocessing import Pool, cpu_count
