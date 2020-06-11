@@ -597,8 +597,8 @@ class Optimization:
                     [parent1, parent2] = random.sample(self.population, 2)
                 except ValueError:
                     print("Could not sample from {} parent{}. Not enough individuals left?".format(
-                        len(self.population)),
-                        '' if len(self.population) == 1 else 's')
+                        len(self.population),
+                        '' if len(self.population) == 1 else 's'))
                     break
 
                 # crossover and mutate parents
@@ -612,7 +612,8 @@ class Optimization:
                     # block, so not in population again
                     self.evaluated[fingerprint] = None
             else:
-                print("Warning: number of retries exceeded. {} new configurations generated.".format(
+                print("Warning: number of retries exceeded. \
+                {} new configurations generated.".format(
                     len(children)))
 
             if len(children) == 0 and gen > 0:
