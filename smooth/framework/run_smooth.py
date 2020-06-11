@@ -41,7 +41,7 @@ def run_smooth(model):
             print('Simulating interval {}/{}'.format(i_interval+1, sim_params.n_intervals))
 
         # run mpc
-        # mp.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
+        mp.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
@@ -88,14 +88,14 @@ def run_smooth(model):
         # If the status and temination condition is not ok/optimal, get and
         # print the current flows and status
         status = oemof_results["Solver"][0]["Status"].key
-        # termination_condition = oemof_results["Solver"][0]["Termination condition"].key
-        # if status != "ok" and termination_condition != "optimal":
-        #     if sim_params.show_debug_flag:
-        #         new_df_results = processing.create_dataframe(model_to_solve)
-        #         df_debug = get_df_debug(df_results, results_dict, new_df_results)
-        #         show_debug(df_debug, components)
-        #     raise SolverNonOptimalError('solver status: ' + status +
-        #                                 " / termination condition: " + termination_condition)
+        termination_condition = oemof_results["Solver"][0]["Termination condition"].key
+        if status != "ok" and termination_condition != "optimal":
+            if sim_params.show_debug_flag:
+                new_df_results = processing.create_dataframe(model_to_solve)
+                df_debug = get_df_debug(df_results, results_dict, new_df_results)
+                show_debug(df_debug, components)
+            raise SolverNonOptimalError('solver status: ' + status +
+                                        " / termination condition: " + termination_condition)
 
         # ------------------- HANDLE RESULTS -------------------
         # Get the results of this oemof run.
@@ -104,7 +104,7 @@ def run_smooth(model):
         df_results = processing.create_dataframe(model_to_solve)
 
         # track system outputs for mpc
-        # system_outputs = mp.get_system_output_mpc(results,system_outputs)
+        system_outputs = mp.get_system_output_mpc(results,system_outputs)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:
@@ -121,4 +121,4 @@ def run_smooth(model):
     for this_comp in components:
         this_comp.generate_results()
 
-    return components, status
+    return components, status, system_outputs

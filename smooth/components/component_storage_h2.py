@@ -97,7 +97,7 @@ class StorageH2 (Component):
         self.current_vac = [vac_in, vac_out]
 
         # max chargeable hydrogen in one time step in kg/h
-        self.delta_max = self.storage_capacity
+        # self.delta_max = self.storage_capacity
 
     def create_oemof_model(self, busses, _):
 
