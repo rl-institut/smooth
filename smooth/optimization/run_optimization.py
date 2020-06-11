@@ -504,16 +504,6 @@ class Optimization:
 
         # Init population with random values between attribute variation (val_max inclusive)
         self.population = []
-        for _ in range(self.population_size):
-            individual = []
-            for av in self.attribute_variation:
-                if av.val_step:
-                    value = random.randrange(0, av.num_steps) * av.val_step + av.val_min
-                else:
-                    value = random.uniform(av.val_min, av.val_max)
-                individual.append(value)
-            self.population.append(Individual(individual))
-
         self.evaluated = {}
 
         # plot intermediate results?
@@ -588,18 +578,25 @@ class Optimization:
             # set upper bound for maximum number of generated children
             # population may not be pop_size big (invalid individuals)
             for tries in range(1000 * self.population_size):
-                if (len(children) == self.population_size) or gen == 0:
+                if (len(children) == self.population_size):
                     # population full (pop_size new individuals)
                     break
 
                 # get random parents from pop_size best results
                 try:
                     [parent1, parent2] = random.sample(self.population, 2)
+                    # crossover and mutate parents
+                    child = mutate(crossover(parent1, parent2), self.attribute_variation)
                 except ValueError:
-                    break
-
-                # crossover and mutate parents
-                child = mutate(crossover(parent1, parent2), self.attribute_variation)
+                    # not enough parents left / initial generation: generate random configuration
+                    individual = []
+                    for av in self.attribute_variation:
+                        if av.val_step:
+                            value = random.randrange(0, av.num_steps) * av.val_step + av.val_min
+                        else:
+                            value = random.uniform(av.val_min, av.val_max)
+                        individual.append(value)
+                    child = Individual(individual)
 
                 # check if child configuration has been seen before
                 fingerprint = str(child)
@@ -608,8 +605,11 @@ class Optimization:
                     children.append(child)
                     # block, so not in population again
                     self.evaluated[fingerprint] = None
+            else:
+                print("Warning: number of retries exceeded. \
+{} new configurations generated.".format(len(children)))
 
-            if len(children) == 0 and gen > 0:
+            if len(children) == 0:
                 # no new children could be generated
                 print("Search room exhausted. Aborting.")
                 break
@@ -622,8 +622,8 @@ class Optimization:
 
             if len(self.population) == 0:
                 # no configuration  was successful
-                print("No individuals left. Aborting.")
-                break
+                print("No individuals left. Building new population.")
+                continue
 
             # sort population by fitness
             f1_vals2 = [i.fitness[0] for i in self.population]
