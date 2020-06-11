@@ -66,30 +66,32 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'power_max': 5000000,
+    'output_max': 5000000,
     'variable_costs': 0.00016,
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
     'fs_threshold': 200,
     'fs_low_art_cost': -0.001,
-    'fs_high_art_cost': 50
+    'fs_high_art_cost': 50,
+    'dependency_flow_costs': ('from_grid', 'bel'),
 })
 
 components.append({
     'component': 'sink',
     'name': 'to_grid',
     'bus_in': 'bel',
-    'artificial_costs': 10
+    'artificial_costs': 10,
+    'dependency_flow_costs': ('bel', 'to_grid'),
 })
 
 components.append({
     'component': 'storage_h2',
     'name': 'h2_storage',
-    'bus_in_and_out': 'bh2_lp',
+    'bus_in': 'bh2_lp',
+    'bus_out': 'bh2_lp',
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
-    'storage_level_init': 300,
     'life_time': 30,
     'capex': {
         'key': ['poly', 'spec'],
@@ -102,7 +104,6 @@ components.append({
         'dependant_value': 'capex'
     }
 })
-
 
 
 components.append({
@@ -158,7 +159,8 @@ sim_params = {
     'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03,
-    'print_progress': True
+    'print_progress': False,
+    'show_debug_flag': False,
 }
 
 mymodel = {
@@ -166,4 +168,3 @@ mymodel = {
     'components': components,
     'sim_params': sim_params,
 }
-

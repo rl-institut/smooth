@@ -1,8 +1,6 @@
-install_requires=[
-    'matplotlib',
-    'seaborn',
-    'pandas',
-    'numpy',
-    'deap',
-    'oemof'
-}
+matplotlib
+pandas
+numpy
+oemof
+scipy
+dill
