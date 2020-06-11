@@ -83,16 +83,17 @@ def save_important_parameters(optimization_results, result_index, result_filenam
             for this_tuple in component.flows:
                 if this_tuple[0] == 'bel':
                     total_elec_use = sum(component.flows[tuple(this_tuple)])
-                    component_elec_use.append(total_elec_use)
-                    component_elec_use_names.append(name)
+                    if name not in component_elec_use_names:
+                        component_elec_use.append(total_elec_use)
+                        component_elec_use_names.append(name)
 
-            if component.component != 'gate':
+            if component.component != 'gate' and component.component != 'energy_demand_from_csv':
                 component_names.append(name)
-            component_annuities.append(this_annuity)
-            component_emissions.append(this_emission)
+                component_annuities.append(this_annuity)
+                component_emissions.append(this_emission)
 
     # Sets the colour palette for the pie plots
-    palette = sns.color_palette()
+    palette = sns.hls_palette(15, l=.3, s=.8)
 
     # ---------------- FINANCIAL ANNUITY PIE PLOT ---------------
     component_names = np.char.array(component_names)
@@ -103,10 +104,10 @@ def save_important_parameters(optimization_results, result_index, result_filenam
     labels = ['{0}: {1:1.2f} %'.format(i, j) for i, j in zip(component_names, annuity_shares)]
     plt.legend(patches_1, labels, loc='best', bbox_to_anchor=(-0.1, 1.),
                fontsize=8)
-    plt.title('Percentage share of total annuity')
+    plt.title('Prozentualer Anteil an der gesamten Annuität')
     plt.tight_layout()
+    plt.savefig(str(result_filename) + '_annuity_breakdown.png', bbox_inches='tight')
     plt.show()
-    plt.savefig(str(result_filename) + '_annuity_breakdown.png')
 
     # ---------------- EMISSION ANNUITY PIE PLOT ---------------
     component_emissions = np.array(component_emissions)
@@ -116,10 +117,10 @@ def save_important_parameters(optimization_results, result_index, result_filenam
     labels = ['{0}: {1:1.2f} %'.format(i, j) for i, j in zip(component_names, emission_shares)]
     plt.legend(patches_2, labels, loc='best', bbox_to_anchor=(-0.1, 1.),
                fontsize=8)
-    plt.title('Percentage share of total emissions')
+    plt.title('Prozentualer Anteil an den Gesamtemissionen')
     plt.tight_layout()
+    plt.savefig(str(result_filename) + '_emissions_breakdown.png', bbox_inches='tight')
     plt.show()
-    plt.savefig(str(result_filename) + '_emissions_breakdown.png')
 
     # ---------------- ELECTRICITY USE PIE PLOT ---------------
     component_elec_use_names = np.char.array(component_elec_use_names)
@@ -131,9 +132,9 @@ def save_important_parameters(optimization_results, result_index, result_filenam
               for i, j in zip(component_elec_use_names, elec_use_shares)]
     plt.legend(patches_3, labels, loc='best', bbox_to_anchor=(-0.1, 1.),
                fontsize=8)
-    plt.title('Percentage share of electricity use')
+    plt.title('Prozentualer Anteil an dem gesamten Stromverbrauch')
     plt.tight_layout()
+    plt.savefig(str(result_filename) + '_electricity_use_breakdown.png', bbox_inches='tight')
     plt.show()
-    plt.savefig(str(result_filename) + '_electricity_use_breakdown.png')
 
     return
