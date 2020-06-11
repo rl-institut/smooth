@@ -613,7 +613,7 @@ class Optimization:
 
             if len(children) == 0:
                 # no new children could be generated
-                print("Search room exhausted. Aborting.")
+                print("Aborting.")
                 break
 
             # New population generated (parents + children)
