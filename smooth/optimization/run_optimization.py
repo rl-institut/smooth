@@ -80,6 +80,7 @@ After all individuals in the current generation have been evaluated,
 they are sorted into tiers by NSGA-II fast non-dominated sorting algorithm.
 Only individuals on the pareto front are retained,
 depending on their distance to their neighbors.
+The parent individuals stay in the population, so they can appear in the pareto front again.
 
 Crossover
 ---------
@@ -98,14 +99,15 @@ After crossover and mutation, we check that this individual's gene sequence
 has not been encountered before (as this would not lead to new information
 and waste computing time). Only then is it admitted into the new generation.
 
+Special cases
+-------------
 We impose an upper limit of 1000 * `population_size` on the number of tries to
 find new children. This counter is reset for each generation. If it is exceeded
 and no new gene sequences have been found, the algorithm aborts and returns the current result.
 
-The algorithm will also abort if no individuals had a valid smooth result.
-This can only happen in the first generation.
-
-The parent individuals stay in the population, so they can appear in the pareto front again.
+In case no individuals have a valid smooth result, an entirely new population is generated.
+No plot will be shown.
+If only one individual is valid, the population is filled up with random individuals.
 """
 
 from multiprocessing import Pool, cpu_count
@@ -504,16 +506,6 @@ class Optimization:
 
         # Init population with random values between attribute variation (val_max inclusive)
         self.population = []
-        for _ in range(self.population_size):
-            individual = []
-            for av in self.attribute_variation:
-                if av.val_step:
-                    value = random.randrange(0, av.num_steps) * av.val_step + av.val_min
-                else:
-                    value = random.uniform(av.val_min, av.val_max)
-                individual.append(value)
-            self.population.append(Individual(individual))
-
         self.evaluated = {}
 
         # plot intermediate results?
@@ -588,21 +580,25 @@ class Optimization:
             # set upper bound for maximum number of generated children
             # population may not be pop_size big (invalid individuals)
             for tries in range(1000 * self.population_size):
-                if (len(children) == self.population_size) or gen == 0:
+                if (len(children) == self.population_size):
                     # population full (pop_size new individuals)
                     break
 
                 # get random parents from pop_size best results
                 try:
                     [parent1, parent2] = random.sample(self.population, 2)
+                    # crossover and mutate parents
+                    child = mutate(crossover(parent1, parent2), self.attribute_variation)
                 except ValueError:
-                    print("Could not sample from {} parent{}. Not enough individuals left?".format(
-                        len(self.population),
-                        '' if len(self.population) == 1 else 's'))
-                    break
-
-                # crossover and mutate parents
-                child = mutate(crossover(parent1, parent2), self.attribute_variation)
+                    # not enough parents left / initial generation: generate random configuration
+                    individual = []
+                    for av in self.attribute_variation:
+                        if av.val_step:
+                            value = random.randrange(0, av.num_steps) * av.val_step + av.val_min
+                        else:
+                            value = random.uniform(av.val_min, av.val_max)
+                        individual.append(value)
+                    child = Individual(individual)
 
                 # check if child configuration has been seen before
                 fingerprint = str(child)
@@ -613,10 +609,9 @@ class Optimization:
                     self.evaluated[fingerprint] = None
             else:
                 print("Warning: number of retries exceeded. \
-                {} new configurations generated.".format(
-                    len(children)))
+{} new configurations generated.".format(len(children)))
 
-            if len(children) == 0 and gen > 0:
+            if len(children) == 0:
                 # no new children could be generated
                 print("Aborting.")
                 break
@@ -629,8 +624,8 @@ class Optimization:
 
             if len(self.population) == 0:
                 # no configuration  was successful
-                print("No individuals left. Aborting.")
-                break
+                print("No individuals left. Building new population.")
+                continue
 
             # sort population by fitness
             f1_vals2 = [i.fitness[0] for i in self.population]
