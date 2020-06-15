@@ -1,9 +1,11 @@
+import os
 import oemof.solph as solph
 from .component import Component
 from oemof.outputlib import views
+import smooth.framework.functions.functions as func
 
 
-class Battery(Component):
+class BatteryElectricVehicle(Component):
     """ Battery electric vehicle is created through this class """
 
     def __init__(self, params):
@@ -14,8 +16,12 @@ class Battery(Component):
         # ------------------- PARAMETERS -------------------
         self.name = "Battery_EV_default_name"
 
-        # Define the electric bus the battery is connected to.
+        # Define the electric and mobility bus.
         self.bus_in_and_out = None
+        self.bus_ev = None
+        # Maximum flow from electric to mobility bus
+        self.max_ev_flow = 5000
+        self.charging_max = 2000
         # Battery capacity (assuming all the capacity can be used) [Wh].
         self.battery_capacity = 5000
         # Initial State of charge [-].
@@ -43,6 +49,14 @@ class Battery(Component):
         # Degradation over lifetime [%]
         # self.degradation =
 
+        # Out- and inflow from CSV
+        self.nominal_value = 1
+        self.csv_filename = None
+        self.csv_separator = ','
+        self.column_title = 0
+        self.column_capacity = None
+        self.path = os.path.dirname(__file__)
+
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the
         # battery [EUR/Wh]. vac_out should be set to a minimal value to ensure,
@@ -65,6 +79,10 @@ class Battery(Component):
             raise ValueError(
                 'Initial state of charge is set below depth of discharge! '
                 'Please adjust soc_init or dod.')
+
+        # ------------------- READ CSV FILES -------------------
+        self.data = func.read_data_file(self.path, self.csv_filename,
+                                        self.csv_separator, self.column_title)
 
         # ------------------- STATES -------------------
         # State of charge [%]
@@ -113,14 +131,18 @@ class Battery(Component):
             self.c_rate_discharge * self.battery_capacity * self.sim_params.interval_time / 60,
             self.soc * self.battery_capacity)
 
-    def create_oemof_model(self, busses, _):
+    def create_oemof_model(self, busses, model):
         """ Create oemof model """
-        storage = solph.components.GenericStorage(
+        # TODO: create mobility bus which is connected to electricity bus via oemof.transformer
+        #       => for now: mobility bus equals electricity bus
+        self.bus_ev = self.bus_in_and_out
+
+        battery = solph.components.GenericStorage(
             label=self.name,
-            inputs={busses[self.bus_in_and_out]: solph.Flow(
+            inputs={busses[self.bus_ev]: solph.Flow(
                     nominal_value=self.e_in_max, variable_costs=self.current_vac[0])
                     },
-            outputs={busses[self.bus_in_and_out]: solph.Flow(
+            outputs={busses[self.bus_ev]: solph.Flow(
                 nominal_value=self.e_out_max, variable_costs=self.current_vac[1])
             },
             loss_rate=self.loss_rate,
@@ -131,7 +153,27 @@ class Battery(Component):
             outflow_conversion_factor=self.efficiency_discharge,
             balanced=False,
         )
-        return storage
+
+        # add sink for leaving vehicles
+        sink = solph.Sink(label="leaving_bev",
+             inputs={busses[self.bus_ev]: solph.Flow(nominal_value=self.battery_capacity,
+                                 actual_value=self.data.iloc[self.sim_params.i_interval],
+                                 fixed=True)})
+
+        # add source for returning vehicles
+        # source = solph.Source(label="returning_bev",
+        #        outputs={busses[self.bus_ev]: solph.Flow(nominal_value=self.battery_capacity,
+        #                             actual_value=self.data.iloc[self.sim_params.i_interval],
+        #                             fixed = True)})
+
+        # Add the two components to the model.
+        model.add(battery, sink)
+
+        # self.model_transformer = transformer
+        self.model_bat = battery
+        self.model_sink = sink
+
+        return None
 
     def update_states(self, results, sim_params):
         """ Update states """
