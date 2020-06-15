@@ -228,10 +228,10 @@ def run_model_mpc(model,components_init,sim_params,prediction_horizon,system_inp
     df_results = None
     results_dict = None
     # z. Modell clonen
-    components = components_init
-    #components = deepcopy(components_init)
-    #for this_comp in components:
-    #    this_comp.sim_params = sim_params
+    #components = components_init
+    components = deepcopy(components_init)
+    for this_comp in components:
+        this_comp.sim_params = sim_params
     # a. system_outputs leer initialisieren
     system_outputs = []
     # b. Smooth laufen lassen über alle Prädiktionsschritte (import from run_smooth)
@@ -296,7 +296,7 @@ def run_model_mpc(model,components_init,sim_params,prediction_horizon,system_inp
             # raise SolverNonOptimalError('solver status: ' + status +
             #                            " / termination condition: " + termination_condition)
             system_outputs = []
-            break
+            return system_outputs
         else:
             # ------------------- HANDLE RESULTS -------------------
             # Get the results of this oemof run.
