@@ -246,7 +246,7 @@ def fast_non_dominated_sort(p):
     S = [[] for _ in p]  # which values dominate other?
     front = [[]]         # group values by number of dominations
     n = [0]*len(p)       # how many values does the value at this position dominate?
-    # rank = [0]*len(p)  # rank within domination tree (unused)
+    # rank = [0]*len(p)    # rank within domination tree (unused)
 
     # compare all elements, see which ones dominate each other
     for i in range(0, len(p)):
@@ -261,9 +261,6 @@ def fast_non_dominated_sort(p):
             if i not in front[0]:
                 front[0].append(i)
 
-    """
-    # ONLY NON-DOMINATED VALUES (front[0]) USED
-    # This builds the rest of the domination tree
     i = 0
     while(len(front[i]) > 0):
         Q = []
@@ -271,14 +268,13 @@ def fast_non_dominated_sort(p):
             for q in S[p]:
                 n[q] -= 1
                 if n[q] == 0:
-                    rank[q] = i+1
+                    # rank[q] = i+1
                     if q not in Q:
                         Q.append(q)
         i = i+1
         front.append(Q)
 
     front.pop(len(front) - 1)
-    """
 
     return front
 
