@@ -70,6 +70,16 @@ def calc_annuity(component, target):
 
     return target_annuity
 
+def calc_annual_emissions(component, target):
+    # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
+    if not target:
+        # There are no target entries, so the annuity is 0 in [target]/a.
+        target_annuity = 0
+    else:
+        # Calculate the annuity of the target in [target]/a.
+        target_annuity = target['cost'] / component.life_time
+
+    return target_annuity
 
 def update_external_annuities(component):
     # Convert the CAPEX to annuities - MAYBE CHANGE THE NAME?
@@ -91,14 +101,17 @@ def update_external_annuities(component):
     component.results['annuity_opex'] = opex
     component.results['annuity_total'] = capex_annuity + opex
 
-
-def calc_annual_emissions(component, target):
-    # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
-    if not target:
-        # There are no target entries, so the annuity is 0 in [target]/a.
-        target_annuity = 0
+    # Calculate the annual emissions for the installation in kg/a.
+    # If the emissions are not given (dict is empty), the annual emissions are 0 kg/a,
+    # otherwise it is a fraction of fix_emissions divided by the component's life-time in years.
+    fix_emissions_annual = calc_annual_emissions(component, component.fix_emissions)
+    # Check if operational emissions were calculated, if so they are directly in annual format.
+    if not component.op_emissions:
+        op_emissions = 0
     else:
-        # Calculate the annuity of the target in [target]/a.
-        target_annuity = target['cost'] / component.life_time
+        op_emissions = component.op_emissions['cost']
 
-    return target_annuity
+    component.results['annual_fix_emissions'] = fix_emissions_annual
+    component.results['annual_op_emissions'] = op_emissions
+    component.results['annual_total_emissions'] = fix_emissions_annual + \
+                                                  op_emissions
