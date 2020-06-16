@@ -163,11 +163,12 @@ def sine_list_input_mpc(operating_point,amplitude,time_end):
 def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_params):
     system_inputs = define_system_inputs_mpc()
     # a. constraints definieren
-    lb = [0.001] * control_horizon + [-1] * control_horizon # lower bound
+    # lb = [0] * control_horizon + [-1] * control_horizon # lower bound
+    lb = [0] * control_horizon + [0] * control_horizon  # setze nur den Inflow des Speichers
     ub = [1] * control_horizon + [1] * control_horizon # upper bound
     bounds = Bounds(lb, ub)
     # b. Startwerte u_vec_0 vorgeben
-    u_vec_0 = [0.5] * control_horizon + [0] * control_horizon # erster Veruch: jeweils in der Mitte der Grenzen
+    u_vec_0 = [0.5] * control_horizon + [0.5] * control_horizon # erster Veruch: jeweils in der Mitte der Grenzen
     # c. cost_function_mpc() als nested function definieren
     def cost_function_mpc(u_vec):
         # a. Steuerfolge für Prädiktionshorizont erweitern und
