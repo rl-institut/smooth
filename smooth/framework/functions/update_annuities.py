@@ -70,6 +70,7 @@ def calc_annuity(component, target):
 
     return target_annuity
 
+
 def calc_annual_emissions(component, target):
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
     if not target:
@@ -80,6 +81,7 @@ def calc_annual_emissions(component, target):
         target_annuity = target['cost'] / component.life_time
 
     return target_annuity
+
 
 def update_external_annuities(component):
     # Convert the CAPEX to annuities - MAYBE CHANGE THE NAME?
@@ -113,5 +115,5 @@ def update_external_annuities(component):
 
     component.results['annual_fix_emissions'] = fix_emissions_annual
     component.results['annual_op_emissions'] = op_emissions
-    component.results['annual_total_emissions'] = fix_emissions_annual + \
-                                                  op_emissions
+    component.results['annual_total_emissions'] = \
+        fix_emissions_annual + op_emissions
