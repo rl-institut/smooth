@@ -24,6 +24,7 @@ class BatteryElectricVehicle(Component):
         self.charging_max = 2000
         # Battery capacity (assuming all the capacity can be used) [Wh].
         self.battery_capacity = 5000
+        self.present_capacity = 5000
         # Initial State of charge [-].
         self.soc_init = 0.5
         # ToDo: set default value for efficiency
@@ -50,7 +51,6 @@ class BatteryElectricVehicle(Component):
         # self.degradation =
 
         # Out- and inflow from CSV
-        self.nominal_value = 1
         self.csv_filename = None
         self.csv_separator = ','
         self.column_title = 0
@@ -81,12 +81,13 @@ class BatteryElectricVehicle(Component):
                 'Please adjust soc_init or dod.')
 
         # ------------------- READ CSV FILES -------------------
-        self.data = func.read_data_file(self.path, self.csv_filename,
-                                        self.csv_separator, self.column_title)
+        self.data = func.read_data_file_multi(self.path, self.csv_filename,self.csv_separator,
+                                              [self.column_title, self.column_capacity])
 
         # ------------------- STATES -------------------
         # State of charge [%]
         self.soc = self.soc_init
+        self.remaining_energy = self.soc_init * self.present_capacity
 
         # Initialize max. chargeable or dischargeable energy [Wh].
         self.e_in_max = None
@@ -97,6 +98,7 @@ class BatteryElectricVehicle(Component):
         # ------------------- VARIABLE ARTIFICIAL COSTS -------------------
         # Store the current artificial costs for input and output [EUR/Wh].
         self.current_vac = [0, 0]
+
 
     def prepare_simulation(self, components):
         """ Prepare simulation """
@@ -123,13 +125,22 @@ class BatteryElectricVehicle(Component):
         # Therefore we need to divide by the efficiency_charge.  Due to the
         # inflow_conversion_factor (in "create oemof model") the battery will
         # then receive right amount.
+        self.leaving_energy = self.data.iloc[self.sim_params.i_interval].loc["ev_p_tot"]\
+                              * self.battery_capacity
+        self.remaining_energy = (self.soc * self.present_capacity) - self.leaving_energy
+        self.present_capacity = self.data.iloc[self.sim_params.i_interval].loc["ev_cap_tot"]\
+                                * self.battery_capacity
+        self.soc = self.remaining_energy / self.present_capacity
+
+        #TODO check max flow equations (as now based on changing capacity):
         self.e_in_max = min(
-            self.c_rate_charge * self.battery_capacity * self.sim_params.interval_time / 60,
-            self.battery_capacity - self.soc * self.battery_capacity) / \
+            self.c_rate_charge * self.present_capacity * self.sim_params.interval_time / 60,
+            self.present_capacity - self.soc * self.present_capacity) / \
             self.efficiency_charge
         self.e_out_max = min(
-            self.c_rate_discharge * self.battery_capacity * self.sim_params.interval_time / 60,
-            self.soc * self.battery_capacity)
+            self.c_rate_discharge * self.present_capacity * self.sim_params.interval_time / 60,
+            self.soc * self.present_capacity)
+
 
     def create_oemof_model(self, busses, model):
         """ Create oemof model """
@@ -147,7 +158,7 @@ class BatteryElectricVehicle(Component):
             },
             loss_rate=self.loss_rate,
             initial_storage_level=self.soc,
-            nominal_storage_capacity=self.battery_capacity,
+            nominal_storage_capacity=self.present_capacity,
             min_storage_level=self.dod,
             inflow_conversion_factor=self.efficiency_charge,
             outflow_conversion_factor=self.efficiency_discharge,
@@ -156,9 +167,12 @@ class BatteryElectricVehicle(Component):
 
         # add sink for leaving vehicles
         sink = solph.Sink(label="leaving_bev",
-             inputs={busses[self.bus_ev]: solph.Flow(nominal_value=self.battery_capacity,
-                                 actual_value=self.data.iloc[self.sim_params.i_interval],
-                                 fixed=True)})
+             inputs={busses[self.bus_ev]: solph.Flow(
+                 nominal_value=self.battery_capacity,
+                 actual_value=self.data.iloc[self.sim_params.i_interval].loc["ev_p_tot"],
+                 fixed=True
+             )}
+        )
 
         # add source for returning vehicles
         # source = solph.Source(label="returning_bev",
@@ -175,6 +189,7 @@ class BatteryElectricVehicle(Component):
 
         return None
 
+
     def update_states(self, results, sim_params):
         """ Update states """
         data_storage = views.node(results, self.name)
@@ -186,6 +201,10 @@ class BatteryElectricVehicle(Component):
                 if "soc" not in self.states:
                     # Initialize a.n array that tracks the state SoC
                     self.states["soc"] = [None] * sim_params.n_intervals
+                    self.states["remaining_energy"] = [None] * sim_params.n_intervals
+                    self.states["present_capacity"] = [None] * sim_params.n_intervals
                 # Check if this result is the state of charge.
                 self.soc = df_storage[i_result][0] / self.battery_capacity
                 self.states["soc"][sim_params.i_interval] = self.soc
+                self.states["remaining_energy"][sim_params.i_interval] = self.remaining_energy
+                self.states["present_capacity"] [sim_params.i_interval] = self.present_capacity
