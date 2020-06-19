@@ -95,13 +95,27 @@ class StorageH2 (Component):
         # max chargeable hydrogen in one time step in kg/h
         self.delta_max = self.storage_capacity
 
+        # Nb. or Intervals until end of simulation
+        self.intervals_to_end = self.sim_params.n_intervals - self.sim_params.i_interval
+        # Amount of hydrogen to attain balance to initial storage level
+        self.charge_balance = self.storage_level_init - self.storage_level
+
+        # Balance start and end of simulation storage level by defining the minimum flow needed
+        self.min_out = max(0,
+                           - self.charge_balance - self.delta_max * (self.intervals_to_end - 1))
+        self.min_in = max(0,
+                          self.charge_balance - self.delta_max * (self.intervals_to_end - 1))
+
+
     def create_oemof_model(self, busses, _):
         storage = solph.components.GenericStorage(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(
-                nominal_value=self.delta_max, variable_costs=self.current_vac[1])},
+                nominal_value=self.delta_max, min=self.min_out, variable_costs=self.current_vac[1]
+            )},
             inputs={busses[self.bus_in]: solph.Flow(
-                nominal_value=self.delta_max, variable_costs=self.current_vac[0])},
+                nominal_value=self.delta_max, min=self.min_in, variable_costs=self.current_vac[0]
+            )},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
