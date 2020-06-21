@@ -40,8 +40,11 @@ def run_smooth(model):
         # Initialize the oemof energy system for this time step or for the control horizon in mpc-case
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
         if sim_params.mpc_flag:
-            oemof_model = solph.EnergySystem(timeindex=this_time_index, periods=sim_params.mpc_control_horizon,
-                                             freq='{}min'.format(sim_params.interval_time))
+            date_time_index = pd.date_range(
+                this_time_index[0], periods=24, freq="H")
+            oemof_model = solph.EnergySystem(timeindex=date_time_index)
+            # oemof_model = solph.EnergySystem(timeindex=this_time_index, periods=sim_params.mpc_control_horizon,
+            #                                  freq='{}min'.format(sim_params.interval_time))
         else:
             oemof_model = solph.EnergySystem(timeindex=this_time_index,
                                             freq='{}min'.format(sim_params.interval_time))
