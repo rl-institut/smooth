@@ -4,7 +4,7 @@ from smooth.framework.simulation_parameters import SimulationParameters as sp
 from smooth.framework.functions.debug import get_df_debug, show_debug
 from smooth.framework.exceptions import SolverNonOptimalError
 from smooth.framework.functions.functions import create_component_obj
-import smooth.framework.functions.mpc_functions as mp
+import smooth.framework.functions.mpc_functions as mpc
 
 
 
@@ -30,8 +30,14 @@ def run_smooth(model):
     df_results = None
     results_dict = None
 
-    # initialisation of system_outputs
+    # initialisation of mpc variables
     system_outputs = []
+    system_inputs = []
+    mpc_iter = 0
+    initial_inputs = [0.5, 0.5]
+    # set control and prediction horizon fix
+    control_horizon = 10
+    prediction_horizon = 12
 
     # ------------------- SIMULATION -------------------
     for i_interval in range(sim_params.n_intervals):
@@ -41,7 +47,19 @@ def run_smooth(model):
             print('Simulating interval {}/{}'.format(i_interval+1, sim_params.n_intervals))
 
         # run mpc
-        mp.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
+        # call dummy function for test with arbitrary function (e.g. sine) for system inputs
+        # mpc.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
+        # for rolling horizon approach call rolling horizon function only once for every control horizon
+        if mpc_iter == control_horizon:
+            mpc_iter = 0
+        if mpc_iter == 0:
+            system_inputs = mpc.rolling_horizon(model, components, control_horizon, prediction_horizon, sim_params,
+                                                initial_inputs)
+        mpc.set_system_input_mpc(components, system_inputs, mpc_iter)
+        initial_inputs = []
+        for this_in in system_inputs:
+            initial_inputs.append(system_inputs[this_in]['mpc_data'][control_horizon - 1])
+        mpc_iter = mpc_iter + 1
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
@@ -104,7 +122,7 @@ def run_smooth(model):
         df_results = processing.create_dataframe(model_to_solve)
 
         # track system outputs for mpc
-        system_outputs = mp.get_system_output_mpc(results,system_outputs)
+        system_outputs = mpc.get_system_output_mpc(results,system_outputs)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:
