@@ -24,6 +24,12 @@ class StorageH2 (Component):
         self.life_time = 20
         # The initial storage level as a factor of the capacity [-]
         self.initial_storage_factor = 0.5
+        # If True, final and initial storage level are force to be equalized by the end,
+        # TODO:
+        # otherwise the cost of the initially stored hydrogen is incorporated into the final cost
+        self.balanced = False
+        self.equalize = False
+        self.initial_storage_cost = 0
         # Max chargeable hydrogen in one time step in kg/h
         self.delta_max = None
         # The storage level wanted as a factor of the capacity
@@ -92,29 +98,35 @@ class StorageH2 (Component):
 
         self.current_vac = [vac_in, vac_out]
 
-        # max chargeable hydrogen in one time step in kg/h
-        self.delta_max = self.storage_capacity
+        # TODO: set default value if not defined
+        # # max chargeable hydrogen in one time step in kg/h
+        # self.delta_max = self.storage_capacity
 
         # Nb. or Intervals until end of simulation
         self.intervals_to_end = self.sim_params.n_intervals - self.sim_params.i_interval
         # Amount of hydrogen to attain balance to initial storage level
         self.charge_balance = self.storage_level_init - self.storage_level
 
-        # Balance start and end of simulation storage level by defining the minimum flow needed
+        # Balance start and end of simulation storage level based on the minimum flow needed
+        # If flow is needed within this time step, the flow will be fixed to this value
         self.min_out = max(0,
                            - self.charge_balance - self.delta_max * (self.intervals_to_end - 1))
         self.min_in = max(0,
                           self.charge_balance - self.delta_max * (self.intervals_to_end - 1))
+        if self.balanced and (self.min_in != 0 or self.min_out != 0):
+            self.equalize = True
 
 
     def create_oemof_model(self, busses, _):
         storage = solph.components.GenericStorage(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(
-                nominal_value=self.delta_max, min=self.min_out, variable_costs=self.current_vac[1]
+                nominal_value=self.delta_max, variable_costs=self.current_vac[1],
+                actual_value=self.min_out/self.delta_max, fixed=self.equalize
             )},
             inputs={busses[self.bus_in]: solph.Flow(
-                nominal_value=self.delta_max, min=self.min_in, variable_costs=self.current_vac[0]
+                nominal_value=self.delta_max, variable_costs=self.current_vac[0],
+                actual_value=self.min_in/self.delta_max, fixed=self.equalize
             )},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,

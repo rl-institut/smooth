@@ -85,6 +85,24 @@ components.append({
 })
 
 components.append({
+    'component': 'supply',
+    'name': 'h2_from_grid',
+    'bus_out': 'bh2_lp',
+    'variable_costs': 0.005,
+    'artificial_costs': 10,
+    'dependency_flow_costs': ('h2_from_grid','bh2_lp'),
+})
+
+components.append({
+    'component': 'sink',
+    'name': 'h2_to_grid',
+    'bus_in': 'bh2_lp',
+    'variable_costs': 0.005,
+    'artificial_costs': 10,
+    'dependency_flow_costs': ('bh2_lp', 'h2_to_grid'),
+})
+
+components.append({
     'component': 'storage_h2',
     'name': 'h2_storage',
     'bus_in': 'bh2_lp',
@@ -92,6 +110,8 @@ components.append({
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
+    'delta_max': 20,
+    'balanced': True,
     'life_time': 30,
     'capex': {
         'key': ['poly', 'spec'],
