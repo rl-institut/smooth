@@ -55,6 +55,10 @@ class StorageH2 (Component):
         else:
             self.storage_level_wanted = None
 
+        # max chargeable hydrogen in one time step in kg/h
+        if self.delta_max is None:
+            self.delta_max = self.storage_capacity
+
         # ------------------- CONSTANTS FOR REAL GAS EQUATION -------------------
         # Critical temperature [K] and pressure [Pa], molar mass of H2
         # [kg/mol], the gas constant [J/(K*mol)].
@@ -97,10 +101,6 @@ class StorageH2 (Component):
             vac_out = self.vac_low_out
 
         self.current_vac = [vac_in, vac_out]
-
-        # TODO: set default value if not defined
-        # # max chargeable hydrogen in one time step in kg/h
-        # self.delta_max = self.storage_capacity
 
         # Nb. or Intervals until end of simulation
         self.intervals_to_end = self.sim_params.n_intervals - self.sim_params.i_interval
