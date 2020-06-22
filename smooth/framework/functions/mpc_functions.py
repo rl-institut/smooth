@@ -35,7 +35,7 @@ def run_mpc_dummy(this_model,components,system_outputs,iteration,sim_params):
     return
 
 def set_system_input_mpc(components,system_inputs,iteration):
-    # rufe die function mit get_system_input_mpc(components,system_inputs,[]) auf,
+    # rufe die function mit set_system_input_mpc(components,system_inputs,[]) auf,
     # wenn system_inputs nicht mit Vektoren verwendet wird
     if iteration==[]:
         for this_in in system_inputs:
@@ -160,7 +160,7 @@ def sine_list_input_mpc(operating_point,amplitude,time_end):
     return sine
 
 
-def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_params):
+def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_params,initial_inputs):
     system_inputs = define_system_inputs_mpc()
     # a. constraints definieren
     # lb = [0] * control_horizon + [-1] * control_horizon # lower bound
@@ -168,7 +168,8 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_para
     ub = [1] * control_horizon + [1] * control_horizon # upper bound
     bounds = Bounds(lb, ub)
     # b. Startwerte u_vec_0 vorgeben
-    u_vec_0 = [0.5] * control_horizon + [0.5] * control_horizon # erster Veruch: jeweils in der Mitte der Grenzen
+    # u_vec_0 = [0.5] * control_horizon + [0.5] * control_horizon # erster Veruch: jeweils in der Mitte der Grenzen
+    u_vec_0 = [initial_inputs[0]] * control_horizon + [initial_inputs[1]] * control_horizon
     # c. cost_function_mpc() als nested function definieren
     def cost_function_mpc(u_vec):
         # a. Steuerfolge für Prädiktionshorizont erweitern und
@@ -199,7 +200,7 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_para
             def cost_function_sink(iteration):
                 return power_sink[iteration] * (-0.00004)
             def cost_function_supply_h2(iteration):
-                return mass_h2_supply[iteration] * 10 # 10 Euro pro kg H2
+                return mass_h2_supply[iteration] * 100 # 100 Euro pro kg H2
             def cost_function_sink_h2(iteration):
                 return mass_h2_sink[iteration] * (0)
             """
@@ -220,17 +221,22 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_para
     res = minimize(cost_function_mpc, u_vec_0, method='L-BFGS-B', options = {'maxiter': 10, 'disp': True},
                    bounds = bounds)
     # e. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
+    iter = 0
+    for this_in in system_inputs:
+        system_inputs[this_in]['mpc_data'] = res.x[(control_horizon * iter): (control_horizon * (iter + 1))]
+        iter = iter + 1
 
-    return res
+    return system_inputs
 
 
-def run_model_mpc(model,components_init,sim_params,prediction_horizon,system_inputs):
+def run_model_mpc(model,components_init,sim_params_init,prediction_horizon,system_inputs):
     # There are no results yet.
     df_results = None
     results_dict = None
     # z. Modell clonen
     #components = components_init
     components = deepcopy(components_init)
+    sim_params = deepcopy(sim_params_init)
     for this_comp in components:
         this_comp.sim_params = sim_params
     # a. system_outputs leer initialisieren
