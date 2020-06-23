@@ -6,7 +6,7 @@ my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
 """ Create busses """
 # create hydrogen bus
-busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
+busses = ['bel', 'bh2_lp', 'bh2_hp']
 
 
 """ Define components """
@@ -33,7 +33,7 @@ components.append({
 
 components.append({
     'component': 'energy_source_from_csv',
-    'name': 'pv_output',
+    'name': 'solar_output',
     'bus_out': 'bel',
     'csv_filename': 'ts_pv.csv',
     'csv_separator': ';',
@@ -47,7 +47,6 @@ components.append({
     'name': 'wind_output',
     'bus_out': 'bel',
     'csv_filename': 'ts_wind.csv',
-    'csv_separator': ';',
     'nominal_value': 1/4,
     'column_title': 'Power output',
     'path': my_path
@@ -67,14 +66,14 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'output_max': 5000000,
+    'input_max': 5000000,
     'variable_costs': 0.00016,
+    'dependency_flow_costs': 'flow: from_grid-->bel',
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
     'fs_threshold': 200,
     'fs_low_art_cost': -0.001,
-    'fs_high_art_cost': 50,
-    'dependency_flow_costs': ('from_grid', 'bel'),
+    'fs_high_art_cost': 50
 })
 
 components.append({
@@ -82,17 +81,17 @@ components.append({
     'name': 'to_grid',
     'bus_in': 'bel',
     'artificial_costs': 10,
-    'dependency_flow_costs': ('bel', 'to_grid'),
+    'dependency_flow_costs': 'flow: bel-->to_grid'
 })
 
 components.append({
     'component': 'storage_h2',
     'name': 'h2_storage',
-    'bus_in': 'bh2_lp',
-    'bus_out': 'bh2_lp',
+    'bus_in_and_out': 'bh2_lp',
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
+    'storage_level_init': 300,
     'life_time': 30,
     'capex': {
         'key': ['poly', 'spec'],
@@ -133,10 +132,24 @@ components.append({
 
 })
 
-"""components.append({
-    'component': 'energy_demand_from_csv',
-    'name': 'thermal_demand',
-    'bus_in': 'bth',
+"""Define any external components that should not be considered in the simulation/optimization"""
+external_components = list()
+
+external_components.append({
+    'external_component': 'h2_dispenser',
+    'name': 'test',
+    'life_time': 20,
+    # Financials
+    'capex': {
+        'key': 'spec',
+        'fitting_value': 107000,
+        'dependant_value': 'number_of_units'
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.05,
+        'dependant_value': 'capex'
+    },
     'csv_filename': 'ts_demand_h2.csv',
     'nominal_value': 1,
     'column_title': 'Hydrogen load',
@@ -144,26 +157,18 @@ components.append({
 })
 
 
-components.append({
-    'component': 'fuel_cell_chp',
-    'name': 'fuel_cell_chp',
-    'bus_el': 'bel',
-    'bus_h2': 'bh2_hp',
-    'bus_th': 'bth',
-    'power_max': 500e3
-})"""
-
 sim_params = {
     'start_date': '1/1/2019',
     'n_intervals': 10,
     'interval_time': 60,
     'interest_rate': 0.03,
-    'print_progress': False,
-    'show_debug_flag': False,
+    'print_progress': True
 }
+
 
 mymodel = {
     'busses': busses,
     'components': components,
     'sim_params': sim_params,
+    'external_components': external_components
 }
