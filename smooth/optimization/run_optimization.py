@@ -132,7 +132,7 @@ In any case, the window listens for a short time for user input events like mous
 Window close is a special event which stops the process,
 but not the computation (as this runs in the separate main process).
 
-When hovering with thhe mouse pointer over a point in the pareto front,
+When hovering with the mouse pointer over a point in the pareto front,
 an annotation is built with the info of the :class:`Individual`.
 The annotation is removed when leaving the point.
 
