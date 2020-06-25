@@ -34,10 +34,10 @@ def run_smooth(model):
     system_outputs = []
     system_inputs = []
     mpc_iter = 0
-    initial_inputs = [0.5, 0.5]
+    initial_inputs = [0.3]
     # set control and prediction horizon fix
-    control_horizon = 10
-    prediction_horizon = 12
+    control_horizon = 6
+    prediction_horizon = 8
 
     # ------------------- SIMULATION -------------------
     for i_interval in range(sim_params.n_intervals):
@@ -53,8 +53,7 @@ def run_smooth(model):
         if mpc_iter == control_horizon:
             mpc_iter = 0
         if mpc_iter == 0:
-            system_inputs = mpc.rolling_horizon(model, components, control_horizon, prediction_horizon, sim_params,
-                                                initial_inputs)
+            system_inputs = mpc.rolling_horizon(model, components, control_horizon, prediction_horizon, initial_inputs)
         mpc.set_system_input_mpc(components, system_inputs, mpc_iter)
         initial_inputs = []
         for this_in in system_inputs:
