@@ -7,31 +7,19 @@ from scipy.optimize import Bounds, minimize
 from smooth.framework.functions.debug import get_df_debug, show_debug
 from smooth.framework.exceptions import SolverNonOptimalError
 from copy import deepcopy
+from smooth.framework.simulation_parameters import SimulationParameters as sp
 
 
 #--------------------MPC FUNCTIONS--------------------------------------------------------------------------------------
 def run_mpc_dummy(this_model,components,system_outputs,iteration,sim_params):
     # function calculating the system inputs (control variables) based on the system outputs
     # (controlled process variables) and a (dummy) mpc algorithm
-
-    # system outputs
-    # check if system_outputs is empty
-    if not system_outputs:
-        # set initial values
-        system_outputs = define_system_outputs_mpc()
-
     # system inputs
     time_end = sim_params.n_intervals
     system_inputs = define_system_inputs_mpc() # auslagern und Aufruf in run_smooth???!!!
     system_inputs['power_electrolyzer']['mpc_data'] = [0.6]*time_end
     system_inputs['mflow_h2_storage']['mpc_data'] = sine_list_input_mpc(0,0.01,time_end) # 0.50
     set_system_input_mpc(components,system_inputs,iteration)
-    # for this_in in system_inputs:
-    #    # Loop through all components of the model dict until the right component is found.
-    #    for this_comp in components:
-    #        if this_comp.name == system_inputs[this_in]['comp_name']:
-    #            # idx = this_model['components'].index(this_comp)
-    #            setattr(this_comp,'mpc_data',system_inputs[this_in]['mpc_data'])
     return
 
 def set_system_input_mpc(components,system_inputs,iteration):
@@ -92,13 +80,18 @@ def define_system_inputs_mpc():
     # define the system inputs of your MIMO System
     electrolyzer = {
         'comp_name': 'this_ely',
-        'mpc_data': 0
+        'mpc_data': 0,
+        'lower_bound': [0],
+        'upper_bound': [1],
     }
     h2_storage = {
         'comp_name': 'h2_storage_lp',
-        'mpc_data': 0
+        'mpc_data': 0,
+        'lower_bound': [0],
+        'upper_bound': [1],
     }
-    system_inputs = {'power_electrolyzer': electrolyzer, 'mflow_h2_storage': h2_storage}
+    # system_inputs = {'power_electrolyzer': electrolyzer, 'mflow_h2_storage': h2_storage}
+    system_inputs = {'power_electrolyzer': electrolyzer}
     return system_inputs
 
 
@@ -134,7 +127,8 @@ def define_system_outputs_mpc():
         'node2_name': 'h2_sink',
         'flow_value': [0],
     }
-    system_outputs = [supply_el,sink_el,to_demand_h2_mp, compressor_h2_mp, supply_h2_mp, sink_h2_mp]
+    # system_outputs = [supply_el,sink_el,to_demand_h2_mp, compressor_h2_mp, supply_h2_mp, sink_h2_mp]
+    system_outputs = [supply_el, sink_el, to_demand_h2_mp, compressor_h2_mp]
     # To Do: initialize flow values with NaN and set starting values only when requested when the method is called
     return system_outputs
 
@@ -160,16 +154,23 @@ def sine_list_input_mpc(operating_point,amplitude,time_end):
     return sine
 
 
-def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_params,initial_inputs):
+def rolling_horizon(model,components,control_horizon,prediction_horizon,initial_inputs):
+    # create sim_params object for prediction horizon
+    model['sim_params']['n_intervals'] = prediction_horizon
+    sim_params_init = sp(model['sim_params'])
+    # define system inputs
     system_inputs = define_system_inputs_mpc()
     # a. constraints definieren
-    # lb = [0] * control_horizon + [-1] * control_horizon # lower bound
-    lb = [0] * control_horizon + [0] * control_horizon  # setze nur den Inflow des Speichers
-    ub = [1] * control_horizon + [1] * control_horizon # upper bound
+    lb = []
+    ub = []
+    for this_in in system_inputs:
+        lb.extend(system_inputs[this_in]['lower_bound'] * control_horizon)
+        ub.extend(system_inputs[this_in]['upper_bound'] * control_horizon)
     bounds = Bounds(lb, ub)
     # b. Startwerte u_vec_0 vorgeben
-    # u_vec_0 = [0.5] * control_horizon + [0.5] * control_horizon # erster Veruch: jeweils in der Mitte der Grenzen
-    u_vec_0 = [initial_inputs[0]] * control_horizon + [initial_inputs[1]] * control_horizon
+    u_vec_0 = []
+    for i in range(len(initial_inputs)):
+        u_vec_0.extend([initial_inputs[i]] * control_horizon)
     # c. cost_function_mpc() als nested function definieren
     def cost_function_mpc(u_vec):
         # a. Steuerfolge für Prädiktionshorizont erweitern und
@@ -182,7 +183,7 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_para
             control_data.extend([control_data[-1]] * (prediction_horizon - control_horizon))
             system_inputs[this_in]['mpc_data'] = control_data
         # c. run_model_mpc() aufrufen  Rückgabe: Regelgrößen-Vektoren für Prädiktionshorizont
-        system_outputs = run_model_mpc(model,components,sim_params,prediction_horizon,system_inputs)
+        system_outputs = run_model_mpc(model,components,sim_params_init,prediction_horizon,system_inputs)
         if not system_outputs:
             cost = 1e12
         else:
@@ -190,30 +191,26 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,sim_para
             mass_h2_demand = system_outputs[2]['flow_value']
             power_supply = system_outputs[0]['flow_value']
             power_sink = system_outputs[1]['flow_value']
-            mass_h2_supply = system_outputs[4]['flow_value']
-            mass_h2_sink = system_outputs[5]['flow_value']
+            # mass_h2_supply = system_outputs[4]['flow_value']
+            # mass_h2_sink = system_outputs[5]['flow_value']
             # d. Teil-Kostenfunktionen als nested functions definieren
             def cost_function_demand(iteration):
                 return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 2
             def cost_function_supply(iteration):
-                return power_supply[iteration] * 0.000195
+                return power_supply[iteration] * 0.0001855
             def cost_function_sink(iteration):
                 return power_sink[iteration] * (-0.00004)
+            """
             def cost_function_supply_h2(iteration):
-                return mass_h2_supply[iteration] * 100 # 100 Euro pro kg H2
+                return mass_h2_supply[iteration] * 20 # 20 Euro pro kg H2
             def cost_function_sink_h2(iteration):
                 return mass_h2_sink[iteration] * (0)
             """
-            def cost_fuction_supply(iteration):
-                return (power_supply[iteration] - 0) ** 2
-            def cost_fuction_sink(iteration):
-                return (power_sink[iteration] - 0) ** 2
-             """
             # e. Iteration über Prädiktionshorizont:
             cost = 0
             for k in range(0, prediction_horizon):
-                cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) \
-                       + cost_function_supply_h2(k) + cost_function_sink_h2(k)
+                cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) # \
+            #            + cost_function_supply_h2(k) + cost_function_sink_h2(k)
         # f. Rückgabe der Kosten
         return cost
     # d. Optimierer aufrufen mit cost_function_mpc()
