@@ -32,9 +32,13 @@ class EnergyDemandFromCsv(Component):
     def create_oemof_model(self, busses, _):
         # define flow_in
         if self.sim_params.mpc_flag:
+            sequence = []
+            for i in range(self.sim_params.i_interval, self.sim_params.mpc_control_horizon):
+                sequence.extend(self.data.iloc[i].values)
             flow_in = solph.Flow(
-                fix=self.data.iloc[self.sim_params.i_interval: (self.sim_params.i_interval + self.sim_params.mpc_control_horizon)],
-                nominal_value=self.nominal_value)
+                actual_value=sequence,
+                nominal_value=self.nominal_value,
+                fixed=True)
         else:
             flow_in = solph.Flow(
                 actual_value=self.data.iloc[self.sim_params.i_interval],

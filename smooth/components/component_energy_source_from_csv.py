@@ -33,9 +33,14 @@ class EnergySourceFromCsv (Component):
     def create_oemof_model(self, busses, _):
         # define flow_out
         if self.sim_params.mpc_flag:
+            sequence = []
+            for i in range(self.sim_params.i_interval, self.sim_params.mpc_control_horizon):
+                sequence.extend(self.data.iloc[i].values)
             flow_out = solph.Flow(
-                fix=self.data.iloc[self.sim_params.i_interval: (self.sim_params.i_interval + self.sim_params.mpc_control_horizon)],
-                nominal_value=self.nominal_value)
+                # actual_value=self.data.iloc[self.sim_params.i_interval: (self.sim_params.i_interval + self.sim_params.mpc_control_horizon)].values/1000,
+                actual_value = sequence,
+                nominal_value=self.nominal_value,
+                fixed=True)
         else:
             flow_out = solph.Flow(
                 actual_value=self.data.iloc[self.sim_params.i_interval],
