@@ -90,8 +90,8 @@ def define_system_inputs_mpc():
         'lower_bound': [0],
         'upper_bound': [1],
     }
-    # system_inputs = {'power_electrolyzer': electrolyzer, 'mflow_h2_storage': h2_storage}
-    system_inputs = {'power_electrolyzer': electrolyzer}
+    system_inputs = {'power_electrolyzer': electrolyzer, 'mflow_h2_storage': h2_storage}
+    # system_inputs = {'power_electrolyzer': electrolyzer}
     return system_inputs
 
 
@@ -127,8 +127,8 @@ def define_system_outputs_mpc():
         'node2_name': 'h2_sink',
         'flow_value': [0],
     }
-    # system_outputs = [supply_el,sink_el,to_demand_h2_mp, compressor_h2_mp, supply_h2_mp, sink_h2_mp]
-    system_outputs = [supply_el, sink_el, to_demand_h2_mp, compressor_h2_mp]
+    system_outputs = [supply_el, sink_el, to_demand_h2_mp, compressor_h2_mp, supply_h2_mp, sink_h2_mp]
+    # system_outputs = [supply_el, sink_el, to_demand_h2_mp, compressor_h2_mp]
     # To Do: initialize flow values with NaN and set starting values only when requested when the method is called
     return system_outputs
 
@@ -191,26 +191,24 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,initial_
             mass_h2_demand = system_outputs[2]['flow_value']
             power_supply = system_outputs[0]['flow_value']
             power_sink = system_outputs[1]['flow_value']
-            # mass_h2_supply = system_outputs[4]['flow_value']
-            # mass_h2_sink = system_outputs[5]['flow_value']
+            mass_h2_supply = system_outputs[4]['flow_value']
+            mass_h2_sink = system_outputs[5]['flow_value']
             # d. Teil-Kostenfunktionen als nested functions definieren
             def cost_function_demand(iteration):
-                return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 2
+                return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 4
             def cost_function_supply(iteration):
                 return power_supply[iteration] * 0.0001855
             def cost_function_sink(iteration):
                 return power_sink[iteration] * (-0.00004)
-            """
             def cost_function_supply_h2(iteration):
-                return mass_h2_supply[iteration] * 20 # 20 Euro pro kg H2
+                return mass_h2_supply[iteration] * 10 # 100 Euro pro kg H2
             def cost_function_sink_h2(iteration):
                 return mass_h2_sink[iteration] * (0)
-            """
             # e. Iteration über Prädiktionshorizont:
             cost = 0
             for k in range(0, prediction_horizon):
-                cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) # \
-            #            + cost_function_supply_h2(k) + cost_function_sink_h2(k)
+                cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) \
+                       + cost_function_supply_h2(k) + cost_function_sink_h2(k)
         # f. Rückgabe der Kosten
         return cost
     # d. Optimierer aufrufen mit cost_function_mpc()
