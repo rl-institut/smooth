@@ -97,7 +97,6 @@ components.append({
     'component': 'sink',
     'name': 'h2_to_grid',
     'bus_in': 'bh2_lp',
-    'variable_costs': 5,
     'artificial_costs': 100,
     'dependency_flow_costs': ('bh2_lp', 'h2_to_grid'),
 })
@@ -112,8 +111,9 @@ components.append({
     'storage_capacity': 500,
     'initial_storage_factor': 0.5,
     'delta_max': 30,
-    'vac_low_in': 0.1,
-    'vac_low_out': 0.1,
+    'dependency_flow_costs': ('h2_storage', 'bh2_lp'),
+    'vac_in': 100,
+    'vac_out': 100,
     'slw_factor': 0.5,
     'balanced': True,
     'life_time': 30,
@@ -178,7 +178,7 @@ components.append({
 
 sim_params = {
     'start_date': '1/1/2019',
-    'n_intervals': 12,
+    'n_intervals': 24,
     'interval_time': 60,
     'interest_rate': 0.03,
     'print_progress': False,
