@@ -31,7 +31,8 @@ def run_smooth(model):
 
     # ------------------- SIMULATION -------------------
     for i_interval in range(sim_params.n_intervals):
-        # i_interval = 48
+        if i_interval == 96:
+            sim_params.mpc_flag = True
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
         if sim_params.print_progress:
@@ -103,7 +104,8 @@ def run_smooth(model):
         results = processing.results(model_to_solve)
         results_dict = processing.parameter_as_dict(model_to_solve)
         df_results = processing.create_dataframe(model_to_solve)
-        break
+        if sim_params.mpc_flag:
+            break
         # Loop through every component and call the result handling functions
         for this_comp in components:
             # Update the flows
@@ -114,7 +116,8 @@ def run_smooth(model):
             this_comp.update_var_costs(results, sim_params)
             # Update the costs and artificial costs.
             this_comp.update_var_emissions(results, sim_params)
-    return results, results_dict, df_results
+    if sim_params.mpc_flag:
+        return results, results_dict, df_results
     # Calculate the annuity for each component.
     for this_comp in components:
         this_comp.generate_results()
