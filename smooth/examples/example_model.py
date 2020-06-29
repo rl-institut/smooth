@@ -90,7 +90,7 @@ components.append({
     'bus_out': 'bh2_lp',
     'variable_costs': 0.005,
     'artificial_costs': 10,
-    'dependency_flow_costs': ('h2_from_grid','bh2_lp'),
+    'dependency_flow_costs': ('h2_from_grid', 'bh2_lp'),
 })
 
 components.append({
