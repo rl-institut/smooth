@@ -33,7 +33,8 @@ class EnergyDemandFromCsv(Component):
         # define flow_in
         if self.sim_params.mpc_flag:
             sequence = []
-            for i in range(self.sim_params.i_interval, self.sim_params.mpc_control_horizon):
+            for i in range(self.sim_params.i_interval,
+                           self.sim_params.i_interval + self.sim_params.mpc_control_horizon):
                 sequence.extend(self.data.iloc[i].values)
             flow_in = solph.Flow(
                 actual_value=sequence,
