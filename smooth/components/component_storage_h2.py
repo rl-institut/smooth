@@ -24,14 +24,19 @@ class StorageH2 (Component):
         self.life_time = 20
         # The initial storage level as a factor of the capacity [-]
         self.initial_storage_factor = 0.5
-        # If True, final and initial storage level are force to be equalized by the end,
-        # TODO:
-        # otherwise the cost of the initially stored hydrogen is incorporated into the final cost
+        # If balanced is True, the final storage level is force to be equal to the initial value,
+        # by fixing the value
+        # TODO: otherwise the cost of the initially stored hydrogen is incorporated into the final
+        #  cost
         self.balanced = False
-        self.equalize = False
+        self.fixed = False
         self.initial_storage_cost = 0
+        self.balance_ratio = 0
         # Max chargeable hydrogen in one time step in kg/h
         self.delta_max = None
+        # Minimal flow needed in current timestep to attain the same storage level as at the start
+        self.min_out = 0
+        self.min_in = 0
         # The storage level wanted as a factor of the capacity
         self.slw_factor = None
 
@@ -90,31 +95,44 @@ class StorageH2 (Component):
         self.current_vac = [0, 0]
 
     def prepare_simulation(self, components):
-        # Set the var. art. costs.
-        vac_in = self.vac_in
-        vac_out = self.vac_out
-
-        if self.storage_level_wanted is not None and self.storage_level < self.storage_level_wanted:
-            # If a wanted storage level is set and the storage level fell below
-            # that wanted level, the low VAC apply.
-            vac_in = self.vac_low_in
-            vac_out = self.vac_low_out
-
-        self.current_vac = [vac_in, vac_out]
-
         # Nb. or Intervals until end of simulation
         self.intervals_to_end = self.sim_params.n_intervals - self.sim_params.i_interval
-        # Amount of hydrogen to attain balance to initial storage level
+        # Amount of hydrogen to charge to attain balance to initial storage level; can be negative
         self.charge_balance = self.storage_level_init - self.storage_level
-
-        # Balance start and end of simulation storage level based on the minimum flow needed
-        # If flow is needed within this time step, the flow will be fixed to this value
+        # Minimum flow is zero if the remaining timesteps are sufficient to balance the storage
+        # level given the maximum flow constraint, otherwise it is equal to the flow needed.
         self.min_out = max(0,
                            - self.charge_balance - self.delta_max * (self.intervals_to_end - 1))
         self.min_in = max(0,
                           self.charge_balance - self.delta_max * (self.intervals_to_end - 1))
-        if self.balanced and (self.min_in != 0 or self.min_out != 0):
-            self.equalize = True
+
+        # Absolute value of the balance_ratio rises towards end of simulation.
+        # Given min_out/in the ratio cannot exceed [-1,1].
+        self.balance_ratio = self.charge_balance / (self.delta_max * self.intervals_to_end)
+
+        # Set the var. art. costs.
+        vac_in = self.vac_in
+        vac_out = self.vac_out
+        if self.balanced:
+            # Initial and final storage levels should be balanced out
+            if self.storage_level_wanted is not None:
+                # If a wanted storage level is set,
+                # the VAC apply in dependence to the balance value from above
+                vac_in = -self.vac_in * self.balance_ratio
+                vac_out = self.vac_out * self.balance_ratio
+
+            if self.min_in != 0 or self.min_out != 0:
+                # If there is a minimal flow needed, the flow value will be fixed to that value
+                self.fixed = True
+        else:
+            if self.storage_level_wanted is not None \
+                    and self.storage_level < self.storage_level_wanted:
+                # If a wanted storage level is set and the storage level fell below
+                # that wanted level, the low VAC apply.
+                vac_in = self.vac_low_in
+                vac_out = self.vac_low_out
+
+        self.current_vac = [vac_in, vac_out]
 
 
     def create_oemof_model(self, busses, _):
@@ -122,11 +140,11 @@ class StorageH2 (Component):
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(
                 nominal_value=self.delta_max, variable_costs=self.current_vac[1],
-                actual_value=self.min_out/self.delta_max, fixed=self.equalize
+                actual_value=self.min_out/self.delta_max, fixed=self.fixed
             )},
             inputs={busses[self.bus_in]: solph.Flow(
                 nominal_value=self.delta_max, variable_costs=self.current_vac[0],
-                actual_value=self.min_in/self.delta_max, fixed=self.equalize
+                actual_value=self.min_in/self.delta_max, fixed=self.fixed
             )},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
@@ -144,10 +162,12 @@ class StorageH2 (Component):
                 if 'storage_level' not in self.states:
                     # Initialize an array that tracks the state stored mass.
                     self.states['storage_level'] = [None] * sim_params.n_intervals
+                    self.states['vac'] = [None] * sim_params.n_intervals
                     self.states['pressure'] = [None] * sim_params.n_intervals
                 # Check if this result is the storage capacity.
                 self.storage_level = df_storage[i_result][0]
                 self.states['storage_level'][sim_params.i_interval] = self.storage_level
+                self.states['vac'][sim_params.i_interval] = self.current_vac
                 # Get the storage pressure [bar].
                 self.pressure = self.get_pressure(self.storage_level)
                 self.states['pressure'][sim_params.i_interval] = self.pressure
