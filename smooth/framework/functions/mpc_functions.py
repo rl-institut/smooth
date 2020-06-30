@@ -8,6 +8,7 @@ from smooth.framework.functions.debug import get_df_debug, show_debug
 from smooth.framework.exceptions import SolverNonOptimalError
 from copy import deepcopy
 from smooth.framework.simulation_parameters import SimulationParameters as sp
+from smooth.framework.functions.load_results import load_results
 
 
 #--------------------MPC FUNCTIONS--------------------------------------------------------------------------------------
@@ -17,8 +18,14 @@ def run_mpc_dummy(this_model,components,system_outputs,iteration,sim_params):
     # system inputs
     time_end = sim_params.n_intervals
     system_inputs = define_system_inputs_mpc() # auslagern und Aufruf in run_smooth???!!!
-    system_inputs['power_electrolyzer']['mpc_data'] = [0.6]*time_end
-    system_inputs['mflow_h2_storage']['mpc_data'] = sine_list_input_mpc(0,0.01,time_end) # 0.50
+    # system_inputs['power_electrolyzer']['mpc_data'] = [0.6]*time_end
+    # system_inputs['mflow_h2_storage']['mpc_data'] = sine_list_input_mpc(0,0.01,time_end) # 0.50
+    sequence_ely = pickle_input_mpc('this_ely',1)
+    sequence_ely = [x/190000 for x in sequence_ely]
+    sequence_storage = pickle_input_mpc('h2_storage_lp',1)
+    sequence_storage = [x/(60/9) for x in sequence_storage]
+    system_inputs['power_electrolyzer']['mpc_data'] = sequence_ely
+    system_inputs['mflow_h2_storage']['mpc_data'] = sequence_storage
     set_system_input_mpc(components,system_inputs,iteration)
     return
 
@@ -132,6 +139,18 @@ def define_system_outputs_mpc():
     # To Do: initialize flow values with NaN and set starting values only when requested when the method is called
     return system_outputs
 
+def pickle_input_mpc(comp_name, flow_switch):
+    # comp_name is the name of the component containing the desired flow
+    # flow_switch can only be 0 or 1, 0: outflow, 1: inflow
+    results = load_results(
+        'C:/Users/ulrike.herrmann/PycharmProjects/271_Ulrike/MPC/2020-06-26_11-30-38_linearized_model_day1.pickle')
+    data = views.node(results, comp_name)
+    df = data['sequences']
+    for i_result in df:
+        if i_result[0][flow_switch] == comp_name and i_result[1] == 'flow':
+            flow_sequence = df[i_result].values.tolist()
+    return flow_sequence
+
 
 def step_input_mpc(operating_point,step_size,iteration,time_end):
     # function returning the current value of a step signal
@@ -154,10 +173,7 @@ def sine_list_input_mpc(operating_point,amplitude,time_end):
     return sine
 
 
-def rolling_horizon(model,components,control_horizon,prediction_horizon,initial_inputs):
-    # create sim_params object for prediction horizon
-    model['sim_params']['n_intervals'] = prediction_horizon
-    sim_params_init = sp(model['sim_params'])
+def rolling_horizon(model, components, control_horizon, prediction_horizon, initial_inputs, sim_params_mpc, i_interval):
     # define system inputs
     system_inputs = define_system_inputs_mpc()
     # a. constraints definieren
@@ -183,7 +199,7 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,initial_
             control_data.extend([control_data[-1]] * (prediction_horizon - control_horizon))
             system_inputs[this_in]['mpc_data'] = control_data
         # c. run_model_mpc() aufrufen  Rückgabe: Regelgrößen-Vektoren für Prädiktionshorizont
-        system_outputs = run_model_mpc(model,components,sim_params_init,prediction_horizon,system_inputs)
+        system_outputs = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
         if not system_outputs:
             cost = 1e12
         else:
@@ -195,7 +211,7 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,initial_
             mass_h2_sink = system_outputs[5]['flow_value']
             # d. Teil-Kostenfunktionen als nested functions definieren
             def cost_function_demand(iteration):
-                return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 4
+                return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 2
             def cost_function_supply(iteration):
                 return power_supply[iteration] * 0.0001855
             def cost_function_sink(iteration):
@@ -224,29 +240,27 @@ def rolling_horizon(model,components,control_horizon,prediction_horizon,initial_
     return system_inputs
 
 
-def run_model_mpc(model,components_init,sim_params_init,prediction_horizon,system_inputs):
+def run_model_mpc(model, components_init, sim_params, i_interval_start, prediction_horizon ,system_inputs):
     # There are no results yet.
     df_results = None
     results_dict = None
-    # z. Modell clonen
-    #components = components_init
+    # reset sim_params.i_interval to start value
+    sim_params.i_interval = i_interval_start
+    # clone model
     components = deepcopy(components_init)
-    sim_params = deepcopy(sim_params_init)
     for this_comp in components:
         this_comp.sim_params = sim_params
     # a. system_outputs leer initialisieren
     system_outputs = []
     # b. Smooth laufen lassen über alle Prädiktionsschritte (import from run_smooth)
     # ------------------- SIMULATION -------------------
-    for i_interval in range(prediction_horizon):
+    for i_interval in range(i_interval_start, i_interval_start + prediction_horizon):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
-        if sim_params.print_progress:
-            print('Simulating interval {}/{}'.format(i_interval+1, prediction_horizon))
 
         # i. Stellgrößen setzen (Wert aus Steuerfolge für aktuellen Prädiktionsschritt)
         # set system_inputs
-        set_system_input_mpc(components,system_inputs,i_interval)
+        set_system_input_mpc(components,system_inputs,i_interval-i_interval_start)
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
@@ -325,5 +339,16 @@ def run_model_mpc(model,components_init,sim_params_init,prediction_horizon,syste
     # track system outputs for mpc
     return system_outputs
 
+
+def remove_trailing_nones_mpc(this_comp, n_intervals, prediction_horizon):
+    # the flows, states and results are initialized for n_interval + prediction_horizon which leads to trailing none
+    # values after the simulation has finished --> those trailing none values are removed here:
+    for this_flow in this_comp.flows:
+        this_comp.flows[this_flow] = this_comp.flows[this_flow][:n_intervals - prediction_horizon]
+    for this_state in this_comp.states:
+        this_comp.states[this_state] = this_comp.states[this_state][:n_intervals - prediction_horizon]
+    this_comp.results['variable_costs'] = this_comp.results['variable_costs'][:n_intervals - prediction_horizon]
+    this_comp.results['art_costs'] = this_comp.results['art_costs'][:n_intervals - prediction_horizon]
+    this_comp.results['variable_emissions'] = this_comp.results['variable_emissions'][:n_intervals - prediction_horizon]
 
 #---------END MPC FUNCTIONS---------------------------------------------------------------------------------------------
