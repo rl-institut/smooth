@@ -43,6 +43,14 @@ smooth.components.component\_electrolyzer module
    :members:
    :undoc-members:
    :show-inheritance:
+   
+Electrolyzer Waste Heat
+------------------------------------------------
+
+.. automodule:: smooth.components.component_electrolyzer_waste_heat
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 smooth.components.component\_energy\_demand\_from\_csv module
 -------------------------------------------------------------

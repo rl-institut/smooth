@@ -5,7 +5,7 @@ from .component import Component
 class ElectricHeater(Component):
     """A simple electric heater component that converts electricity to heat is created through this class.
 
-    :param name: The name given to the electric heater component
+    :param name: The unique name given to the electric heater component
     :type name: str
     :param bus_el: The electricity bus that is the input of the electric heater
     :type bus_el: str
@@ -49,7 +49,7 @@ class ElectricHeater(Component):
     def create_oemof_model(self, busses, _):
         """Creates an oemof Transformer component from the information given in the ElectricHeater class, to be used in the oemof model
 
-        :param busses: List of the virtual buses used in the energy system
+        :param busses: The virtual buses used in the energy system
         :type busses: list
         """
         electric_heater = solph.Transformer(

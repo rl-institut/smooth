@@ -7,12 +7,48 @@ import warnings
 
 
 class Electrolyzer (Component):
-    """Electrolyzer agents are created through this class
+    """Alkaline electrolyzer agents are created through this class.
 
-    :param name: unique name of the component
+    :param name: The unique name given to the electrolyser component
     :type name: str
-    :param bus_el: name of the electric bus
+    :param bus_el: The electricity bus that is the input of the electrolyser
     :type bus_el: str
+    :param bus_h2: The hydrogen bus that is the output of the electrolyser
+    :type bus_h2: str
+    :param power_max: The maximum power of the electrolyser [W]
+    :type power_max: numerical
+    :param pressure: The pressure of hydrogen in the system [Pa]
+    :type pressure: numerical
+    :param fs_pressure: The pressure of hydrogen in the system, to be used
+        in other components [bar]
+    :type fs_pressure: numerical
+    :param temp_init: The initial electrolyser temperature [K]
+    :type temp_init: numerical
+    :param life_time: The life time of the component [a]
+    :type life_time: numerical
+    :param fitting_value_exchange_current_density: The fitting parameter
+        exchange current density [A/cm²]
+    :type fitting_value_exchange_current_density: numerical
+    :param fitting_value_electrolyte_thickness: The thickness of the
+        electrolyte layer [cm]
+    :type fitting_value_electrolyte_thickness: numerical
+    :param temp_min: The minimum temperature of the electrolyzer
+        (completely cooled down) [K]
+    :type temp_min: numerical
+    :param temp_max: The highest temperature the electrolyser can be [K]
+    :type temp_max: numerical
+    :param cur_dens_max: The maximal current density given by the
+        manufacturer [A/cm^2]
+    :type cur_dens_max: numerical
+    :param cur_dens_max_temp: The current density at which the maximal
+        temperature is reached [A/cm^2]
+    :type cur_dens_max_temp: numerical
+    :param area_cell: The size of the cell surface [cm²]
+    :type area_cell: numerical
+    :param set_parameters(params): Updates parameter default values (see generic Component class)
+    :type set_parameters(params): function
+    :param interval_time: The interval time [min]
+    :type interval_time:
     """
 
     def __init__(self, params):

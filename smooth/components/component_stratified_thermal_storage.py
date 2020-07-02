@@ -29,7 +29,7 @@ class StratifiedThermalStorage (Component):
         self.max_heat_flow_charge = self.storage_level_max * self.storage_capacity
         # The maximum heat discharged into the storage per timestep [Wh]
         self.max_heat_flow_discharge = (1 - self.storage_level_min) * self.storage_capacity
-        # Initial USABLE storage level factor in relation to the capacity
+        # Initial storage level factor in relation to the capacity
         self.initial_storage_factor = 0.5
         # Lifetime [a]
         self.life_time = 20
