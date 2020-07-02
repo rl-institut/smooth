@@ -5,21 +5,42 @@ from math import log
 
 
 class CompressorH2(Component):
-    """Compressor agents for compressing hydrogen are created through this class
-
-    :param name: unique name of the component
+    """
+    :param name: unique name given to the compressor component
     :type name: str
-    :param bus_h2_in: name of the lower pressure hydrogen bus
+    :param bus_h2_in: lower pressure hydrogen bus that is an input of
+        the compressor
     :type bus_h2_in: str
-    :param bus_h2_out: name of the higher pressure hydrogen bus
+    :param bus_h2_out: higher pressure hydrogen bus that is the output
+        of the compressor
     :type bus_h2_out: str
-    :param bus_el: name of the electric bus that provides energy to run the compressor
+    :param bus_el: electric bus that is an input of the compressor
     :type bus_el: str
-    :param m_flow_max: maximum mass flow through the compressor in kg/h
+    :param m_flow_max: maximum mass flow through the compressor [kg/h]
     :type m_flow_max: float
+    :param life_time: life time of the component [a]
+    :type life_time: float
+    :param temp_in: temperature of hydrogen on entry to the compressor [K]
+    :type temp_in: float
+    :param efficiency: overall efficiency of the compressor
+    :type efficiency: float
+    :param set_parameters(params): updates parameter default values
+        (see generic Component class)
+    :type set_parameters(params): function
+    :param spec_compression_energy: specific compression energy
+        (electrical energy needed per kg H2) [Wh/kg]
+    :type spec_compression_energy: int
+    :param R: gas constant (R) [J/(K*mol)]
+    :type R: float
+    :param Mr_H2: molar mass of H2 [kg/mol]
+    :type Mr_H2: float
+    :param R_H2: ToDo: define this properly
+
     """
 
     def __init__(self, params):
+        """Constructor method
+        """
         # Call the init function of th mother class.
         Component.__init__(self)
 
@@ -40,7 +61,6 @@ class CompressorH2(Component):
         # It is assumed that hydrogen always enters the compressor at room temperature [K]
         # FIXME: An assumption from MATLAB is that hydrogen always enters the
         # compressor at this temp, should it be calculated instead of assumed??
-
         self.temp_in = 293.15
 
         # Overall efficiency of the compressor (value taken from MATLAB) [-]
@@ -60,6 +80,13 @@ class CompressorH2(Component):
         self.R_H2 = self.R / self.Mr_H2
 
     def create_oemof_model(self, busses, _):
+        """Creates an oemof Transformer component using the information given in
+        the Compressor H2 class, to be used in the oemof model
+
+        :param busses: virtual buses used in the energy system
+        :type busses list
+        :return: the oemof compressor component
+        """
         compressor = solph.Transformer(
             label=self.name,
             inputs={
@@ -75,6 +102,12 @@ class CompressorH2(Component):
         return compressor
 
     def prepare_simulation(self, components):
+        """Prepares the simulation by calculating the specific compression energy
+
+        :param components: list containing each component object
+        :type components: list
+        :return: the specific compression energy [Wh/kg]
+        """
         # The compressor has two foreign states, the inlet pressure and the
         # outlet pressure. Usually this is the storage pressure of the storage
         # at that bus. But a fixed pressure can also be set.
@@ -119,14 +152,22 @@ class CompressorH2(Component):
         self.spec_compression_energy = float(spec_compression_work / 3.6)
 
     def update_states(self, results, sim_params):
+        """Updates the states in the compressor component
+
+        :param results: oemof results object for the given time step
+        :type results: object
+        :param sim_params: simulation parameters for the energy system (defined by user)
+        :type sim_params: object
+        :return:
+        """
         # Update the states of the compressor
 
         # If the states dict of this object wasn't created yet, it's done here.
         if 'specific_compression_work' not in self.states:
             self.states['specific_compression_work'] = [None] * sim_params.n_intervals
-        # self.states['inlet pressure'] = [None] * sim_params.n_intervals
-        #  self.states['outlet pressure'] = [None] * sim_params.n_intervals
-        return
 
-        # self.states['specific_compression_work'][sim_params.i_interval] =
-        # self.spec_compression_energy
+        self.states['specific_compression_work'][sim_params.i_interval] \
+            = self.spec_compression_energy
+
+
+

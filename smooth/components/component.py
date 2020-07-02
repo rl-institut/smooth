@@ -154,11 +154,11 @@ class Component:
         If a component has states, this update_states function is overwritten in the
         specific component.
 
-        :param results: The oemof results object for the given time step
+        :param results: oemof results object for the given time step
         :type results: object
-        :param sim_params: The simulation parameters for the energy system (defined by user)
+        :param sim_params: simulation parameters for the energy system (defined by user)
         :type sim_params: object
-        :return: If used as a placeholder, nothing will be returned. Else, refer to
+        :return: if used as a placeholder, nothing will be returned. Else, refer to
         specific component that uses the update_states function for further detail.
         """
         pass

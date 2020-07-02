@@ -135,43 +135,43 @@ import pyomo.environ as po
 
 class ElectrolyzerWasteHeat(Electrolyzer):
     """
-    :param param_bus_th: The inclusion of the thermal bus in the parameters dictionary,
+    :param param_bus_th: inclusion of the thermal bus in the parameters dictionary,
         which was not included in the electrolyzer mother class
     :type param_bus_th: dict
-    :param bus_th: The thermal bus that is the output of the electrolyzer
+    :param bus_th: thermal bus that is the output of the electrolyzer
     :type bus_th: str
-    :param set_parameters(params): Updates parameter default values (see generic Component class)
+    :param set_parameters(params): updates parameter default values (see generic Component class)
     :type set_parameters(params): function
-    :param interval_time: The interval time [min]
+    :param interval_time: interval time [min]
     :type interval_time: numerical
-    :param energy_max: The maximum energy that the electrolyzer can use in one time step [Wh]
+    :param energy_max: maximum energy that the electrolyzer can use in one time step [Wh]
     :type energy_max: numerical
-    :param c_p_H2: The specific heat of hydrogen at constant pressure [J/(kg*K)]
+    :param c_p_H2: specific heat of hydrogen at constant pressure [J/(kg*K)]
     :type c_p_H2: numerical
-    :param c_p_O2: The specific heat of oxygen at constant pressure [J/(kg*K)]
+    :param c_p_O2: specific heat of oxygen at constant pressure [J/(kg*K)]
     :type c_p_O2: numerical
-    :param c_p_H2O: The specific heat of water at constant pressure [J/(kg*K)]
+    :param c_p_H2O: specific heat of water at constant pressure [J/(kg*K)]
     :type c_p_H2O: numerical
-    :param diameter_cell: The diameter of the electrolyzer cell [m]
+    :param diameter_cell: diameter of the electrolyzer cell [m]
     :type diameter_cell: numerical
-    :param stack_end_height: The height of the two stack ends that are not part of the cells,
+    :param stack_end_height: height of the two stack ends that are not part of the cells,
         from the perspective of the total stack height [m]
     :type stack_end_height: numerical
-    :param height_cell: The height of an individual cell in relation to the cell diameter [m]
+    :param height_cell: height of an individual cell in relation to the cell diameter [m]
     :type height_cell: numerical
-    :param height_stack: The total stack height, which is calculated by taking the cell stack
+    :param height_stack: total stack height, which is calculated by taking the cell stack
         plus the two additional ends of the stack into consideration [m]
     :type height_stack: numerical
-    :param area_stack: The external surface area of the electrolyser stack under the
+    :param area_stack: external surface area of the electrolyser stack under the
         assumption that it is cylindrical [m^2]
     :type area_stack: numerical
-    :param area_separator: The overall surface area exposed by the gas separators and the
+    :param area_separator: overall surface area exposed by the gas separators and the
         pipe communicating them [m^2]
     :type area_separator: numerical
-    :param model_h2: The model created with regards to the hydrogen produced by the
+    :param model_h2: model created with regards to the hydrogen produced by the
         electrolyser
     :type model_h2: oemof model
-    :param model_th: The model created with regards to the thermal energy produced by
+    :param model_th: model created with regards to the thermal energy produced by
         the electrolyser
     :type model_th: oemof model
 
@@ -268,12 +268,12 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         and thermal production of the electrolyser from information given in the
         Electrolyser Waste Heat class, to be used in the oemof model
 
-        :param busses: The virtual buses used in the energy system
+        :param busses: virtual buses used in the energy system
         :type busses: list
-        :param model: The oemof model containing the hydrogen production and thermal energy
+        :param model: oemof model containing the hydrogen production and thermal energy
             production of the electrolyser
         :type model: model
-        :return: None
+        :return: the oemof electrolyzer and electrolyzer thermal components
         """
         # Get the non-linear behaviour.
         self.update_nonlinear_behaviour()

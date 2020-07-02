@@ -9,46 +9,46 @@ import warnings
 class Electrolyzer (Component):
     """Alkaline electrolyzer agents are created through this class.
 
-    :param name: The unique name given to the electrolyser component
+    :param name: unique name given to the electrolyser component
     :type name: str
-    :param bus_el: The electricity bus that is the input of the electrolyser
+    :param bus_el: electricity bus that is the input of the electrolyser
     :type bus_el: str
-    :param bus_h2: The hydrogen bus that is the output of the electrolyser
+    :param bus_h2: hydrogen bus that is the output of the electrolyser
     :type bus_h2: str
-    :param power_max: The maximum power of the electrolyser [W]
+    :param power_max: maximum power of the electrolyser [W]
     :type power_max: numerical
-    :param pressure: The pressure of hydrogen in the system [Pa]
+    :param pressure: pressure of hydrogen in the system [Pa]
     :type pressure: numerical
-    :param fs_pressure: The pressure of hydrogen in the system, to be used
+    :param fs_pressure: pressure of hydrogen in the system, to be used
         in other components [bar]
     :type fs_pressure: numerical
-    :param temp_init: The initial electrolyser temperature [K]
+    :param temp_init: initial electrolyser temperature [K]
     :type temp_init: numerical
-    :param life_time: The life time of the component [a]
+    :param life_time: life time of the component [a]
     :type life_time: numerical
-    :param fitting_value_exchange_current_density: The fitting parameter
+    :param fitting_value_exchange_current_density: fitting parameter
         exchange current density [A/cm²]
     :type fitting_value_exchange_current_density: numerical
-    :param fitting_value_electrolyte_thickness: The thickness of the
+    :param fitting_value_electrolyte_thickness: thickness of the
         electrolyte layer [cm]
     :type fitting_value_electrolyte_thickness: numerical
-    :param temp_min: The minimum temperature of the electrolyzer
+    :param temp_min: minimum temperature of the electrolyzer
         (completely cooled down) [K]
     :type temp_min: numerical
-    :param temp_max: The highest temperature the electrolyser can be [K]
+    :param temp_max: highest temperature the electrolyser can be [K]
     :type temp_max: numerical
-    :param cur_dens_max: The maximal current density given by the
+    :param cur_dens_max: maximal current density given by the
         manufacturer [A/cm^2]
     :type cur_dens_max: numerical
-    :param cur_dens_max_temp: The current density at which the maximal
+    :param cur_dens_max_temp: current density at which the maximal
         temperature is reached [A/cm^2]
     :type cur_dens_max_temp: numerical
-    :param area_cell: The size of the cell surface [cm²]
+    :param area_cell: size of the cell surface [cm²]
     :type area_cell: numerical
-    :param set_parameters(params): Updates parameter default values (see generic Component class)
+    :param set_parameters(params): updates parameter default values (see generic Component class)
     :type set_parameters(params): function
-    :param interval_time: The interval time [min]
-    :type interval_time:
+    :param interval_time: interval time [min]
+    :type interval_time: numerical
     """
 
     def __init__(self, params):
