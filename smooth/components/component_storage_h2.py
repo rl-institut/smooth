@@ -146,11 +146,11 @@ class StorageH2 (Component):
         storage = solph.components.GenericStorage(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(
-                nominal_value=self.delta_max, variable_costs=self.current_vac[1],
+                nominal_value=self.delta_max, variable_costs=self.current_vac[1], max=1.0,
                 actual_value=self.min_out/self.delta_max, fixed=self.fixed
             )},
             inputs={busses[self.bus_in]: solph.Flow(
-                nominal_value=self.delta_max, variable_costs=self.current_vac[0],
+                nominal_value=self.delta_max, variable_costs=self.current_vac[0], max=1.0,
                 actual_value=self.min_in/self.delta_max, fixed=self.fixed
             )},
             initial_storage_level=self.storage_level / self.storage_capacity,
