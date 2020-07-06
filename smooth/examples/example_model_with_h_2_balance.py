@@ -112,9 +112,9 @@ components.append({
     'initial_storage_factor': 0.5,
     'delta_max': 30,
     'dependency_flow_costs': ('h2_storage', 'bh2_lp'),
-    'vac_in': 100,
-    'vac_out': 100,
-    'slw_factor': 0.5,
+    'vac_bal_in': 100,
+    'vac_bal_out': 100,
+    'balance_vac_interval': 10,
     'balanced': True,
     'life_time': 30,
     'capex': {

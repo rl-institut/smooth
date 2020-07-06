@@ -30,7 +30,9 @@ class StorageH2 (Component):
         #  cost
         self.balanced = False
         self.fixed = False
-        self.initial_storage_cost = 0
+        # Nb. of intervals to the end, where the balance ratio is applied for VAC calculation.
+        self.balance_vac_interval = None
+        # Difference to initial storage level in relation to the max. chargable H_2 until the end
         self.balance_ratio = 0
         # Max chargeable hydrogen in one time step in kg/h
         self.delta_max = None
@@ -48,6 +50,10 @@ class StorageH2 (Component):
         # storage level [EUR/kg].
         self.vac_low_in = 0
         self.vac_low_out = 0
+        # Var. art. costs that apply as a scaling value if the storage level is set to be balanced
+        # to the initial level by the end of simulation [EUR/kg].
+        self.vac_bal_in = 0
+        self.vac_bal_out = 0
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
@@ -113,17 +119,18 @@ class StorageH2 (Component):
         # Set the var. art. costs.
         vac_in = self.vac_in
         vac_out = self.vac_out
-        if self.balanced:
+        if self.balanced and self.min_in != 0 or self.min_out != 0:
             # Initial and final storage levels should be balanced out
-            if self.storage_level_wanted is not None:
-                # If a wanted storage level is set,
-                # the VAC apply in dependence to the balance value from above
-                vac_in = -self.vac_in * self.balance_ratio
-                vac_out = self.vac_out * self.balance_ratio
+            # If there is a minimal flow needed, the flow value will be fixed to that value
+            self.fixed = True
 
-            if self.min_in != 0 or self.min_out != 0:
-                # If there is a minimal flow needed, the flow value will be fixed to that value
-                self.fixed = True
+        # At an interval, if balance vac apply, storage_level_wanted is not considered
+        if self.balance_vac_interval is not None \
+                and self.intervals_to_end <= self.balance_vac_interval:
+            # If a balance should be incentivized,
+            # the balance VAC scaled balance_ratio value from above apply
+            vac_in = -self.vac_bal_in * self.balance_ratio
+            vac_out = self.vac_bal_in * self.balance_ratio
         else:
             if self.storage_level_wanted is not None \
                     and self.storage_level < self.storage_level_wanted:
