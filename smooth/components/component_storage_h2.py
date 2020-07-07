@@ -112,13 +112,10 @@ class StorageH2 (Component):
         self.min_in = max(0,
                           self.charge_balance - self.delta_max * (self.intervals_to_end - 1))
 
-        # Absolute value of the balance_ratio rises towards end of simulation.
-        # Given min_out/in the ratio cannot exceed [-1,1].
-        self.balance_ratio = self.charge_balance / (self.delta_max * self.intervals_to_end)
-
         # Set the var. art. costs.
         vac_in = self.vac_in
         vac_out = self.vac_out
+        self.balance_ratio = 0
         if self.balanced and self.min_in != 0 or self.min_out != 0:
             # Initial and final storage levels should be balanced out
             # If there is a minimal flow needed, the flow value will be fixed to that value
@@ -127,6 +124,9 @@ class StorageH2 (Component):
         # At an interval, if balance vac apply, storage_level_wanted is not considered
         if self.balance_vac_interval is not None \
                 and self.intervals_to_end <= self.balance_vac_interval:
+            # Absolute value of the balance_ratio rises towards end of simulation.
+            # Given a fixed min_out/in, the ratio cannot exceed [-1,1].
+            self.balance_ratio = self.charge_balance / (self.delta_max * self.intervals_to_end)
             # If a balance should be incentivized,
             # the balance VAC scaled balance_ratio value from above apply
             vac_in = -self.vac_bal_in * self.balance_ratio
