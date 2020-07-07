@@ -1,3 +1,89 @@
+"""
+******
+Scope
+******
+A hydrogen compressor is used in energy systems as a means of increasing
+the pressure of hydrogen to suitable levels for other components in the
+system or satisfying energy demands.
+
+*******
+Concept
+*******
+The hydrogen compressor is powered by electricity and intakes a low
+pressure hydrogen flow while outputting a hgh pressure hydrogen flow.
+The efficiency of the compressor is assumed to be 88.8%.
+
+Specific compression energy
+---------------------------
+The specific compression energy is calculated by first obtaining the
+compression ratio:
+
+.. math::
+    p_{ratio} = \\frac{p_{out}}{p_{in}}
+
+* :math:`p_{ratio}` = compression ratio
+* :math:`p_{out}` = outlet pressure [bar]
+* :math:`p_{in}` = inlet pressure [bar]
+
+Then the output temperature is calculated, and the initial assumption
+for the polytropic exponent is assumed to be 1.6:
+
+.. math::
+    T_{out} = min(max(T_{in}, T_{in} * p_{ratio} ^ \\frac{n_{init} - 1/n_{init}),
+    T_{in} + 60)
+
+* :math:`T_{out}` = output temperature [K]
+* :math:`T_{in}` = input temperature [K]
+* :math:`n_{init}` = initial polytropic exponent
+
+Then the temperature ratio is calculated:
+
+.. math::
+    T_{ratio} = \\frac{T_{out}}{T_{in}}
+
+* :math:`T_{ratio}` = temperature ratio
+
+Then the polytropic exponent is calculated:
+
+.. math::
+    n = \\frac{1}{\\frac{1 - log_{T_{ratio}}{log_{p_{ratio}}}}
+
+The compressibility factors of the hydrogen entering and leaving
+the compressor is then calculated using interpolation considering
+varying temperature, pressure and compressibility factor values
+(see the calculate_compressibility_factor function). The real
+gas compressibility factor is calculated using these two values
+as follows:
+
+.. math::
+    Z_{real} = \\frac{Z_{in} + Z_{out}}{2}
+
+* :math:`Z_{real}` = real gas compressibility factor
+* :math:`Z_{in}` = compressibility factor on entry
+* :math:`Z_{out}` = compressibility factor on exit
+
+Thus the specific compression work is finally calculated:
+
+.. math::
+    c_{w_{1}} = \\frac{1}{\\mu} * R_{H_{2}} * T_{in} * \\frac{n}{n-1} * p_{ratio} ^ (\\frac{n-1}{n} -1) * \\frac{Z_{real}{1000}
+
+* :math:`c_{w_{1}}` = specific compression work [kJ/kg]
+* :math:`\\mu` = compression efficiency
+* :math:`R_{H_{2}}` = hydrogen gas constant
+
+Finally, the specific compression work is converted into the amount of
+electrical energy required to compress 1 kg of hydrogen:
+
+.. math::
+    c_{w_{2}} = \\frac{c_{w_{1}}}{3.6}
+
+* :math:`c_{w_{2}}` = specific compression energy [Wh/kg]
+
+"""
+
+
+
+
 import oemof.solph as solph
 from .component import Component
 from .component_functions.all_component_functions import calculate_compressibility_factor
@@ -84,7 +170,7 @@ class CompressorH2(Component):
         the Compressor H2 class, to be used in the oemof model
 
         :param busses: virtual buses used in the energy system
-        :type busses list
+        :type busses: list
         :return: the oemof compressor component
         """
         compressor = solph.Transformer(
@@ -158,7 +244,7 @@ class CompressorH2(Component):
         :type results: object
         :param sim_params: simulation parameters for the energy system (defined by user)
         :type sim_params: object
-        :return:
+        :return: updated values for each state in the 'states' dict
         """
         # Update the states of the compressor
 

@@ -28,7 +28,7 @@ smooth.components.component\_chp module
    :undoc-members:
    :show-inheritance:
 
-smooth.components.component\_compressor\_h2 module
+Hydrogen Compressor
 --------------------------------------------------
 
 .. automodule:: smooth.components.component_compressor_h2

@@ -1,6 +1,6 @@
 """
-This module is created as a subclass of the Electrolyzer module with the inclusion
-of a waste heat model.
+This module is created as a subclass of the alkaline Electrolyzer module with
+the inclusion of a waste heat model.
 
 ******
 Scope
@@ -13,9 +13,9 @@ where there is the potential to recover large quantities of energy.
 
 *INCLUDE FIGURE?
 
-In this component, it is assumed that the electrolyzer consists of a cylindrical
-cell stack along with two cylindrical gas separators. It is further assumed
-that:
+In this component, it is assumed that the alkaline electrolyzer consists of a
+cylindrical cell stack along with two cylindrical gas separators. It is further
+assumed that:
 
 * The cell stack height consists of the cells plus two ends. The height of the
   end of the stack which is not part of the cells has a dependence on the diameter
