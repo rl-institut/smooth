@@ -13,14 +13,15 @@ class Sink(Component):
         # ------------------- PARAMETERS -------------------
         self.name = 'Grid_default_name'
 
-        # Maximum input per timestep of commodity:
-        # e.g. for the electricity grid [Wh], thermal grid [Wh], CH4 grid [Wh]
+        # Maximum input per hour:
+        # e.g. for the electricity grid [W], thermal grid [W], CH4 grid [kg/h]
         self.input_max = 800000000
 
         self.bus_in = None
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
+        self.input_max = self.input_max * self.sim_params.interval_time / 60
 
         # ------------------- COSTS -------------------
         # Define the costs for the commodities (negative means earning money)

@@ -14,8 +14,8 @@ class Supply (Component):
 
         # ------------------- PARAMETERS -------------------
         self.name = 'Grid_default_name'
-        # Maximum output per timestep of commodity:
-        # e.g. for the electricity grid [Wh], thermal grid [Wh], CH4 grid [kg/h]
+        # Maximum output per hour:
+        # e.g. for the electricity grid [W], thermal grid [W], CH4 grid [kg/h]
         self.output_max = 8000000
 
         self.bus_out = None
@@ -35,6 +35,7 @@ class Supply (Component):
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
+        self.output_max = self.output_max * self.sim_params.interval_time / 60
 
         # ------------------- INTERNAL VALUES -------------------
         # The current artificial cost value e.g. [EUR/Wh], [EUR/kg].
