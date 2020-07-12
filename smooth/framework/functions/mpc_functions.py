@@ -1,13 +1,10 @@
-import pandas as pd
 from oemof.outputlib import views
 from oemof import solph
 from oemof.outputlib import processing
 import math
 from scipy.optimize import Bounds, minimize
 from smooth.framework.functions.debug import get_df_debug, show_debug
-from smooth.framework.exceptions import SolverNonOptimalError
 from copy import deepcopy
-from smooth.framework.simulation_parameters import SimulationParameters as sp
 from smooth.framework.functions.load_results import load_results
 
 
@@ -139,6 +136,7 @@ def define_system_outputs_mpc():
     # To Do: initialize flow values with NaN and set starting values only when requested when the method is called
     return system_outputs
 
+
 def pickle_input_mpc(comp_name, flow_switch):
     # comp_name is the name of the component containing the desired flow
     # flow_switch can only be 0 or 1, 0: outflow, 1: inflow
@@ -173,7 +171,8 @@ def sine_list_input_mpc(operating_point,amplitude,time_end):
     return sine
 
 
-def rolling_horizon(model, components, system_inputs, control_horizon, prediction_horizon, initial_inputs, sim_params_mpc, i_interval):
+def rolling_horizon(model, components, system_inputs, control_horizon, prediction_horizon, minimize_options,
+                    initial_inputs, sim_params_mpc, i_interval):
     # define system inputs
     # system_inputs = define_system_inputs_mpc()
     # a. constraints definieren
@@ -229,7 +228,7 @@ def rolling_horizon(model, components, system_inputs, control_horizon, predictio
         return cost
     # d. Optimierer aufrufen mit cost_function_mpc()
     # res = minimize(cost_function_mpc, u_vec_0, method='trust-constr', options = {'verbose': 1}, bounds = bounds)
-    res = minimize(cost_function_mpc, u_vec_0, method='L-BFGS-B', options = {'maxiter': 10, 'disp': True},
+    res = minimize(cost_function_mpc, u_vec_0, method='L-BFGS-B', options = minimize_options,
                    bounds = bounds)
     # e. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
     iter = 0

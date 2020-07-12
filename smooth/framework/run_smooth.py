@@ -29,13 +29,11 @@ def run_smooth(model, mpc_params):
     # GET SIMULATION PARAMETERS
     # Create an object with the simulation parameters.
     # QUICK FIX:
-    model['sim_params']['n_intervals'] = model['sim_params']['n_intervals'] + \
-                                         mpc_params['algorithm_params']['prediction_horizon']
+    model['sim_params']['n_intervals'] = model['sim_params']['n_intervals'] + mpc_params['prediction_horizon']
     sim_params = sp(model['sim_params'])
     # Create simulation parameters for mpc with extended date_time_index
     dict_sim_params_mpc = deepcopy(model['sim_params'])
-    dict_sim_params_mpc['n_intervals'] = model['sim_params']['n_intervals'] + \
-                                         mpc_params['algorithm_params']['prediction_horizon']
+    dict_sim_params_mpc['n_intervals'] = model['sim_params']['n_intervals'] + mpc_params['prediction_horizon']
     sim_params_mpc = sp(dict_sim_params_mpc)
 
     # CREATE COMPONENT OBJECTS
@@ -46,7 +44,7 @@ def run_smooth(model, mpc_params):
     results_dict = None
 
     # ------------------- SIMULATION -------------------
-    for i_interval in range(sim_params.n_intervals - mpc_params['algorithm_params']['prediction_horizon']):
+    for i_interval in range(sim_params.n_intervals - mpc_params['prediction_horizon']):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
         if sim_params.print_progress:
@@ -61,18 +59,18 @@ def run_smooth(model, mpc_params):
         # call dummy function for test with arbitrary function (e.g. sine) for system inputs
         # mpc.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
         # for rolling horizon approach call rolling horizon function only once for every control horizon
-        if mpc_iter == mpc_params['algorithm_params']['control_horizon']:
+        if mpc_iter == mpc_params['control_horizon']:
             mpc_iter = 0
         if mpc_iter == 0:
             mpc_params['system_inputs'] = mpc.rolling_horizon(model, components, mpc_params['system_inputs'],
-                                                              mpc_params['algorithm_params']['control_horizon'],
-                                                              mpc_params['algorithm_params']['prediction_horizon'],
+                                                              mpc_params['control_horizon'],
+                                                              mpc_params['prediction_horizon'],
+                                                              mpc_params['minimize_options'],
                                                               initial_inputs, sim_params_mpc, i_interval)
         mpc.set_system_input_mpc(components, mpc_params['system_inputs'], mpc_iter)
         initial_inputs = []
         for this_in in mpc_params['system_inputs']:
-            initial_inputs.append(mpc_params['system_inputs'][this_in]['mpc_data']
-                                  [mpc_params['algorithm_params']['prediction_horizon'] - 1])
+            initial_inputs.append(mpc_params['system_inputs'][this_in]['mpc_data'][mpc_params['control_horizon'] - 1])
         mpc_iter = mpc_iter + 1
 
         # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
