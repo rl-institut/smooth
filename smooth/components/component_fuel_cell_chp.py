@@ -41,14 +41,14 @@ class FuelCellChp(Component):
         # http://afrodita.rcub.bg.ac.rs/~todorom/tutorials/rad24.html
 
         # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
-        self.bp_load_electric = [0.0, 0.0517, 0.1589, 0.2482, 1.0]
+        self.bp_load_electric = [0.0, 0.0481, 0.0694, 0.0931, 0.1272, 0.1616, 0.2444, 0.5912, 1.0]
         # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
-        self.bp_eff_electric = [0.0, 0.0915, 0.2188, 0.2795, 0.5238]
+        self.bp_eff_electric = [0.0, 0.1996, 0.3028, 0.4272, 0.5034, 0.5381, 0.5438, 0.4875, 0.3695]
 
         # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
-        self.bp_load_thermal = [0.0, 0.0481, 0.0694, 0.0931, 0.1272, 0.1616, 0.2444, 0.5912, 1.0]
+        self.bp_load_thermal = [0.0, 0.0517, 0.1589, 0.2482, 1.0]
         # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
-        self.bp_eff_thermal = [0.0, 0.1996, 0.3028, 0.4272, 0.5034, 0.5381, 0.5438, 0.4875, 0.3695]
+        self.bp_eff_thermal = [0.0, 0.0915, 0.2188, 0.2795, 0.5238]
 
         # Now calculate the absolute values for electricity [Wh] and thermal
         # energy [Wh] and H2 consumption [kg].

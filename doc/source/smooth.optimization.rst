@@ -12,21 +12,15 @@ Subpackages
 Submodules
 ----------
 
-smooth.optimization.optimization\_parameters module
----------------------------------------------------
-
-.. automodule:: smooth.optimization.optimization_parameters
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 smooth.optimization.run\_optimization module
 --------------------------------------------
 
 .. automodule:: smooth.optimization.run_optimization
    :members:
    :undoc-members:
+   :exclude-members: sort_by_values, CDF, fast_non_dominated_sort, dominates
    :show-inheritance:
+   :member-order: bysource
 
 
 Module contents
