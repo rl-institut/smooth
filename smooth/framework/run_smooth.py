@@ -4,8 +4,8 @@ from smooth.framework.simulation_parameters import SimulationParameters as sp
 from smooth.framework.functions.debug import get_df_debug, show_debug
 from smooth.framework.exceptions import SolverNonOptimalError
 from smooth.framework.functions.functions import create_component_obj
-import smooth.framework.functions.mpc_functions as mp
-
+import smooth.framework.functions.mpc_functions as mpc
+from copy import deepcopy
 
 
 def run_smooth(model):
@@ -19,9 +19,24 @@ def run_smooth(model):
         names = [c.pop("name") for c in model["components"]]
         model.update({'components': dict(zip(names, model["components"]))})
 
+    # initialisation of mpc variables
+    system_outputs = []
+    system_inputs = []
+    mpc_iter = 0
+    initial_inputs = [0.5, 0.5]
+    # set control and prediction horizon fix
+    control_horizon = 6
+    prediction_horizon = 12
+
     # GET SIMULATION PARAMETERS
     # Create an object with the simulation parameters.
+    # QUICK FIX:
+    model['sim_params']['n_intervals'] = model['sim_params']['n_intervals'] + prediction_horizon
     sim_params = sp(model['sim_params'])
+    # Create simulation parameters for mpc with extended date_time_index
+    dict_sim_params_mpc = deepcopy(model['sim_params'])
+    dict_sim_params_mpc['n_intervals'] = model['sim_params']['n_intervals'] + prediction_horizon
+    sim_params_mpc = sp(dict_sim_params_mpc)
 
     # CREATE COMPONENT OBJECTS
     components = create_component_obj(model, sim_params)
@@ -30,23 +45,32 @@ def run_smooth(model):
     df_results = None
     results_dict = None
 
-    # initialisation of system_outputs
-    system_outputs = []
-
     # ------------------- SIMULATION -------------------
-    for i_interval in range(sim_params.n_intervals):
+    for i_interval in range(sim_params.n_intervals - prediction_horizon):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
         if sim_params.print_progress:
             print('Simulating interval {}/{}'.format(i_interval+1, sim_params.n_intervals))
 
-        # run mpc
-        mp.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
-
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
         oemof_model = solph.EnergySystem(timeindex=this_time_index,
                                          freq='{}min'.format(sim_params.interval_time))
+
+        # run mpc
+        # call dummy function for test with arbitrary function (e.g. sine) for system inputs
+        # mpc.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
+        # for rolling horizon approach call rolling horizon function only once for every control horizon
+        if mpc_iter == control_horizon:
+            mpc_iter = 0
+        if mpc_iter == 0:
+            system_inputs = mpc.rolling_horizon(model, components, control_horizon, prediction_horizon,
+                                                initial_inputs, sim_params_mpc, i_interval)
+        mpc.set_system_input_mpc(components, system_inputs, mpc_iter)
+        initial_inputs = []
+        for this_in in system_inputs:
+            initial_inputs.append(system_inputs[this_in]['mpc_data'][control_horizon - 1])
+        mpc_iter = mpc_iter + 1
 
         # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
         # Create all busses and save them to a dict for later use in the components.
@@ -104,7 +128,7 @@ def run_smooth(model):
         df_results = processing.create_dataframe(model_to_solve)
 
         # track system outputs for mpc
-        system_outputs = mp.get_system_output_mpc(results,system_outputs)
+        system_outputs = mpc.get_system_output_mpc(results,system_outputs)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:
@@ -120,5 +144,10 @@ def run_smooth(model):
     # Calculate the annuity for each component.
     for this_comp in components:
         this_comp.generate_results()
+        # remove trailing none values:
+        mpc.remove_trailing_nones_mpc(this_comp, sim_params.n_intervals, prediction_horizon)
+    # cut off the additional entries in sim_params.date_time_index
+    sim_params.date_time_index = sim_params.date_time_index[:sim_params.n_intervals - prediction_horizon]
+    sim_params.n_intervals = sim_params.n_intervals - prediction_horizon
 
     return components, status, system_outputs

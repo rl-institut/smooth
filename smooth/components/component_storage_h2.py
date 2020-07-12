@@ -109,8 +109,8 @@ class StorageH2 (Component):
                 nominal_value=self.delta_max,
                 variable_costs=self.current_vac[0])
             flow_h2_out = solph.Flow(
-                actual_value=min(abs(min(0,self.mpc_data)),(self.storage_level-self.storage_level_min)/self.delta_max),
-                fixed=True,
+                # actual_value=min(abs(min(0,self.mpc_data)),(self.storage_level-self.storage_level_min)/self.delta_max),
+                # fixed=True,
                 nominal_value=self.delta_max,
                 variable_costs=self.current_vac[1])
         # otherwise all flows are solved by oemof
