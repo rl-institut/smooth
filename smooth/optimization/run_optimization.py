@@ -240,15 +240,15 @@ def fast_non_dominated_sort(p):
 
     :param p: values to sort
     :type p: iterable
-    :return: indices of values sorted into their domination ranks
+    :return: indices of values sorted into their domination ranks (only first element used)
     :rtype: list of lists of indices
     """
-    S = [[]]*len(p)
-    front = [[]]
-    n = [0]*len(p)
-    rank = [0]*len(p)
+    S = [[] for _ in p]  # which values dominate other?
+    front = [[]]         # group values by number of dominations
+    n = [0]*len(p)       # how many values does the value at this position dominate?
+    # rank = [0]*len(p)    # rank within domination tree (unused)
 
-    # build domination tree
+    # compare all elements, see which ones dominate each other
     for i in range(0, len(p)):
         for j in range(0, len(p)):
             if p[i].dominates(p[j]) and j not in S[i]:
@@ -256,7 +256,8 @@ def fast_non_dominated_sort(p):
             elif p[j].dominates(p[i]):
                 n[i] += 1
         if n[i] == 0:
-            rank[i] = 0
+            # element is not dominated: put in front
+            # rank[i] = 0
             if i not in front[0]:
                 front[0].append(i)
 
@@ -267,13 +268,14 @@ def fast_non_dominated_sort(p):
             for q in S[p]:
                 n[q] -= 1
                 if n[q] == 0:
-                    rank[q] = i+1
+                    # rank[q] = i+1
                     if q not in Q:
                         Q.append(q)
         i = i+1
         front.append(Q)
 
     front.pop(len(front) - 1)
+
     return front
 
 
