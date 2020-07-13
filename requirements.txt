@@ -1,7 +1,7 @@
 matplotlib
-#pandas
-#numpy
+pandas
+numpy
 scipy
-#dill
+dill
 #oemof
 pyutilib==5.8.0
