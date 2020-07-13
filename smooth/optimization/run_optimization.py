@@ -108,9 +108,40 @@ and no new gene sequences have been found, the algorithm aborts and returns the 
 In case no individuals have a valid smooth result, an entirely new population is generated.
 No plot will be shown.
 If only one individual is valid, the population is filled up with random individuals.
+
+Plotting
+--------
+To visualize the current progress,
+you can set the *plot_progress* simulation parameter to True.
+This will show the current pareto front in a pyplot window.
+You can mouse over the points to show the configuration and objective values.
+To keep the computation running in the background (non-blocking plots)
+while listening for user events, the plotting runs in its own process.
+
+On initialisation, a one-directional pipe is established to send data
+from the main computation to the plotting process.
+The process is started right at the end of the initialisation.
+It needs the attribute variations and objective names for hover info and axes labels.
+It also generates a multiprocessing event which checks if the process shall be stopped.
+
+In the main loop of the process, the pipe is checked for any new data.
+This incorporates a timeout to avoid high processor usage.
+If new data is available, the old plot is cleared
+(along with any annotations, labels and titles) and redrawn from scratch.
+In any case, the window listens for a short time for user input events like mouseover.
+Window close is a special event which stops the process,
+but not the computation (as this runs in the separate main process).
+
+When hovering with the mouse pointer over a point in the pareto front,
+an annotation is built with the info of the :class:`Individual`.
+The annotation is removed when leaving the point.
+
+Sending None through the pipe makes the process show the plot until the user closes it.
+This blocks the process, so no new data is received, but user events are still processed.
 """
 
-from multiprocessing import Pool, cpu_count
+import multiprocessing as mp
+from tkinter import TclError
 import random
 import matplotlib.pyplot as plt  # only needed when plot_progress is set
 import dill
@@ -407,6 +438,163 @@ def fitness_function(
     return index, individual
 
 
+class PlottingProcess(mp.Process):
+    """Process for plotting the intermediate results
+
+    Data is sent through (onedirectional) pipe.
+    It should be a dictionary containing "values" (array of :class:`Individual`)
+    and "gen" (current generation number, displayed in title).
+    Send None to stop listening for new data and block the Process by showing the plot.
+    After the user closes the plot, the process returns and can be joined.
+
+    :param pipe: data transfer channel
+    :type pipe: `multiprocessing pipe \
+<https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Pipe>`_
+    :param attribute_variation: AV of :class:`Optimization`
+    :type attribute_variation: list of :class:`AttributeVariation`
+    :param objective_names: descriptive names of :class:`Optimization` objectives
+    :type objective_names: list of strings
+    :var exit_flag: Multiprocessing event signalling process should be stopped
+    :var fig: figure for plotting
+    :var ax: current graphic axis for plotting
+    :var points: plotted results or None
+    :var annot: current annotation or None
+    """
+    def __init__(self):
+        self.exit_flag = mp.Event()
+        self.exit_flag.clear()
+
+    def main(self):
+        """Main plotting thread
+
+        Loops while exit_flag is not set and user has not closed window.
+        Checks periodically for new data to be displayed.
+        """
+
+        # start of main loop: no results yet
+        plt.title("Waiting for first results...")
+
+        # loop until exit signal
+        while not self.exit_flag.is_set():
+            # poll with timeout (like time.sleep)
+            while self.pipe.poll(0.1):
+                # something in pipe
+                data = self.pipe.recv()
+                if data is None:
+                    # special case
+                    plt.title("Finished!")
+                    # block process until user closes window
+                    plt.show()
+                    # exit process
+                    return
+                else:
+                    # process sent data
+                    # save sent results to show in annotation later
+                    self.values = data["values"]
+                    # use abs(r[]) to display positive values
+                    f1_vals = [r.fitness[0] for r in data["values"]]
+                    f2_vals = [r.fitness[1] for r in data["values"]]
+                    # reset figure
+                    self.ax.clear()
+                    # redraw plot with new data
+                    self.points, = self.ax.plot(f1_vals, f2_vals, '.b')
+                    # new title and labels
+                    plt.title('Front for Generation #{}'.format(data["gen"]), {'zorder': 1})
+                    plt.xlabel(self.objective_names[0])
+                    plt.ylabel(self.objective_names[1])
+                    self.fig.canvas.draw()
+            try:
+                # redraw plot, capture events
+                plt.pause(0.1)
+            except TclError:
+                # window may have been closed: exit process
+                return
+        # exit signal sent: stop process
+        return
+
+    def handle_close(self, event):
+        """Called when user closes window
+
+        Signal main loop that process should be stopped.
+        """
+        self.exit_flag.set()
+
+    def hover(self, event):
+        """Called when user hovers over plot.
+
+        Checks if user hovers over point. If so, delete old annotation and
+        create new one with relevant info from all Indivdiuals corresponding to this point.
+        If user does not hover over point, remove annotation, if any.
+        """
+        if self.points and event.inaxes == self.ax:
+            # results shown, mouse within plot: get event info
+            # cont: any points hovered?
+            # ind:  list of points hovered
+            cont, ind = self.points.contains(event)
+            ind = ind["ind"]
+
+            if cont:
+                # points hovered
+                # get all point coordinates
+                x, y = self.points.get_data()
+                text = []
+                for idx in ind:
+                    # loop over points hovered
+                    ind_text = ""
+                    max_line_len = 0
+                    # list all attribute variations with name and value
+                    for av_idx, av in enumerate(self.attribute_variation):
+                        line = "{}.{}: {}\n".format(
+                            av.comp_name,
+                            av.comp_attribute,
+                            self.values[idx][av_idx])
+                        ind_text += line
+                        max_line_len = max(max_line_len, len(line))
+                    # separator line
+                    ind_text += '-'*max_line_len + "\n"
+                    # list all objectives with name and value
+                    for obj_idx, obj in enumerate(self.objective_names):
+                        ind_text += "{}: {}\n".format(obj, self.values[idx].fitness[obj_idx])
+                    text.append(ind_text)
+                text = "\n".join(text)
+
+                # remove old annotation
+                if self.annot:
+                    self.annot.remove()
+
+                # create new annotation
+                self.annot = self.ax.annotate(
+                    text,
+                    xy=(x[ind[0]], y[ind[0]]),
+                    xytext=(-20, 20),
+                    textcoords="offset points",
+                    bbox=dict(boxstyle="round", fc="w"),
+                    arrowprops={'arrowstyle': "-"},
+                    annotation_clip=False)
+                # self.annot.get_bbox_patch().set_alpha(0.4)
+                self.fig.canvas.draw()
+            elif self.annot and self.annot.get_visible():
+                # no point hovered, but annotation present: remove annotation
+                self.annot.remove()
+                self.annot = None
+                self.fig.canvas.draw()
+
+    def __call__(self, pipe, attribute_variation, objective_names):
+        """Process entry point.
+
+        Set up plotting window, necessary variables and callbacks, call main loop.
+        """
+        self.pipe = pipe
+        self.attribute_variation = attribute_variation
+        self.objective_names = objective_names
+        self.fig, self.ax = plt.subplots()
+        self.points = None
+        self.annot = None
+        self.fig.canvas.mpl_connect('close_event', self.handle_close)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.hover)
+        self.main()
+
+
 class Optimization:
     """Main optimization class to save GA parameters
 
@@ -471,9 +659,9 @@ class Optimization:
             assert(self.n_core)
         except (AssertionError, AttributeError):
             print("No CPU count (n_core) given. Using all cores.")
-            self.n_core = cpu_count()
+            self.n_core = mp.cpu_count()
         if self.n_core == "max":
-            self.n_core = cpu_count()
+            self.n_core = mp.cpu_count()
 
         # population size
         try:
@@ -512,7 +700,12 @@ class Optimization:
 
         # plot intermediate results?
         if self.plot_progress:
-            self.ax = plt.figure().add_subplot(111)
+            # set up plotting process with unidirectional pipe
+            plot_pipe_rx, self.plot_pipe_tx = mp.Pipe(duplex=False)
+            self.plot_process = mp.Process(
+                target=PlottingProcess(),
+                args=(plot_pipe_rx, self.attribute_variation, self.objective_names))
+            self.plot_process.start()
 
     def err_callback(self, err_msg):
         """Async error callback
@@ -537,7 +730,7 @@ class Optimization:
         Remove invalid indivuals from `population`
         """
         # open n_core worker threads
-        pool = Pool(processes=self.n_core)
+        pool = mp.Pool(processes=self.n_core)
         # set objective functions for each worker
         dill_objectives = dill.dumps(self.objectives)
         for idx, ind in enumerate(self.population):
@@ -545,7 +738,7 @@ class Optimization:
                 pool.apply_async(
                     fitness_function,
                     (idx, ind, self.model, self.attribute_variation,
-                     dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
+                        dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
                     callback=self.set_fitness,
                     error_callback=self.err_callback  # tb
                 )
@@ -658,17 +851,8 @@ class Optimization:
             print("\n")
 
             # show current pareto front in plot
-            if self.plot_progress:
-                # use abs(r[]) to display positive values
-                f1_vals = [r.fitness[0] for r in result]
-                f2_vals = [r.fitness[1] for r in result]
-                self.ax.clear()
-                self.ax.plot(f1_vals, f2_vals, '.b')
-                plt.title('Front for Generation #{}'.format(gen+1))
-                plt.xlabel(self.objective_names[0])
-                plt.ylabel(self.objective_names[1])
-                plt.draw()
-                plt.pause(0.1)
+            if self.plot_progress and self.plot_process.is_alive():
+                self.plot_pipe_tx.send({'gen': gen+1, 'values': result})
 
             self.population = [self.population[i] for i in pop_idx]
 
@@ -683,8 +867,9 @@ class Optimization:
             print(i, v.values, " -> ", dict(zip(self.objective_names, v.fitness)))
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
-        if self.plot_progress:
-            plt.show()
+        if self.plot_progress and self.plot_process.is_alive():
+            self.plot_pipe_tx.send(None)    # stop drawing, show plot
+            self.plot_process.join()        # wait until user closes plot
 
         return result
 
