@@ -802,7 +802,7 @@ class Optimization:
         for av_idx, av in enumerate(self.attribute_variation):
             # iterate attribute variations (assumed to be independent)
             print("Gradient descending {} / {}".format(av_idx+1, len(self.attribute_variation)))
-            step_size =  av.val_step or 1.0  # required for ascent
+            step_size = av.val_step or 1.0  # required for ascent
             self.population = []
             for i in range(len(new_result)):
                 # generate two children around parent to get gradient
@@ -884,11 +884,21 @@ class Optimization:
                     else:
                         # no improvement: stop ascent of this solution
                         step[i] = 0.0
+
+                # show current result in plot
+                if self.plot_progress and self.plot_process.is_alive():
+                    self.plot_pipe_tx.send({
+                        'title': 'Gradient descending AV #{}'.format(av_idx+1),
+                        'values': new_result
+                    })
             # no more changes in any solution for this AV: change next AV
 
-            # show current pareto front in plot
+            # show current result in plot
             if self.plot_progress and self.plot_process.is_alive():
-                self.plot_pipe_tx.send({'title': 'Front after gradient descending AV #{}'.format(av_idx+1), 'values': new_result})
+                self.plot_pipe_tx.send({
+                    'title': 'Front after gradient descending AV #{}'.format(av_idx+1),
+                    'values': new_result
+                })
 
         return new_result
 
@@ -1000,7 +1010,10 @@ class Optimization:
 
             # show current pareto front in plot
             if self.plot_progress and self.plot_process.is_alive():
-                self.plot_pipe_tx.send({'title': 'Front for Generation #{}'.format(gen + 1), 'values': result})
+                self.plot_pipe_tx.send({
+                    'title': 'Front for Generation #{}'.format(gen + 1),
+                    'values': result
+                })
 
             self.population = [self.population[i] for i in pop_idx]
 
