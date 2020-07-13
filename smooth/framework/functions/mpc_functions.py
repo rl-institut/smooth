@@ -33,14 +33,14 @@ def set_system_input_mpc(components,system_inputs,iteration):
         for this_in in system_inputs:
             # Loop through all components of the model dict until the right component is found.
             for this_comp in components:
-                if this_comp.name == system_inputs[this_in]['comp_name']:
-                    setattr(this_comp, 'mpc_data', system_inputs[this_in]['mpc_data'])
+                if this_comp.name == this_in['comp_name']:
+                    setattr(this_comp, 'mpc_data', this_in['mpc_data'])
     else:
         for this_in in system_inputs:
             # Loop through all components of the model dict until the right component is found.
             for this_comp in components:
-                if this_comp.name == system_inputs[this_in]['comp_name']:
-                    setattr(this_comp, 'mpc_data', system_inputs[this_in]['mpc_data'][iteration])
+                if this_comp.name == this_in['comp_name']:
+                    setattr(this_comp, 'mpc_data', this_in['mpc_data'][iteration])
     return
 
 
@@ -179,8 +179,8 @@ def rolling_horizon(model, components, system_inputs, control_horizon, predictio
     lb = []
     ub = []
     for this_in in system_inputs:
-        lb.extend(system_inputs[this_in]['lower_bound'] * control_horizon)
-        ub.extend(system_inputs[this_in]['upper_bound'] * control_horizon)
+        lb.extend(this_in['lower_bound'] * control_horizon)
+        ub.extend(this_in['upper_bound'] * control_horizon)
     bounds = Bounds(lb, ub)
     # b. Startwerte u_vec_0 vorgeben
     u_vec_0 = []
@@ -196,7 +196,7 @@ def rolling_horizon(model, components, system_inputs, control_horizon, predictio
             control_data = u_vec[(iter * control_horizon):((iter + 1) * control_horizon)]
             iter = iter + 1
             control_data.extend([control_data[-1]] * (prediction_horizon - control_horizon))
-            system_inputs[this_in]['mpc_data'] = control_data
+            this_in['mpc_data'] = control_data
         # c. run_model_mpc() aufrufen  Rückgabe: Regelgrößen-Vektoren für Prädiktionshorizont
         system_outputs = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
         if not system_outputs:
@@ -233,7 +233,7 @@ def rolling_horizon(model, components, system_inputs, control_horizon, predictio
     # e. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
     iter = 0
     for this_in in system_inputs:
-        system_inputs[this_in]['mpc_data'] = res.x[(control_horizon * iter): (control_horizon * (iter + 1))]
+        this_in['mpc_data'] = res.x[(control_horizon * iter): (control_horizon * (iter + 1))]
         iter = iter + 1
 
     return system_inputs

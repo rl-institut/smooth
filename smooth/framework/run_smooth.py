@@ -24,7 +24,7 @@ def run_smooth(model, mpc_params):
     initial_inputs = []
     mpc_iter = 0
     for this_in in mpc_params['system_inputs']:
-        initial_inputs.append(mpc_params['system_inputs'][this_in]['mpc_data'])
+        initial_inputs.append(this_in['mpc_data'])
 
     # GET SIMULATION PARAMETERS
     # Create an object with the simulation parameters.
@@ -70,8 +70,8 @@ def run_smooth(model, mpc_params):
         mpc.set_system_input_mpc(components, mpc_params['system_inputs'], mpc_iter)
         initial_inputs = []
         for this_in in mpc_params['system_inputs']:
-            initial_inputs.append(mpc_params['system_inputs'][this_in]['mpc_data'][mpc_params['control_horizon'] - 1])
-        mpc_iter = mpc_iter + 1
+            initial_inputs.append(this_in['mpc_data'][mpc_params['control_horizon'] - 1])
+        mpc_iter = mpc_iter + 13
 
         # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
         # Create all busses and save them to a dict for later use in the components.
@@ -146,9 +146,9 @@ def run_smooth(model, mpc_params):
     for this_comp in components:
         this_comp.generate_results()
         # remove trailing none values:
-        mpc.remove_trailing_nones_mpc(this_comp, sim_params.n_intervals, prediction_horizon)
+        mpc.remove_trailing_nones_mpc(this_comp, sim_params.n_intervals, mpc_params['prediction_horizon'])
     # cut off the additional entries in sim_params.date_time_index
-    sim_params.date_time_index = sim_params.date_time_index[:sim_params.n_intervals - prediction_horizon]
-    sim_params.n_intervals = sim_params.n_intervals - prediction_horizon
+    sim_params.date_time_index = sim_params.date_time_index[:sim_params.n_intervals - mpc_params['prediction_horizon']]
+    sim_params.n_intervals = sim_params.n_intervals - mpc_params['prediction_horizon']
 
     return components, status, system_outputs
