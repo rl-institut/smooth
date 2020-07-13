@@ -109,6 +109,32 @@ In case no individuals have a valid smooth result, an entirely new population is
 No plot will be shown.
 If only one individual is valid, the population is filled up with random individuals.
 
+Gradient ascent
+---------------
+The solutions of the GA are pareto-optimal, but may not be at a local optimum.
+Although new configurations to be evaluated are searched near the current ones,
+it is not guaranteed to find slight improvements.
+This is especially true if there are many dimensions to search
+and the change is in only one dimension.
+The chance to happen upon this single improvement is in
+inverse proportion to the number of attribute variations.
+
+Therefore, the *post_processing* option exists to follow the
+fitness gradient for each solution after the GA has finished.
+We assume that each attribute is independent of each other.
+All solutions improve the same attribute at the same time.
+The number of fitness evaluations may exceed the *population_size*,
+however, the maximum number of cores used stays the same as before.
+
+To find the local optimum of a single attribute of a solution,
+we first have to find the gradient.
+This is done by going one *val_step* in positive and negative direction.
+These new children are then evaluated. Depending on the domination,
+the gradient may be *+val_step*, -*val_step* or 0 (parent is optimal).
+Then, this gradient is followed until the child shows no improvement.
+After all solutions have found their optimum for this attribute,
+the next attribute is varied.
+
 Plotting
 --------
 To visualize the current progress,
@@ -247,10 +273,10 @@ class Individual:
             one is greater while the other is equal. False otherwise.
         :rtype: boolean
         """
-        return (
+        return self.fitness is not None and (other.fitness is None or (
             (self.fitness[0] > other.fitness[0] and self.fitness[1] > other.fitness[1]) or
             (self.fitness[0] >= other.fitness[0] and self.fitness[1] > other.fitness[1]) or
-            (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1]))
+            (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1])))
 
 
 def sort_by_values(n, values):
@@ -499,7 +525,7 @@ class PlottingProcess(mp.Process):
                     # redraw plot with new data
                     self.points, = self.ax.plot(f1_vals, f2_vals, '.b')
                     # new title and labels
-                    plt.title('Front for Generation #{}'.format(data["gen"]), {'zorder': 1})
+                    plt.title(data.get("title", "Pareto front"), {'zorder': 1})
                     plt.xlabel(self.objective_names[0])
                     plt.ylabel(self.objective_names[1])
                     self.fig.canvas.draw()
@@ -619,6 +645,8 @@ class Optimization:
     :param objective_names: descriptive names for optimization functions.
         Defaults to ('costs', 'emissions')
     :type objective_names: 2-tuple of strings, optional
+    :param post_processing: improve GA solution with gradient ascent. Defaults to False
+    :type post_processing: boolean, optional
     :param plot_progress: plot current pareto front. Defaults to False
     :type plot_progress: boolean, optional
     :param SAVE_ALL_SMOOTH_RESULTS: save return value of `run_smooth`
@@ -638,6 +666,7 @@ class Optimization:
     def __init__(self, iterable=(), **kwargs):
 
         # set defaults
+        self.post_processing = False
         self.plot_progress = False
         self.SAVE_ALL_SMOOTH_RESULTS = False
 
@@ -744,9 +773,134 @@ class Optimization:
                 )
         pool.close()
         pool.join()
-        # filter out individuals with invalid fitness values
-        self.population = list(
-            filter(lambda ind: ind is not None and ind.fitness is not None, self.population))
+
+    def gradient_ascent(self, result):
+        """Try to fine-tune result(s) with gradient ascent
+
+        Attributes are assumed to be independent and varied separately.
+        Solutions with the same fitness are ignored.
+
+        :param result: result from GA
+        :type result: list of :class:`Individual`
+        :return: improved result
+        :rtype: list of :class:`Individual`
+        """
+        print('\n+++++++ Intermediate result +++++++')
+        for i, v in enumerate(result):
+            print(i, v.values, " -> ", dict(zip(self.objective_names, v.fitness)))
+        print('+++++++++++++++++++++++++++++++++++\n')
+
+        new_result = []
+        # ignore solutions with identical fitness
+        for i in range(len(result)):
+            known_fitness = False
+            for j in range(len(new_result)):
+                known_fitness |= new_result[j].fitness == result[i].fitness
+            if not known_fitness:
+                new_result.append(result[i])
+
+        for av_idx, av in enumerate(self.attribute_variation):
+            # iterate attribute variations (assumed to be independent)
+            print("Gradient descending {} / {}".format(av_idx+1, len(self.attribute_variation)))
+            step_size = av.val_step or 1.0  # required for ascent
+            self.population = []
+            for i in range(len(new_result)):
+                # generate two children around parent to get gradient
+                parent = new_result[i]
+                # "below" parent, clip to minimum
+                child1 = Individual([gene for gene in parent])
+                child1[av_idx] = max(parent[av_idx] - step_size, av.val_min)
+                child1_fingerprint = str(child1)
+                # "above" parent, clip to maximum
+                child2 = Individual([gene for gene in parent])
+                child2[av_idx] = min(parent[av_idx] + step_size, av.val_max)
+                child2_fingerprint = str(child2)
+                # add to population. Take evaluated if exists
+                try:
+                    self.population.append(self.evaluated[child1_fingerprint])
+                except KeyError:
+                    self.population.append(child1)
+                try:
+                    self.population.append(self.evaluated[child2_fingerprint])
+                except KeyError:
+                    self.population.append(child2)
+
+            # compute fitness of all new children
+            # Keep invalid to preserve order (match parent to children)
+            self.compute_fitness()
+
+            # take note which direction is best for each individual
+            # may be positive or negative step size or 0 (no fitness improvement)
+            step = [0] * len(new_result)
+            for i in range(len(new_result)):
+                parent = new_result[i]
+                child1 = self.population[2*i]
+                child2 = self.population[2*i+1]
+                # get domination within family
+                if child1.dominates(parent):
+                    if child2.dominates(child1):
+                        # child 2 dominates
+                        step[i] = step_size
+                        new_result[i] = child2
+                    else:
+                        # child 1 dominates
+                        step[i] = -step_size
+                        new_result[i] = child1
+                else:
+                    # child1 does not dominate parent
+                    if child2.dominates(parent):
+                        # child 2 dominates
+                        step[i] = step_size
+                        new_result[i] = child2
+                    else:
+                        # parent is not dominated
+                        step[i] = 0.0
+
+            # continue gradient ascent of solutions until local optimum reached for all
+            while sum(map(abs, step)) != 0.0:
+                # still improvement
+                self.population = []
+                for i in range(len(new_result)):
+                    # generate new offspring in direction of step (may be 0 -> unchanged)
+                    parent = new_result[i]
+                    child = Individual([gene for gene in parent])
+                    child[av_idx] = min(max(parent[av_idx] + step[i], av.val_min), av.val_max)
+                    fingerprint = str(child)
+                    # add to population. Take evaluated if exists
+                    try:
+                        self.population.append(self.evaluated[fingerprint])
+                    except KeyError:
+                        self.population.append(child)
+
+                # compute fitness of all new children
+                # Keep invalid to preserve order (match parent to children)
+                self.compute_fitness()
+
+                for i in range(len(new_result)):
+                    # compare fitness of parent and child
+                    child = self.population[i]
+                    if child.dominates(new_result[i]):
+                        new_result[i] = child
+                    else:
+                        # no improvement: stop ascent of this solution
+                        step[i] = 0.0
+
+                # show current result in plot
+                if self.plot_progress and self.plot_process.is_alive():
+                    self.plot_pipe_tx.send({
+                        'title': 'Gradient descending AV #{}'.format(av_idx+1),
+                        'values': new_result
+                    })
+            # no more changes in any solution for this AV: change next AV
+
+            # show current result in plot
+            if self.plot_progress and self.plot_process.is_alive():
+                self.plot_pipe_tx.send({
+                    'title': 'Front after gradient descending AV #{}'.format(av_idx+1),
+                    'values': new_result
+                })
+
+        return new_result
 
     def run(self):
         """Main GA function
@@ -817,6 +971,10 @@ class Optimization:
             # evaluate generated population
             self.compute_fitness()
 
+            # filter out individuals with invalid fitness values
+            self.population = list(
+                filter(lambda ind: ind is not None and ind.fitness is not None, self.population))
+
             if len(self.population) == 0:
                 # no configuration  was successful
                 print("No individuals left. Building new population.")
@@ -852,17 +1010,25 @@ class Optimization:
 
             # show current pareto front in plot
             if self.plot_progress and self.plot_process.is_alive():
-                self.plot_pipe_tx.send({'gen': gen+1, 'values': result})
+                self.plot_pipe_tx.send({
+                    'title': 'Front for Generation #{}'.format(gen + 1),
+                    'values': result
+                })
 
             self.population = [self.population[i] for i in pop_idx]
 
             # next generation
 
+        result.sort(key=lambda v: -v.fitness[0])
+
+        if self.post_processing:
+            result = self.gradient_ascent(result)
+
         print('\n+++++++ GENETIC ALGORITHM FINISHED +++++++')
         for i, attr in enumerate(self.attribute_variation):
             print(' {} - {}'.format(
                 attr.comp_name, attr.comp_attribute))
-        result.sort(key=lambda v: -v.fitness[0])
+
         for i, v in enumerate(result):
             print(i, v.values, " -> ", dict(zip(self.objective_names, v.fitness)))
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
