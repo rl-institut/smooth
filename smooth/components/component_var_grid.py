@@ -17,7 +17,8 @@ class VarGrid(Component):
         # [1] house connection, [2] lov voltage grid, [3] lov voltage local network station
         # [4] medium voltage grid, [5] medium voltage transformer station, [6] High Voltage
         # These can be associated with different output_max and capex for each level
-        # default values for output_max from https://www.stromnetz-hamburg.de/netzanschluss/netzanschlussanfrage/
+        # default values for output_max from
+        # https://www.stromnetz-hamburg.de/netzanschluss/netzanschlussanfrage/
 
         self.grid_level = 1
 
