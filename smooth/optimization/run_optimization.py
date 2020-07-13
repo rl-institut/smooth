@@ -115,7 +115,7 @@ The solutions of the GA are pareto-optimal, but may not be at a local optimum.
 Although new configurations to be evaluated are searched near the current ones,
 it is not guaranteed to find slight improvements.
 This is especially true if there are many dimensions to search
-and the change is is in only one dimension.
+and the change is in only one dimension.
 The chance to happen upon this single improvement is in
 inverse proportion to the number of attribute variations.
 
