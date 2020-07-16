@@ -19,7 +19,7 @@ def plot_smooth_results(smooth_result, comp_label_dict=comp_dict_german,
         elif smooth_result[0].sim_params.interval_time == 1:
             plt.xlabel('Minuten')
         else:
-            plt.xlabel('Zeitschritt')
+            plt.xlabel('Zeitschritt (≙' + str(smooth_result[0].sim_params.interval_time) + ' min)')
 
         try:
             plt.title(bus_dict[this_bus])
