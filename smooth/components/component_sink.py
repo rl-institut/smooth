@@ -21,7 +21,7 @@ class Sink(Component):
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
-        self.input_max = self.input_max * self.sim_params.interval_time / 60
+        # self.input_max = self.input_max * self.sim_params.interval_time / 60
 
         # ------------------- COSTS -------------------
         # Define the costs for the commodities (negative means earning money)

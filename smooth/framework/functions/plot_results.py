@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from smooth.framework.functions.functions import extract_flow_per_bus
 from smooth.examples.example_plotting_dicts import comp_dict_german, bus_dict_german, y_dict_german
+import numpy as np
 
 
 def plot_smooth_results(smooth_result, comp_label_dict=comp_dict_german,
@@ -13,11 +14,20 @@ def plot_smooth_results(smooth_result, comp_label_dict=comp_dict_german,
         for this_component, this_flow in busses_to_plot[this_bus].items():
             plt.plot(this_flow, label=str(this_component))
         plt.legend()
-        plt.xlabel('Stunden des Jahres')
+        if smooth_result[0].sim_params.interval_time == 60:
+            plt.xlabel('Stunden')
+        elif smooth_result[0].sim_params.interval_time == 1:
+            plt.xlabel('Minuten')
+        else:
+            plt.xlabel('Zeitschritt')
+
         try:
             plt.title(bus_dict[this_bus])
             plt.ylabel(y_dict[this_bus])
         except KeyError:
             plt.title('bus: ' + this_bus)
 
+        locs, labels = plt.xticks()
+        locs_new = np.arange(0, len(this_flow)+1, np.floor(abs(locs[0])))
+        plt.xticks(locs_new)
         plt.show()

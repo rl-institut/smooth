@@ -104,6 +104,7 @@ class Battery(Component):
         # Therefore we need to divide by the efficiency_charge.  Due to the
         # inflow_conversion_factor (in "create oemof model") the battery will
         # then receive right amount.
+        # Todo: What about th einterval time specific parametrisation here? necessary?
         self.e_in_max = min(
             self.c_rate_charge * self.battery_capacity * self.sim_params.interval_time / 60,
             self.battery_capacity - self.soc * self.battery_capacity) / \

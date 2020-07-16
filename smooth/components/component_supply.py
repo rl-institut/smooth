@@ -35,7 +35,7 @@ class Supply (Component):
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
-        self.output_max = self.output_max * self.sim_params.interval_time / 60
+        # self.output_max = self.output_max * self.sim_params.interval_time / 60
 
         # ------------------- INTERNAL VALUES -------------------
         # The current artificial cost value e.g. [EUR/Wh], [EUR/kg].
