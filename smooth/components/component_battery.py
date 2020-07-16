@@ -97,7 +97,7 @@ class Battery(Component):
 
         # ToDo: c_rate depending on the soc
 
-        # Max. chargeable or dischargeable power [W] goinge in from the bus
+        # Max. chargeable or dischargeable power [W] going in from the bus
         # due to c_rate depending on the soc. To ensure that the battery can
         # be fully charged in one timestep, the nominal value of the input-flow
         # needs to be higher than what's actually going into the battery.
