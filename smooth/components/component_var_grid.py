@@ -81,27 +81,21 @@ class VarGrid(Component):
         self.set_parameters(params)
         # adjust to set level of grid and given timestep
         if self.grid_level == 1:
-            # self.output_max = self.grid_l1_output_max * self.sim_params.interval_time / 60
             self.output_max = self.grid_l1_output_max
             self.capex = self.capex_l1
         elif self.grid_level == 2:
-            # self.output_max = self.grid_l2_output_max * self.sim_params.interval_time / 60
             self.output_max = self.grid_l2_output_max
             self.capex = self.capex_l2
         elif self.grid_level == 3:
-            # self.output_max = self.grid_l3_output_max * self.sim_params.interval_time / 60
             self.output_max = self.grid_l3_output_max
             self.capex = self.capex_l3
         elif self.grid_level == 4:
-            # self.output_max = self.grid_l4_output_max * self.sim_params.interval_time / 60
             self.output_max = self.grid_l4_output_max
             self.capex = self.capex_l4
         elif self.grid_level == 5:
-            # self.output_max = self.grid_l5_output_max * self.sim_params.interval_time / 60
             self.output_max = self.grid_l5_output_max
             self.capex = self.capex_l5
         elif self.grid_level == 6:
-            # self.output_max = self.grid_l6_output_max * self.sim_params.interval_time / 60
             self.output_max = self.grid_l6_output_max
             self.capex = self.capex_l6
 
