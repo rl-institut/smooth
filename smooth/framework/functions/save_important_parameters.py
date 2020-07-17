@@ -2,11 +2,13 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
 sns.set()
 
 
-def save_important_parameters(optimization_results, result_index, result_filename, comp_dict):
+def save_important_parameters(optimization_results, result_index, result_filename,
+                              comp_dict, external_components=None):
     """Saves the most important parameters from the optimization results in a csv file, and
     automatically generates pie plots containing the results of financial annuity shares,
     emission shares and electricity usage shares between components in the energy system.
@@ -17,6 +19,8 @@ def save_important_parameters(optimization_results, result_index, result_filenam
     :type result_index: int
     :param result_filename: The result filename e.g. 'my_optimization_results.pickle'
     :type result_filename: pickle
+    :param comp_dict: The dictionary containing names of all components
+    :type comp_dict: dict
     """
 
     if result_filename.endswith('.pickle'):
@@ -33,6 +37,7 @@ def save_important_parameters(optimization_results, result_index, result_filenam
         component_emissions = []
         component_elec_use = []
         component_elec_use_names = []
+        sum_flows = []
 
         for component in optimization_results[result_index].smooth_result:
             name = component.name
@@ -81,16 +86,34 @@ def save_important_parameters(optimization_results, result_index, result_filenam
                 name = comp_dict[name]
 
             for this_tuple in component.flows:
-                if this_tuple[0] == 'bel':
+                if 'bel' in this_tuple[0]:
                     total_elec_use = sum(component.flows[tuple(this_tuple)])
                     if name not in component_elec_use_names:
                         component_elec_use.append(total_elec_use)
                         component_elec_use_names.append(name)
 
-            if component.component != 'gate' and component.component != 'energy_demand_from_csv':
+                this_tuple_flow_sum = [this_tuple, sum(component.flows[tuple(this_tuple)])]
+                sum_flows.append(this_tuple_flow_sum)
+
+            if component.component != 'gate' and component.component != 'energy_demand_from_csv' \
+                    and component.component != 'sink':
                 component_names.append(name)
                 component_annuities.append(this_annuity)
                 component_emissions.append(this_emission)
+
+    flow_sums_dataframe = pd.DataFrame(sum_flows, columns=['Flow name', 'Flow sum'])
+
+    if external_components is not None:
+        for ext_component in external_components:
+            name = ext_component.name
+            this_annuity = ext_component.results['annuity_total']
+            this_emission = ext_component.results['annual_total_emissions']
+            if name in comp_dict.keys():
+                name = comp_dict[name]
+
+            component_names.append(name)
+            component_annuities.append(this_annuity)
+            component_emissions.append(this_emission)
 
     # Sets the colour palette for the pie plots
     palette = sns.hls_palette(15, l=.3, s=.8)
@@ -137,4 +160,4 @@ def save_important_parameters(optimization_results, result_index, result_filenam
     plt.savefig(str(result_filename) + '_electricity_use_breakdown.png', bbox_inches='tight')
     plt.show()
 
-    return
+    return flow_sums_dataframe
