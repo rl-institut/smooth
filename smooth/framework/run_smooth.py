@@ -22,9 +22,9 @@ def run_smooth(model, mpc_params):
     # initialisation of mpc variables
     system_outputs = []
     initial_inputs = []
-    mpc_iter = 0
     for this_in in mpc_params['system_inputs']:
-        initial_inputs.append(this_in['mpc_data'])
+        initial_inputs.extend([this_in['mpc_data']] * mpc_params['control_horizon'])
+    # mpc_iter = 0
 
     # GET SIMULATION PARAMETERS
     # Create an object with the simulation parameters.
@@ -59,19 +59,20 @@ def run_smooth(model, mpc_params):
         # call dummy function for test with arbitrary function (e.g. sine) for system inputs
         # mpc.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
         # for rolling horizon approach call rolling horizon function only once for every control horizon
-        if mpc_iter == mpc_params['control_horizon']:
-            mpc_iter = 0
-        if mpc_iter == 0:
-            mpc_params['system_inputs'] = mpc.rolling_horizon(model, components, mpc_params['system_inputs'],
-                                                              mpc_params['control_horizon'],
-                                                              mpc_params['prediction_horizon'],
-                                                              mpc_params['minimize_options'],
-                                                              initial_inputs, sim_params_mpc, i_interval)
-        mpc.set_system_input_mpc(components, mpc_params['system_inputs'], mpc_iter)
+        # if mpc_iter == mpc_params['control_horizon']:
+        #     mpc_iter = 0
+        # if mpc_iter == 0:
+        mpc_params['system_inputs'] = mpc.model_predictive_control(model, components, mpc_params['system_inputs'],
+                                                                    mpc_params['control_horizon'],
+                                                                    mpc_params['prediction_horizon'],
+                                                                    mpc_params['minimize_options'],
+                                                                    initial_inputs, sim_params_mpc, i_interval)
+        mpc.set_system_input_mpc(components, mpc_params['system_inputs'], iteration=0)
         initial_inputs = []
         for this_in in mpc_params['system_inputs']:
-            initial_inputs.append(this_in['mpc_data'][mpc_params['control_horizon'] - 1])
-        mpc_iter = mpc_iter + 13
+            initial_inputs.extend(this_in['mpc_data'][1:])
+            initial_inputs.append(initial_inputs[-1])
+        # mpc_iter = mpc_iter + 1
 
         # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
         # Create all busses and save them to a dict for later use in the components.

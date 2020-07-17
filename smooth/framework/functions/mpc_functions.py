@@ -171,7 +171,7 @@ def sine_list_input_mpc(operating_point,amplitude,time_end):
     return sine
 
 
-def rolling_horizon(model, components, system_inputs, control_horizon, prediction_horizon, minimize_options,
+def model_predictive_control(model, components, system_inputs, control_horizon, prediction_horizon, minimize_options,
                     initial_inputs, sim_params_mpc, i_interval):
     # define system inputs
     # system_inputs = define_system_inputs_mpc()
@@ -183,9 +183,9 @@ def rolling_horizon(model, components, system_inputs, control_horizon, predictio
         ub.extend(this_in['upper_bound'] * control_horizon)
     bounds = Bounds(lb, ub)
     # b. Startwerte u_vec_0 vorgeben
-    u_vec_0 = []
-    for i in range(len(initial_inputs)):
-        u_vec_0.extend([initial_inputs[i]] * control_horizon)
+    # u_vec_0 = []
+    # for i in range(len(initial_inputs)):
+    #     u_vec_0.extend([initial_inputs[i]] * control_horizon)
     # c. cost_function_mpc() als nested function definieren
     def cost_function_mpc(u_vec):
         # a. Steuerfolge für Prädiktionshorizont erweitern und
@@ -228,8 +228,7 @@ def rolling_horizon(model, components, system_inputs, control_horizon, predictio
         return cost
     # d. Optimierer aufrufen mit cost_function_mpc()
     # res = minimize(cost_function_mpc, u_vec_0, method='trust-constr', options = {'verbose': 1}, bounds = bounds)
-    res = minimize(cost_function_mpc, u_vec_0, method='L-BFGS-B', options = minimize_options,
-                   bounds = bounds)
+    res = minimize(cost_function_mpc, initial_inputs, method='L-BFGS-B', options = minimize_options, bounds = bounds)
     # e. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
     iter = 0
     for this_in in system_inputs:
