@@ -1,4 +1,4 @@
-from smooth.examples.example_model import mymodel
+from testing_heat_storage import mymodel
 from smooth import run_smooth
 from smooth import plot_smooth_results
 from smooth import print_smooth_results

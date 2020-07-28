@@ -143,7 +143,8 @@ class Component:
 
         :param components: List containing each component object
         :type components: list
-        :return: If used as a placeholder, nothing will be returned. Else, refer to specific component that uses the prepare_simulation function for further detail.
+        :return: If used as a placeholder, nothing will be returned. Else, refer to
+            specific component that uses the prepare_simulation function for further detail.
         """
         pass
 

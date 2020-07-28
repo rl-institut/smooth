@@ -1,14 +1,140 @@
+"""
+This module represents a combined heat and power (CHP) system with a fuel cell,
+using hydrogen to generate electricity and heat.
+
+*****
+Scope
+*****
+The importance of a fuel cell CHP component in dynamic energy systems is its
+potential to enable better sector coupling between the electricity and
+heating sectors, thus less dependence on centralised power systems by
+offering the ability for localised energy supply [1].
+
+*******
+Concept
+*******
+The fuel cell CHP has a hydrogen bus input along with an electrical bus and
+thermal bus output. The behaviour of the fuel cell CHP component is non-linear,
+which is demonstrated through the use of oemof's Piecewise Linear Transformer
+component.
+
+INCLUDE FIGURE?
+
+Efficiency
+----------
+The efficiency curves for both electrical and thermal energy output according
+to nominal load which are considered for the fuel cell CHP component are
+displayed in INSERT FIGURE. From the breakpoints, the electrical and thermal
+production based on the hydrogen consumption and variable efficiency can be
+obtained.
+
+Electrical and thermal energy production
+----------------------------------------
+In order to calculate the electrical and thermal energy production for
+each load point, first the maximum hydrogen input is calculated:
+
+.. math::
+    H_2_{max} = \\frac{P_{max}}{LHV_{H_2}} * \\mu_{elec_{full load}}
+
+* :math:`H_{2}_{max}` = maximum hydrogen input per timestep [kg]
+* :math:`P_{max}` = maximum electrical output power [W]
+* :math:`\\mu_{elec_{max}}` = electrical efficiency at full load [-]
+
+Then the load break points for both the electrical and thermal components
+ are converted into how much hydrogen is consumed at each load break point
+according to the maximum hydrogen input per time step:
+
+.. math::
+    bp_{H_{2_el}_{i}} = bp_{load_el}_{i} * H_{2}_{max}
+    bp_{H_{2_th}_{i}} = bp_{load_th}_{i} * H_{2}_{max}
+
+* :math:`bp_{H_{2_el}_{i}}` = ith electrical break point in terms of hydrogen consumption [kg]
+* :math:`bp_{load_el}_{i}` = ith electrical break point in terms of nominal load [-]
+* :math:`bp_{H_{2_th}_{i}}` = ith thermal break point in terms of hydrogen consumption [kg]
+* :math:`bp_{load_th}_{i}` = ith thermal break point in terms of nominal load [-]
+
+From these hydrogen consumption values, the absolute electrical and thermal
+energy produced at each break point is calculated:
+
+.. math::
+    E_{el}_{i}} = bp_{H_{2_el}_{i}} * \\mu_{el}_{i} * LHV_{H_2} * 1000
+    E_{th}_{i}} = bp_{H_{2_th}_{i}} * \\mu_{th}_{i} * LHV_{H_2} * 1000
+
+* :math:`E_{el}_{i}}` = ith absolute electrical energy value [Wh]
+* :math:`\\mu_{el}_{i}` = ith electrical efficiency [-]
+* :math:`E_{th}_{i}}` = ith absolute thermal energy value [Wh]
+* :math:`\\mu_{th}_{i}` = ith electrical efficiency [-]
+
+Piecewise Linear Transformer
+----------------------------
+Currently, the piecewise linear transformer component in oemof can only
+represent a one-to-one transformation with a singular input and a singular
+output. Thus, in order to represent the non-linear fuel cell CHP in the
+energy system, two oemof components are created for the electrical and
+thermal outputs individually, with a constraint that the hydrogen input flows
+into each component must always be equal. In this way, the individual oemof
+components behave as one component.
+
+References
+----------
+[1] P.E. Dodds et.al. (2015). Hydrogen and fuel cell technologies for heat: A
+review, International journal of hydrogen energy.
+"""
+
 from smooth.components.component import Component
 import oemof.solph as solph
 import pyomo.environ as po
 
 
 class FuelCellChp(Component):
-    """ A combined heat and power plant with a fuel cell, using H2 to generate
-    electricity and heat. """
+    """
+    :param name: unique name given to the fuel cell CHP component
+    :type name: str
+    :param bus_h2: hydrogen bus that is the input of the CHP
+    :type bus_h2: str
+    :param bus_el: electricity bus that is the output of the CHP
+    :type bus_el: str
+    :param bus_th: thermal bus that is the output of the CHP
+    :type bus_th: str
+    :param power_max: maximum electrical output power [W]
+    :type power_max: numerical
+    :param set_parameters(params): updates parameter default values (see generic Component class)
+    :type set_parameters(params): function
+    :param heating_value: heating value of hydrogen [kWh/kg]
+    :type heating_value: numerical
+    :param bp_load_electric: electrical efficiency load break points [-]
+    :type bp_load_electric: list
+    :param bp_eff_electric: electrical efficiency break points [-]
+    :type bp_eff_electric: list
+    :param bp_load_thermal: thermal efficiency load break points [-]
+    :type bp_load_thermal: list
+    :param bp_eff_thermal: thermal efficiency break points [-]
+    :type bp_eff_thermal: list
+    :param h2_input_max: maximum hydrogen input that leads to maximum electrical energy in Wh [kg]
+    :type h2_input_max: numerical
+    :param bp_h2_consumed_electric: converted electric load points according to maximum hydrogen
+        input per time step [kg]
+    :type bp_h2_consumed_electric: list
+    :param bp_h2_consumed_thermal: converted thermal load points according to maximum hydrogen
+        input per time step [kg]
+    :type bp_h2_consumed_thermal: list
+    :param bp_energy_electric: absolute electrical energy values over the load points [Wh]
+    :type bp_energy_electric: list
+    :param bp_energy_thermal: absolute thermal energy values over the load points [Wh]
+    :type bp_energy_thermal: list
+    :param bp_h2_consumed_electric_half: half the amount of hydrogen that is consumed [kg]
+    :type bp_h2_consumed_electric_half: list
+    :param bp_h2_consumed_thermal_half: half the amount of hydrogen that is consumed [kg]
+    :type bp_h2_consumed_thermal_half: list
+    :param model_el: electric model to set constraints later
+    :type model_el: model
+    :param model_th: thermal model to set constraints later
+    :type model_th: model
+    """
 
     def __init__(self, params):
-
+        """Constructor method
+        """
         # Call the init function of the mother class.
         Component.__init__(self)
 
@@ -92,18 +218,39 @@ class FuelCellChp(Component):
         self.model_th = None
 
     def get_electrical_energy_by_h2(self, h2_consumption):
+        """Gets the electrical energy produced by the according hydrogen production value.
+
+        :param h2_consumption: hydrogen production value [kg]
+        :return: according electrical energy value [Wh]
+        """
         # Check the index of this load point.
         this_index = self.bp_h2_consumed_electric_half.index(h2_consumption)
         # Return the according hydrogen production value [kg].
         return self.bp_energy_electric[this_index]
 
     def get_thermal_energy_by_h2(self, h2_consumption):
+        """Gets the thermal energy produced by the according hydrogen production value.
+
+        :param h2_consumption: hydrogen production value [kg]
+        :return: according thermal energy value [Wh]
+        """
         # Check the index of this load point.
         this_index = self.bp_h2_consumed_thermal_half.index(h2_consumption)
         # Return the according hydrogen production value [kg].
         return self.bp_energy_thermal[this_index]
 
     def create_oemof_model(self, busses, model):
+        """Creates two separate oemof Piecewise Linear Transformer components for the
+        electrical and thermal production of the fuel cell CHP from information given
+        in the FuelCellCHP class, to be used in the oemof model
+
+        :param busses: virtual buses used in the energy system
+        :type busses: list
+        :param model: oemof model containing the electrical energy production and
+            thermal energy production of the fuel cell CHP
+        :type model: model
+        :return: the oemof fuel cell CHP electric and thermal components
+        """
         # Create the non-linear oemof component. The CHP has to be modelled as
         # two components, while the piecewise linear transformer does not
         # accept 2 outputs yet.
@@ -153,11 +300,27 @@ class FuelCellChp(Component):
         return None
 
     def update_constraints(self, busses, model_to_solve):
-        # Set a constraint so that the hydrogen inflow of the electrical and
-        # the thermal part are always the same (which is necessary while the
-        # piecewise linear transformer cannot have two outputs yet and
-        # therefore the two parts need to be separate components).
+        """Set a constraint so that the hydrogen inflow of the electrical and
+        the thermal part are always the same (which is necessary while the
+        piecewise linear transformer cannot have two outputs yet and
+        therefore the two parts need to be separate components).
+
+        :param busses:
+        :param model_to_solve: The oemof model that will be solved
+        :type model_to_solve: model
+        """
+
         def chp_ratio_rule(model, t):
+            """Ensures that the flows going into the fuel cell CHP electricity production
+            component and those going into the fuel cell CHP thermal energy production
+            component are equal.
+
+            :param model: The oemof model containing the electrical energy production and
+                thermal energy production of the electrolyser
+            :type model: model
+            :param t: ?
+            :return: expression = 0
+            """
             # Inverter flow
             expr = 0
             expr += model.flow[busses[self.bus_h2], self.model_th, t]
@@ -169,6 +332,14 @@ class FuelCellChp(Component):
             model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
 
     def update_flows(self, results, sim_params):
+        """Updates the flows of the fuel cell CHP components for each time step.
+
+        :param results: The oemof results for the given time step
+        :type results: object
+        :param sim_params: The simulation parameters for the energy system (defined by user)
+        :type sim_params: object
+        :return: updated flow values for each flow in the 'flows' dict
+        """
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
         Component.update_flows(self, results, sim_params, self.name + '_electric')
         Component.update_flows(self, results, sim_params, self.name + '_thermal')

@@ -2,17 +2,18 @@
 This module is created as a subclass of the alkaline Electrolyzer module with
 the inclusion of a waste heat model.
 
-******
+*****
 Scope
-******
+*****
 The significance of including the heat generation from an electrolyzer in an
 energy system is that this heat can be utilized for other means (e.g.
 contributing towards a heat demand) as opposed to wasted. This will be
 particularly important with the implementation of large scale electrolyzers,
 where there is the potential to recover large quantities of energy.
 
-*INCLUDE FIGURE?
-
+*******
+Concept
+*******
 In this component, it is assumed that the alkaline electrolyzer consists of a
 cylindrical cell stack along with two cylindrical gas separators. It is further
 assumed that:
@@ -25,9 +26,13 @@ assumed that:
 * The overall surface area exposed by the gas separators and the pipe
   communicating them is in a ratio of 1:0.42 with the surface area of the stack [3]
 
-*******
-Concept
-*******
+*INCLUDE FIGURE?
+
+The alkaline electrolyzer with waste heat intakes an electrical flow and outputs
+hydrogen and thermal energy flows. The behaviour of the electrolyzer waste heat
+model is non-linear, which is demonstrated through the use of oemof's Piecewise
+Linear Transformer component.
+
 Waste heat
 ----------
 The waste heat, which is removed from the electrolyzer by the cooling water,
@@ -118,6 +123,16 @@ Thus, the sensible heat is calculated using mass and specific heat:
 
 The latent heat is neglected since the mass of :math:`H_{2O}` vapor is neglected.
 
+Piecewise Linear Transformer
+----------------------------
+Currently, the piecewise linear transformer component in oemof can only
+represent a one-to-one transformation with a singular input and a singular
+output. Thus, in order to represent the non-linear behaviour of the alkaline
+electrolyser in the energy system, two oemof components are created for the
+hydrogen and thermal outputs individually, with a constraint that the electric
+input flows into each component must always be equal. In this way, the individual
+oemof components behave as one component.
+
 References
 ----------
 [1] De Silva, Y.S.K. (2017). Design of an Alkaline Electrolysis Stack, University of Agder.
@@ -178,7 +193,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
      """
 
     def __init__(self, params):
-        """ Constructor method
+        """Constructor method
         """
         # Split the params dict
         param_bus_th = {"bus_th": params.pop("bus_th")}
@@ -234,9 +249,10 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         self.model_th = None
 
     def conversion_fun_ely(self, ely_energy):
-        """Gives out the mass values for the electric energy values at the breakpoints.
+        """Gives out the hydrogen mass values for the electric energy values at the
+        breakpoints
 
-        :param ely_energy: The electric energy values at the breakpoints
+        :param ely_energy: electric energy values at the breakpoints
         :type ely_energy: numerical
         :return: The according hydrogen production value [kg]
         """
@@ -250,7 +266,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
 
     def conversion_fun_thermal(self, ely_energy):
         """Gives out the thermal energy values for the electric energy values at the
-        breakpoints.
+        breakpoints
 
         :param ely_energy: The electric energy values at the breakpoints
         :type ely_energy: numerical
@@ -266,7 +282,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
     def create_oemof_model(self, busses, model):
         """Creates two separate oemof Piecewise Linear Transformer components for the hydrogen
         and thermal production of the electrolyser from information given in the
-        Electrolyser Waste Heat class, to be used in the oemof model
+        ElectrolyserWasteHeat class, to be used in the oemof model
 
         :param busses: virtual buses used in the energy system
         :type busses: list
@@ -316,7 +332,8 @@ class ElectrolyzerWasteHeat(Electrolyzer):
 
     def update_nonlinear_behaviour(self):
         """Updates the nonlinear behaviour of the electrolyser in terms of hydrogen and
-        thermal energy production, as well as the resulting temperature of the electrolyser.
+        thermal energy (waste heat) production, as well as the resulting temperature of
+        the electrolyser
         """
         # Set up the breakpoints for the electrolyzer conversion of electricity to hydrogen.
         n_supporting_point = 10
@@ -355,17 +372,15 @@ class ElectrolyzerWasteHeat(Electrolyzer):
     def get_waste_heat(self, energy_used, h2_produced, new_ely_temp):
         """Approximates waste heat production based on calculations of internal heat
         generation, heat losses to the environment and the sensible and latent
-        heat removed from the system.
+        heat removed from the system
 
-        #ToDo: put equations here or in the beginning?
-
-        :param energy_used: The energy consumed by the electrolyser [kWh]
+        :param energy_used: energy consumed by the electrolyser [kWh]
         :type energy_used: numerical
-        :param h2_produced: The hydrogen produced by the electrolyser [kg]
+        :param h2_produced: hydrogen produced by the electrolyser [kg]
         :type h2_produced: numerical
-        :param new_ely_temp: The resulting temperature of the electrolyser [K]
+        :param new_ely_temp: resulting temperature of the electrolyser [K]
         :type new_ely_temp: numerical
-        :return: The resulting waste heat produced by the electrolyser [kWh]
+        :return: resulting waste heat produced by the electrolyser [kWh]
         """
         # source: Dieguez et al., 'Thermal Performance of a commercial alkaline
         # water electrolyzer: Experimental study and mathematical modeling',
@@ -397,11 +412,11 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         """Calculates the sensible and latent heat that has been removed with the
         hydrogen and oxygen streams leaving the system.
 
-        :param mass_H2: The mass of hydrogen [kg]
+        :param mass_H2: mass of hydrogen [kg]
         :type mass_H2: numerical
-        :param new_ely_temp: The resulting temperature of the electrolyser [K]
+        :param new_ely_temp: resulting temperature of the electrolyser [K]
         :type new_ely_temp: numerical
-        :return: Values for the sensible and latent heat
+        :return: values for the sensible and latent heat
         """
         # mass of H2, O2 and H2O is related by the water decomposition stoichiometry
         # and the mass balance
@@ -427,9 +442,9 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         transformer cannot have two outputs yet and therefore the two parts need to be
         separate components).
 
-        :param busses: The virtual buses used in the energy system
+        :param busses: virtual buses used in the energy system
         :type busses: list
-        :param model_to_solve: The oemof model that will be solved
+        :param model_to_solve: oemof model that will be solved
         :type model_to_solve: model
         """
 
@@ -438,7 +453,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
             component and those going into the electrolyser thermal energy production
             component are equal.
 
-            :param model: The oemof model containing the hydrogen production and thermal
+            :param model: oemof model containing the hydrogen production and thermal
                 energy production of the electrolyser
             :type model: model
             :param t: ?
@@ -457,9 +472,9 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         """Updates the flows of the electrolyser waste heat components for each time
         step.
 
-        :param results: The oemof results for the given time step
+        :param results: oemof results for the given time step
         :type results: object
-        :param sim_params: The simulation parameters for the energy system (defined by user)
+        :param sim_params: simulation parameters for the energy system (defined by user)
         :type sim_params: object
         :return: updated flow values for each flow in the 'flows' dict
         """

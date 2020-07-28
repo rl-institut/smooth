@@ -1,10 +1,12 @@
 """
+This module represents a hydrogen compressor.
+
 ******
 Scope
 ******
 A hydrogen compressor is used in energy systems as a means of increasing
-the pressure of hydrogen to suitable levels for other components in the
-system or satisfying energy demands.
+the pressure of hydrogen to suitable levels for feeding into other components
+in the system or satisfying energy demands.
 
 *******
 Concept
@@ -167,7 +169,7 @@ class CompressorH2(Component):
 
     def create_oemof_model(self, busses, _):
         """Creates an oemof Transformer component using the information given in
-        the Compressor H2 class, to be used in the oemof model
+        the CompressorH2 class, to be used in the oemof model
 
         :param busses: virtual buses used in the energy system
         :type busses: list

@@ -7,8 +7,97 @@ import os
 
 
 class StratifiedThermalStorage (Component):
-    def __init__(self, params):
+    """
+    :param name: unique name given to the stratified thermal storage component
+    :type name: str
+    :param bus_in: thermal bus input of the storage
+    :type bus_in: str
+    :param bus_out: thermal bus output of the storage
+    :type bus_out: str
+    :param storage_capacity: storage capacity [Wh]
+    :type storage_capacity: numerical
+    :param storage_level_min: minimum storage level relative to storage capacity [-]
+    :type storage_level_min: numerical
+    :param storage_level_max: maximum storage level relative to storage capacity [-]
+    :type storage_level_max: numerical
+    :param max_heat_flow_charge: maximum heat charged into the storage per timestep [Wh]
+    :type max_heat_flow_charge: numerical
+    :param max_heat_flow_discharge: maximum heat discharged from the storage per timestep [Wh]
+    :type max_heat_flow_discharge: numerical
+    :param storage_level_init: initial storage level [Wh]
+    :type storage_level_init: numerical
+    :param life_time: lifetime of the component [a]
+    :type life_time: numerical
+    :param nominal_value: value that the timeseries should be multipled by, default is 1
+    :type nominal_value: numerical
+    :param csv_filename: csv filename containing the desired demand timeseries e.g. 'my_demand_filename.csv'
+    :type csv_filenmae: str
+    :param csv_separator: separator of the csv file e.g. ',' or ';', default is ','
+    :type csv_separator: str
+    :param column_title: column title (or index) of the timeseries, default is 0
+    :type column_title: str or int
+    :param path: path where the timeseries csv file can be located
+    :type path: str
+    :param density: density of the storage medium [kg/m3]
+    :type density: numerical
+    :param heat_capacity: heat capacity of the storage medium [J/(kg*K)]
+    :type heat_capacity: numerical
+    :param temp_h: hot temperature level of the stratified storage tank [K]
+    :type temp_h: numerical
+    :param temp_c: cold temperature level of the stratified storage tank [K]
+    :type temp_c: numerical
+    :param temp_env: environment temperature value [C] because timeseries usually in degrees C
+    :type temp_env: numerical
+    :param height_diameter_ratio: height to diameter ratio of storage tank [-]
+    :type height_diameter_ratio: numerical
+    :param s_iso: thickness of isolation layer [m]
+    :type s_iso: numerical
+    :param lamb_iso: heat conductivity of isolation material [W/(m*K)]
+    :type lamb_iso: numerical
+    :param alpha_inside: heat transfer coefficient inside [W/(m2*K)]
+    :type alpha_inside: numerical
+    :param alpha_outside: heat transfer coefficient outside [W/(m2*K)]
+    :type alpha_outside: numerical
+    :param vac_in: normal var. art. costs for charging in the storage [EUR/Wh]
+    :type vac_in: numerical
+    :param vac_out: normal var. art. costs for discharging out the storage [EUR/Wh]
+    :type vac_out: numerical
+    :param storage_level_wanted: if a storage level is set as wanted, the vac_low costs
+        apply if the storage is below that level [Wh].
+    :type storage_level_wanted: numerical
+    :param vac_low_in: var. art. costs that apply if storage level is below
+        wanted storage level [Wh]
+    :type vac_low_in: numerical
+    :param vac_low_out: var. art. costs that apply if storage level is below
+        wanted storage level [Wh]
+    :type vac_low_out: numerical
+    :param set_parameters(params): updates parameter default values
+        (see generic Component class)
+    :type set_parameters(params): function
+    :param storage_level: storage level [Wh]
+    :type storage_level: numerical
+    :param current_vac: stores the current artificial costs for input and output [EUR/Wh]
+    :type current_vac: array
+    :param volume: storage volume [m³]
+    :type volume: numerical
+    :param diameter: diameter of the storage [m]
+    :type diameter: numerical
+    :param u_value: thermal transmittance [W/(m2*K)]
+    :type u_value: numerical
+    :param loss_rate: relative loss of the storage capacity between
+        two consecutive timesteps [-]
+    :type loss_rate: numerical (sequence or scalar)
+    :param fixed_losses_relative: losses independent of state of charge between
+        two consecutive timesteps relative to nominal storage capacity [-]
+    :type fixed_losses_relative: numerical (sequence or scalar)
+    :param fixed_losses_absolute: losses independent of state of charge and independent
+        of nominal storage capacity between two consecutive timesteps [Wh]
+    :type fixed_losses_absolute: numerical (sequence or scalar)
+    """
 
+    def __init__(self, params):
+        """Constructor method
+        """
         # Call the init function of the mother class.
         Component.__init__(self)
 
@@ -124,6 +213,12 @@ class StratifiedThermalStorage (Component):
             self.temp_env)
 
     def prepare_simulation(self, components):
+        """Prepares the simulation by applying the appropriate variable artificial costs
+
+        :param components: List containing each component object
+        :type components: list
+        :return: array containing var. art. costs in and out of the storage
+        """
         # Set the var. art. costs.
         vac_in = self.vac_in
         vac_out = self.vac_out
@@ -137,6 +232,13 @@ class StratifiedThermalStorage (Component):
         self.current_vac = [vac_in, vac_out]
 
     def create_oemof_model(self, busses, _):
+        """Creates an oemof GenericStorage component from the information given in the
+        Stratified Thermal Storage class, to be used in the oemof model
+
+        :param busses: virtual buses used in the energy system
+        :type busses: list
+        :return: the oemof thermal storage component
+        """
         thermal_storage = solph.components.GenericStorage(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_vac[1],
@@ -155,6 +257,14 @@ class StratifiedThermalStorage (Component):
         return thermal_storage
 
     def update_states(self, results, sim_params):
+        """Updates the states of the thermal storage component for each time step
+
+        :param results: oemof results for the given time step
+        :type results: object
+        :param sim_params: simulation parameters for the energy system (defined by user)
+        :type sim_params: object
+        :return: updated state values for each state in the 'state' dict
+        """
         data_storage = views.node(results, self.name)
         df_storage = data_storage['sequences']
 
@@ -169,20 +279,76 @@ class StratifiedThermalStorage (Component):
                 self.states['storage_level'][sim_params.i_interval] = self.storage_level
 
     def get_volume(self, s_c, h_c, de, t_h, t_c):
+        """Calculates the storage tank volume
+
+        :param s_c: storage capacity [Wh]
+        :type s_c: numerical
+        :param h_c: heat capacity of storage medium [J/(kg*K)]
+        :type h_c: numerical
+        :param de: density of the storage medium [kg/m3]
+        :type de: numerical
+        :param t_h: hot temperature level of the stratified storage tank [K]
+        :type t_h: numerical
+        :param t_c: cold temperature level of the stratified storage tank [K]
+        :type t_c: numerical
+        :return: storage tank volume
+        """
         volume = s_c * 3600 / (h_c * de * (t_h - t_c))
         return volume
 
     def get_diameter(self, V, h_d_ratio):
+        """Calculates the diameter of the storage tank
+
+        :param V: storage tank volume [m3]
+        :type V: numerical
+        :param h_d_ratio: height to diameter ratio of storage tank [-]
+        :type h_d_ratio: numerical
+        :return: storage tank diameter
+        """
         diameter = ((4 * V) / (pi * h_d_ratio))**(1 / 3)
         return diameter
 
     def calculate_storage_u_value(self, a_in, s_iso, l_iso, a_out):
-        # Function from oemof-thermal: CHECK ABOUT S_ISO UNITS
+        """Calculates the u value (thermal transmittance) of storage envelope
+
+        :param a_in: heat transfer coefficient inside [W/(m2*K)]
+        :type a_in: numerical
+        :param s_iso: thickness of isolation layer [m]
+        :type s_iso: numerical
+        :param l_iso: heat conductivity of isolation material [W/(m*K)]
+        :type l_iso: numerical
+        :param a_out: heat transfer coefficient outside [W/(m2*K)]
+        :type a_out: numerical
+        :return: u value
+        """
+        # Function from oemof-thermal
         denominator = 1 / a_in + s_iso / l_iso + 1 / a_out
         u_value = 1 / denominator
         return u_value
 
     def calculate_losses(self, sim_params, u_val, d, de, h_c, t_c, t_h, t_env, time_increment=1):
+        """Calculates the loss rate and the fixed losses for the stratified thermal storage
+
+        :param sim_params: simulation parameters for the energy system (defined by user)
+        :type sim_params: object
+        :param u_val: thermal transmittance [W/(m2*K)]
+        :type u_val: numerical
+        :param d: diameter of storage tank [m]
+        :type d: numerical
+        :param de: density of the storage medium [kg/m3]
+        :type de: numerical
+        :param h_c: heat capacity of storage medium [J/(kg*K)]
+        :type h_c: numerical
+        :param t_c: cold temperature level of the stratified storage tank [K]
+        :type t_c: numerical
+        :param t_h: hot temperature level of the stratified storage tank [K]
+        :type t_h: numerical
+        :param t_env: environmental temperature [K]
+        :type t_env: numerical (sequence or scalar)
+        :param time_increment: time increment of the oemof.solph.EnergySytem [h]
+        :type time_increment: numerical
+        :return: loss rate, relative fixed losses and absolute fixed losses
+        """
         loss_rate = (
             4 * u_val * 1 / (d * de * h_c) * time_increment
             * 3600  # Ws to Wh

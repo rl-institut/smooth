@@ -36,7 +36,15 @@ Hydrogen Compressor
    :undoc-members:
    :show-inheritance:
 
-smooth.components.component\_electrolyzer module
+Electric Heater
+------------------------------------------------
+
+.. automodule:: smooth.components.component_electric_heater
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+Electrolyzer (alkaline)
 ------------------------------------------------
 
 .. automodule:: smooth.components.component_electrolyzer
@@ -44,7 +52,7 @@ smooth.components.component\_electrolyzer module
    :undoc-members:
    :show-inheritance:
    
-Electrolyzer Waste Heat
+Electrolyzer Waste Heat (alkaline)
 ------------------------------------------------
 
 .. automodule:: smooth.components.component_electrolyzer_waste_heat
@@ -52,7 +60,7 @@ Electrolyzer Waste Heat
    :undoc-members:
    :show-inheritance:
 
-smooth.components.component\_energy\_demand\_from\_csv module
+Energy Demand from CSV
 -------------------------------------------------------------
 
 .. automodule:: smooth.components.component_energy_demand_from_csv
@@ -68,7 +76,7 @@ smooth.components.component\_energy\_source\_from\_csv module
    :undoc-members:
    :show-inheritance:
 
-smooth.components.component\_fuel\_cell\_chp module
+Fuel cell CHP
 ---------------------------------------------------
 
 .. automodule:: smooth.components.component_fuel_cell_chp
@@ -96,6 +104,14 @@ smooth.components.component\_storage\_h2 module
 -----------------------------------------------
 
 .. automodule:: smooth.components.component_storage_h2
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Stratified Thermal Storage
+-----------------------------------------------
+
+.. automodule:: smooth.components.component_stratified_thermal_storage
    :members:
    :undoc-members:
    :show-inheritance:

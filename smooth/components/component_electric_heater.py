@@ -1,23 +1,46 @@
+"""
+A simple electric heater component that converts electricity to heat is created through this module.
+
+*****
+Scope
+*****
+Electric heaters can convert electricity into heat directly with a high efficiency, which can
+be useful in energy systems with large quantitites of renewable electricity production as
+well as a heat demand that must be satisfied.
+
+*******
+Concept
+*******
+A simple oemof Transformer component is used to convert the electricity bus into
+a thermal bus, with a constant efficiency of 98% applied [1].
+
+References
+----------
+[1] Meyers, S. et.al. (2016). Competitive Assessment between Solar Thermal and
+Photovoltaics for Industrial Process Heat Generation, International Solar
+Energy Society.
+"""
+
+
 import oemof.solph as solph
 from .component import Component
 
 
 class ElectricHeater(Component):
-    """A simple electric heater component that converts electricity to heat is created through this class.
-
-    :param name: The unique name given to the electric heater component
+    """
+    :param name: unique name given to the electric heater component
     :type name: str
-    :param bus_el: The electricity bus that is the input of the electric heater
+    :param bus_el: electricity bus that is the input of the electric heater
     :type bus_el: str
-    :param bus_th: The thermal bus that is the output of the electric heater
+    :param bus_th: thermal bus that is the output of the electric heater
     :type bus_th: str
-    :param power_max: The maximum thermal output [W]
+    :param power_max: maximum thermal output [W]
     :type power_max: numerical
-    :param life_time: The life time of the component [a]
+    :param life_time: life time of the component [a]
     :type life_time: numerical
-    :param efficiency: The constant efficiency of the heater [-]
+    :param efficiency: constant efficiency of the heater [-]
     :type efficiency: float (0-1)
-    :param set_parameters(params): Updates parameter default values (see generic Component class)
+    :param set_parameters(params): updates parameter default values (see generic Component class)
     :type set_parameters(params): function
     """
     def __init__(self, params):
@@ -38,16 +61,14 @@ class ElectricHeater(Component):
         self.life_time = 20
 
         # Overall efficiency of the heater [-]
-        # Value taken from Meyers, S.et.al. 'Competitive Assessment between
-        # Solar Thermal and Photovoltaics for Industrial Process Heat
-        # Generation'
         self.efficiency = 0.98
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
     def create_oemof_model(self, busses, _):
-        """Creates an oemof Transformer component from the information given in the ElectricHeater class, to be used in the oemof model
+        """Creates an oemof Transformer component from the information given in the
+        ElectricHeater class, to be used in the oemof model
 
         :param busses: The virtual buses used in the energy system
         :type busses: list
