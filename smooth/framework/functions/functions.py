@@ -11,7 +11,7 @@ def read_data_file(path, filename, csv_separator, column_title):
     #  filename = name of csv file [string].
     file_path = os.path.join(path, filename)
     # create specific string for chosen data type
-    data = pd.read_csv(file_path, sep=csv_separator, usecols=[column_title])
+    data = pd.read_csv(file_path, sep=csv_separator, usecols=[column_title], encoding='latin-1')
     return data
 
 
