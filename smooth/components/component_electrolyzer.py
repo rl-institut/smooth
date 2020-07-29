@@ -1,4 +1,3 @@
-from oemof.outputlib import views
 import oemof.solph as solph
 from .component import Component
 import math
@@ -397,7 +396,7 @@ class Electrolyzer (Component):
             self.states['water_consumption'] = [None] * sim_params.n_intervals
 
         # Get the flows of the electrolyzer for this time step.
-        data_electrolyzer = views.node(results, self.name)
+        data_electrolyzer = solph.views.node(results, self.name)
         df_electrolyzer = data_electrolyzer['sequences']
 
         # Get the hydrogen produced this time step [kg].

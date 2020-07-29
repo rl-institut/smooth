@@ -1,6 +1,5 @@
 import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
 
 
 class TrailerH2Delivery(Component):
@@ -171,7 +170,7 @@ class TrailerH2Delivery(Component):
         return trailer
 
     def update_states(self, results, sim_params):
-        data_trailer = views.node(results, self.name)
+        data_trailer = solph.views.node(results, self.name)
         df_trailer = data_trailer['sequences']
 
         for i_result in df_trailer:
