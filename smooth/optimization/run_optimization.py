@@ -455,7 +455,9 @@ def fitness_function(
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
         if ignore_zero and individual[i] == 0:
-            del model['components'][av.comp_name]
+            # remove component with zero value from model
+            # use pop instead of del in case component is removed multiple times
+            model['components'].pop(av.comp_name, None)
         else:
             model['components'][av.comp_name][av.comp_attribute] = individual[i]
 
