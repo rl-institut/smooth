@@ -108,9 +108,66 @@ and no new gene sequences have been found, the algorithm aborts and returns the 
 In case no individuals have a valid smooth result, an entirely new population is generated.
 No plot will be shown.
 If only one individual is valid, the population is filled up with random individuals.
+
+Gradient ascent
+---------------
+The solutions of the GA are pareto-optimal, but may not be at a local optimum.
+Although new configurations to be evaluated are searched near the current ones,
+it is not guaranteed to find slight improvements.
+This is especially true if there are many dimensions to search
+and the change is in only one dimension.
+The chance to happen upon this single improvement is in
+inverse proportion to the number of attribute variations.
+
+Therefore, the *post_processing* option exists to follow the
+fitness gradient for each solution after the GA has finished.
+We assume that each attribute is independent of each other.
+All solutions improve the same attribute at the same time.
+The number of fitness evaluations may exceed the *population_size*,
+however, the maximum number of cores used stays the same as before.
+
+To find the local optimum of a single attribute of a solution,
+we first have to find the gradient.
+This is done by going one *val_step* in positive and negative direction.
+These new children are then evaluated. Depending on the domination,
+the gradient may be *+val_step*, -*val_step* or 0 (parent is optimal).
+Then, this gradient is followed until the child shows no improvement.
+After all solutions have found their optimum for this attribute,
+the next attribute is varied.
+
+Plotting
+--------
+To visualize the current progress,
+you can set the *plot_progress* simulation parameter to True.
+This will show the current pareto front in a pyplot window.
+You can mouse over the points to show the configuration and objective values.
+To keep the computation running in the background (non-blocking plots)
+while listening for user events, the plotting runs in its own process.
+
+On initialisation, a one-directional pipe is established to send data
+from the main computation to the plotting process.
+The process is started right at the end of the initialisation.
+It needs the attribute variations and objective names for hover info and axes labels.
+It also generates a multiprocessing event which checks if the process shall be stopped.
+
+In the main loop of the process, the pipe is checked for any new data.
+This incorporates a timeout to avoid high processor usage.
+If new data is available, the old plot is cleared
+(along with any annotations, labels and titles) and redrawn from scratch.
+In any case, the window listens for a short time for user input events like mouseover.
+Window close is a special event which stops the process,
+but not the computation (as this runs in the separate main process).
+
+When hovering with the mouse pointer over a point in the pareto front,
+an annotation is built with the info of the :class:`Individual`.
+The annotation is removed when leaving the point.
+
+Sending None through the pipe makes the process show the plot until the user closes it.
+This blocks the process, so no new data is received, but user events are still processed.
 """
 
-from multiprocessing import Pool, cpu_count
+import multiprocessing as mp
+from tkinter import TclError
 import random
 import matplotlib.pyplot as plt  # only needed when plot_progress is set
 import dill
@@ -216,10 +273,9 @@ class Individual:
             one is greater while the other is equal. False otherwise.
         :rtype: boolean
         """
-        return (
-            (self.fitness[0] > other.fitness[0] and self.fitness[1] > other.fitness[1]) or
+        return self.fitness is not None and (other.fitness is None or (
             (self.fitness[0] >= other.fitness[0] and self.fitness[1] > other.fitness[1]) or
-            (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1]))
+            (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1])))
 
 
 def sort_by_values(n, values):
@@ -240,15 +296,15 @@ def fast_non_dominated_sort(p):
 
     :param p: values to sort
     :type p: iterable
-    :return: indices of values sorted into their domination ranks
+    :return: indices of values sorted into their domination ranks (only first element used)
     :rtype: list of lists of indices
     """
-    S = [[]]*len(p)
-    front = [[]]
-    n = [0]*len(p)
-    rank = [0]*len(p)
+    S = [[] for _ in p]  # which values dominate other?
+    front = [[]]         # group values by number of dominations
+    n = [0]*len(p)       # how many values does the value at this position dominate?
+    # rank = [0]*len(p)    # rank within domination tree (unused)
 
-    # build domination tree
+    # compare all elements, see which ones dominate each other
     for i in range(0, len(p)):
         for j in range(0, len(p)):
             if p[i].dominates(p[j]) and j not in S[i]:
@@ -256,7 +312,8 @@ def fast_non_dominated_sort(p):
             elif p[j].dominates(p[i]):
                 n[i] += 1
         if n[i] == 0:
-            rank[i] = 0
+            # element is not dominated: put in front
+            # rank[i] = 0
             if i not in front[0]:
                 front[0].append(i)
 
@@ -267,13 +324,15 @@ def fast_non_dominated_sort(p):
             for q in S[p]:
                 n[q] -= 1
                 if n[q] == 0:
-                    rank[q] = i+1
+                    # rank[q] = i+1
                     if q not in Q:
                         Q.append(q)
         i = i+1
         front.append(Q)
 
-    front.pop(len(front) - 1)
+    if len(front) > 1:
+        front.pop(len(front) - 1)
+
     return front
 
 
@@ -289,13 +348,16 @@ def CDF(values1, values2, n):
     :return: `n` crowding distance values
     :rtype: list
     """
+
+    if (n == 0 or len(values1) != n or len(values2) != n or
+            max(values1) == min(values1) or max(values2) == min(values2)):
+        return [1e100]*n
+
     distance = [0]*n
     sorted1 = sort_by_values(n, values1)
     sorted2 = sort_by_values(n, values2)
     distance[0] = 1e100  # border
     distance[-1] = 1e100
-    if max(values1) == min(values1) or max(values2) == min(values2):
-        return [1e100]*n
     for k in range(1, n-1):
         distance[k] = distance[k] + (values1[sorted1[k+1]] -
                                      values2[sorted1[k-1]])/(max(values1)-min(values1))
@@ -367,6 +429,7 @@ def fitness_function(
         model,
         attribute_variation,
         dill_objectives,
+        ignore_zero=False,
         save_results=False):
     """Compute fitness for one individual
         Called async: copies of individual and model given
@@ -381,6 +444,8 @@ def fitness_function(
     :type attribute_variation: list of :class:`AttributeVariation`
     :param dill_objectives: objective functions
     :type dill_objectives: tuple of lambda-functions pickled with dill
+    :param ignore_zero: ignore components with an attribute value of zero
+    :type ignore_zero: boolean
     :param save_results: save smooth result in individual?
     :type save_results: boolean
     :return: index, modified individual with fitness (None if failed)
@@ -389,7 +454,10 @@ def fitness_function(
     """
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
-        model['components'][av.comp_name][av.comp_attribute] = individual[i]
+        if ignore_zero and individual[i] == 0:
+            del model['components'][av.comp_name]
+        else:
+            model['components'][av.comp_name][av.comp_attribute] = individual[i]
 
     # Now that the model is updated according to the genes given by the GA, run smooth
     try:
@@ -403,6 +471,163 @@ def fitness_function(
         # The smooth run failed.The fitness score remains None.
         print('Evaluation canceled ({})'.format(str(e)))
     return index, individual
+
+
+class PlottingProcess(mp.Process):
+    """Process for plotting the intermediate results
+
+    Data is sent through (onedirectional) pipe.
+    It should be a dictionary containing "values" (array of :class:`Individual`)
+    and "gen" (current generation number, displayed in title).
+    Send None to stop listening for new data and block the Process by showing the plot.
+    After the user closes the plot, the process returns and can be joined.
+
+    :param pipe: data transfer channel
+    :type pipe: `multiprocessing pipe \
+<https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Pipe>`_
+    :param attribute_variation: AV of :class:`Optimization`
+    :type attribute_variation: list of :class:`AttributeVariation`
+    :param objective_names: descriptive names of :class:`Optimization` objectives
+    :type objective_names: list of strings
+    :var exit_flag: Multiprocessing event signalling process should be stopped
+    :var fig: figure for plotting
+    :var ax: current graphic axis for plotting
+    :var points: plotted results or None
+    :var annot: current annotation or None
+    """
+    def __init__(self):
+        self.exit_flag = mp.Event()
+        self.exit_flag.clear()
+
+    def main(self):
+        """Main plotting thread
+
+        Loops while exit_flag is not set and user has not closed window.
+        Checks periodically for new data to be displayed.
+        """
+
+        # start of main loop: no results yet
+        plt.title("Waiting for first results...")
+
+        # loop until exit signal
+        while not self.exit_flag.is_set():
+            # poll with timeout (like time.sleep)
+            while self.pipe.poll(0.1):
+                # something in pipe
+                data = self.pipe.recv()
+                if data is None:
+                    # special case
+                    plt.title("Finished!")
+                    # block process until user closes window
+                    plt.show()
+                    # exit process
+                    return
+                else:
+                    # process sent data
+                    # save sent results to show in annotation later
+                    self.values = data["values"]
+                    # use abs(r[]) to display positive values
+                    f1_vals = [r.fitness[0] for r in data["values"]]
+                    f2_vals = [r.fitness[1] for r in data["values"]]
+                    # reset figure
+                    self.ax.clear()
+                    # redraw plot with new data
+                    self.points, = self.ax.plot(f1_vals, f2_vals, '.b')
+                    # new title and labels
+                    plt.title(data.get("title", "Pareto front"), {'zorder': 1})
+                    plt.xlabel(self.objective_names[0])
+                    plt.ylabel(self.objective_names[1])
+                    self.fig.canvas.draw()
+            try:
+                # redraw plot, capture events
+                plt.pause(0.1)
+            except TclError:
+                # window may have been closed: exit process
+                return
+        # exit signal sent: stop process
+        return
+
+    def handle_close(self, event):
+        """Called when user closes window
+
+        Signal main loop that process should be stopped.
+        """
+        self.exit_flag.set()
+
+    def hover(self, event):
+        """Called when user hovers over plot.
+
+        Checks if user hovers over point. If so, delete old annotation and
+        create new one with relevant info from all Indivdiuals corresponding to this point.
+        If user does not hover over point, remove annotation, if any.
+        """
+        if self.points and event.inaxes == self.ax:
+            # results shown, mouse within plot: get event info
+            # cont: any points hovered?
+            # ind:  list of points hovered
+            cont, ind = self.points.contains(event)
+            ind = ind["ind"]
+
+            if cont:
+                # points hovered
+                # get all point coordinates
+                x, y = self.points.get_data()
+                text = []
+                for idx in ind:
+                    # loop over points hovered
+                    ind_text = ""
+                    max_line_len = 0
+                    # list all attribute variations with name and value
+                    for av_idx, av in enumerate(self.attribute_variation):
+                        line = "{}.{}: {}\n".format(
+                            av.comp_name,
+                            av.comp_attribute,
+                            self.values[idx][av_idx])
+                        ind_text += line
+                        max_line_len = max(max_line_len, len(line))
+                    # separator line
+                    ind_text += '-'*max_line_len + "\n"
+                    # list all objectives with name and value
+                    for obj_idx, obj in enumerate(self.objective_names):
+                        ind_text += "{}: {}\n".format(obj, self.values[idx].fitness[obj_idx])
+                    text.append(ind_text)
+                text = "\n".join(text)
+
+                # remove old annotation
+                if self.annot:
+                    self.annot.remove()
+
+                # create new annotation
+                self.annot = self.ax.annotate(
+                    text,
+                    xy=(x[ind[0]], y[ind[0]]),
+                    xytext=(-20, 20),
+                    textcoords="offset points",
+                    bbox=dict(boxstyle="round", fc="w"),
+                    arrowprops={'arrowstyle': "-"},
+                    annotation_clip=False)
+                # self.annot.get_bbox_patch().set_alpha(0.4)
+                self.fig.canvas.draw()
+            elif self.annot and self.annot.get_visible():
+                # no point hovered, but annotation present: remove annotation
+                self.annot.remove()
+                self.annot = None
+                self.fig.canvas.draw()
+
+    def __call__(self, pipe, attribute_variation, objective_names):
+        """Process entry point.
+
+        Set up plotting window, necessary variables and callbacks, call main loop.
+        """
+        self.pipe = pipe
+        self.attribute_variation = attribute_variation
+        self.objective_names = objective_names
+        self.fig, self.ax = plt.subplots()
+        self.points = None
+        self.annot = None
+        self.fig.canvas.mpl_connect('close_event', self.handle_close)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.hover)
+        self.main()
 
 
 class Optimization:
@@ -429,8 +654,12 @@ class Optimization:
     :param objective_names: descriptive names for optimization functions.
         Defaults to ('costs', 'emissions')
     :type objective_names: 2-tuple of strings, optional
+    :param post_processing: improve GA solution with gradient ascent. Defaults to False
+    :type post_processing: boolean, optional
     :param plot_progress: plot current pareto front. Defaults to False
     :type plot_progress: boolean, optional
+    :param ignore_zero: ignore components with an attribute value of zero. Defaults to False
+    :type ignore_zero: boolean, optional
     :param SAVE_ALL_SMOOTH_RESULTS: save return value of `run_smooth`
         for all evaluated individuals.
         **Warning!** When writing the result to file,
@@ -448,7 +677,9 @@ class Optimization:
     def __init__(self, iterable=(), **kwargs):
 
         # set defaults
+        self.post_processing = False
         self.plot_progress = False
+        self.ignore_zero = False
         self.SAVE_ALL_SMOOTH_RESULTS = False
 
         # objective functions: tuple with lambdas
@@ -469,9 +700,9 @@ class Optimization:
             assert(self.n_core)
         except (AssertionError, AttributeError):
             print("No CPU count (n_core) given. Using all cores.")
-            self.n_core = cpu_count()
+            self.n_core = mp.cpu_count()
         if self.n_core == "max":
-            self.n_core = cpu_count()
+            self.n_core = mp.cpu_count()
 
         # population size
         try:
@@ -510,7 +741,12 @@ class Optimization:
 
         # plot intermediate results?
         if self.plot_progress:
-            self.ax = plt.figure().add_subplot(111)
+            # set up plotting process with unidirectional pipe
+            plot_pipe_rx, self.plot_pipe_tx = mp.Pipe(duplex=False)
+            self.plot_process = mp.Process(
+                target=PlottingProcess(),
+                args=(plot_pipe_rx, self.attribute_variation, self.objective_names))
+            self.plot_process.start()
 
     def err_callback(self, err_msg):
         """Async error callback
@@ -535,7 +771,7 @@ class Optimization:
         Remove invalid indivuals from `population`
         """
         # open n_core worker threads
-        pool = Pool(processes=self.n_core)
+        pool = mp.Pool(processes=self.n_core)
         # set objective functions for each worker
         dill_objectives = dill.dumps(self.objectives)
         for idx, ind in enumerate(self.population):
@@ -543,15 +779,140 @@ class Optimization:
                 pool.apply_async(
                     fitness_function,
                     (idx, ind, self.model, self.attribute_variation,
-                     dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
+                        dill_objectives, self.ignore_zero, self.SAVE_ALL_SMOOTH_RESULTS),
                     callback=self.set_fitness,
                     error_callback=self.err_callback  # tb
                 )
         pool.close()
         pool.join()
-        # filter out individuals with invalid fitness values
-        self.population = list(
-            filter(lambda ind: ind is not None and ind.fitness is not None, self.population))
+
+    def gradient_ascent(self, result):
+        """Try to fine-tune result(s) with gradient ascent
+
+        Attributes are assumed to be independent and varied separately.
+        Solutions with the same fitness are ignored.
+
+        :param result: result from GA
+        :type result: list of :class:`Individual`
+        :return: improved result
+        :rtype: list of :class:`Individual`
+        """
+        print('\n+++++++ Intermediate result +++++++')
+        for i, v in enumerate(result):
+            print(i, v.values, " -> ", dict(zip(self.objective_names, v.fitness)))
+        print('+++++++++++++++++++++++++++++++++++\n')
+
+        new_result = []
+        # ignore solutions with identical fitness
+        for i in range(len(result)):
+            known_fitness = False
+            for j in range(len(new_result)):
+                known_fitness |= new_result[j].fitness == result[i].fitness
+            if not known_fitness:
+                new_result.append(result[i])
+
+        for av_idx, av in enumerate(self.attribute_variation):
+            # iterate attribute variations (assumed to be independent)
+            print("Gradient descending {} / {}".format(av_idx+1, len(self.attribute_variation)))
+            step_size = av.val_step or 1.0  # required for ascent
+            self.population = []
+            for i in range(len(new_result)):
+                # generate two children around parent to get gradient
+                parent = new_result[i]
+                # "below" parent, clip to minimum
+                child1 = Individual([gene for gene in parent])
+                child1[av_idx] = max(parent[av_idx] - step_size, av.val_min)
+                child1_fingerprint = str(child1)
+                # "above" parent, clip to maximum
+                child2 = Individual([gene for gene in parent])
+                child2[av_idx] = min(parent[av_idx] + step_size, av.val_max)
+                child2_fingerprint = str(child2)
+                # add to population. Take evaluated if exists
+                try:
+                    self.population.append(self.evaluated[child1_fingerprint])
+                except KeyError:
+                    self.population.append(child1)
+                try:
+                    self.population.append(self.evaluated[child2_fingerprint])
+                except KeyError:
+                    self.population.append(child2)
+
+            # compute fitness of all new children
+            # Keep invalid to preserve order (match parent to children)
+            self.compute_fitness()
+
+            # take note which direction is best for each individual
+            # may be positive or negative step size or 0 (no fitness improvement)
+            step = [0] * len(new_result)
+            for i in range(len(new_result)):
+                parent = new_result[i]
+                child1 = self.population[2*i]
+                child2 = self.population[2*i+1]
+                # get domination within family
+                if child1.dominates(parent):
+                    if child2.dominates(child1):
+                        # child 2 dominates
+                        step[i] = step_size
+                        new_result[i] = child2
+                    else:
+                        # child 1 dominates
+                        step[i] = -step_size
+                        new_result[i] = child1
+                else:
+                    # child1 does not dominate parent
+                    if child2.dominates(parent):
+                        # child 2 dominates
+                        step[i] = step_size
+                        new_result[i] = child2
+                    else:
+                        # parent is not dominated
+                        step[i] = 0.0
+
+            # continue gradient ascent of solutions until local optimum reached for all
+            while sum(map(abs, step)) != 0.0:
+                # still improvement
+                self.population = []
+                for i in range(len(new_result)):
+                    # generate new offspring in direction of step (may be 0 -> unchanged)
+                    parent = new_result[i]
+                    child = Individual([gene for gene in parent])
+                    child[av_idx] = min(max(parent[av_idx] + step[i], av.val_min), av.val_max)
+                    fingerprint = str(child)
+                    # add to population. Take evaluated if exists
+                    try:
+                        self.population.append(self.evaluated[fingerprint])
+                    except KeyError:
+                        self.population.append(child)
+
+                # compute fitness of all new children
+                # Keep invalid to preserve order (match parent to children)
+                self.compute_fitness()
+
+                for i in range(len(new_result)):
+                    # compare fitness of parent and child
+                    child = self.population[i]
+                    if child.dominates(new_result[i]):
+                        new_result[i] = child
+                    else:
+                        # no improvement: stop ascent of this solution
+                        step[i] = 0.0
+
+                # show current result in plot
+                if self.plot_progress and self.plot_process.is_alive():
+                    self.plot_pipe_tx.send({
+                        'title': 'Gradient descending AV #{}'.format(av_idx+1),
+                        'values': new_result
+                    })
+            # no more changes in any solution for this AV: change next AV
+
+            # show current result in plot
+            if self.plot_progress and self.plot_process.is_alive():
+                self.plot_pipe_tx.send({
+                    'title': 'Front after gradient descending AV #{}'.format(av_idx+1),
+                    'values': new_result
+                })
+
+        return new_result
 
     def run(self):
         """Main GA function
@@ -622,6 +983,10 @@ class Optimization:
             # evaluate generated population
             self.compute_fitness()
 
+            # filter out individuals with invalid fitness values
+            self.population = list(
+                filter(lambda ind: ind is not None and ind.fitness is not None, self.population))
+
             if len(self.population) == 0:
                 # no configuration  was successful
                 print("No individuals left. Building new population.")
@@ -656,33 +1021,33 @@ class Optimization:
             print("\n")
 
             # show current pareto front in plot
-            if self.plot_progress:
-                # use abs(r[]) to display positive values
-                f1_vals = [r.fitness[0] for r in result]
-                f2_vals = [r.fitness[1] for r in result]
-                self.ax.clear()
-                self.ax.plot(f1_vals, f2_vals, '.b')
-                plt.title('Front for Generation #{}'.format(gen+1))
-                plt.xlabel(self.objective_names[0])
-                plt.ylabel(self.objective_names[1])
-                plt.draw()
-                plt.pause(0.1)
+            if self.plot_progress and self.plot_process.is_alive():
+                self.plot_pipe_tx.send({
+                    'title': 'Front for Generation #{}'.format(gen + 1),
+                    'values': result
+                })
 
             self.population = [self.population[i] for i in pop_idx]
 
             # next generation
 
+        result.sort(key=lambda v: -v.fitness[0])
+
+        if self.post_processing:
+            result = self.gradient_ascent(result)
+
         print('\n+++++++ GENETIC ALGORITHM FINISHED +++++++')
         for i, attr in enumerate(self.attribute_variation):
             print(' {} - {}'.format(
                 attr.comp_name, attr.comp_attribute))
-        result.sort(key=lambda v: -v.fitness[0])
+
         for i, v in enumerate(result):
             print(i, v.values, " -> ", dict(zip(self.objective_names, v.fitness)))
         print('+++++++++++++++++++++++++++++++++++++++++++\n')
 
-        if self.plot_progress:
-            plt.show()
+        if self.plot_progress and self.plot_process.is_alive():
+            self.plot_pipe_tx.send(None)    # stop drawing, show plot
+            self.plot_process.join()        # wait until user closes plot
 
         return result
 
