@@ -451,7 +451,10 @@ def fitness_function(
     """
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
-        model['components'][av.comp_name][av.comp_attribute] = individual[i]
+        if individual[i] == 0:
+            del model['components'][av.comp_name]
+        else:
+            model['components'][av.comp_name][av.comp_attribute] = individual[i]
 
     # Now that the model is updated according to the genes given by the GA, run smooth
     try:
