@@ -429,6 +429,7 @@ def fitness_function(
         model,
         attribute_variation,
         dill_objectives,
+        ignore_zero=False,
         save_results=False):
     """Compute fitness for one individual
         Called async: copies of individual and model given
@@ -443,6 +444,8 @@ def fitness_function(
     :type attribute_variation: list of :class:`AttributeVariation`
     :param dill_objectives: objective functions
     :type dill_objectives: tuple of lambda-functions pickled with dill
+    :param ignore_zero: ignore components with an attribute value of zero
+    :type ignore_zero: boolean
     :param save_results: save smooth result in individual?
     :type save_results: boolean
     :return: index, modified individual with fitness (None if failed)
@@ -451,7 +454,7 @@ def fitness_function(
     """
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
-        if individual[i] == 0:
+        if ignore_zero and individual[i] == 0:
             del model['components'][av.comp_name]
         else:
             model['components'][av.comp_name][av.comp_attribute] = individual[i]
@@ -655,6 +658,8 @@ class Optimization:
     :type post_processing: boolean, optional
     :param plot_progress: plot current pareto front. Defaults to False
     :type plot_progress: boolean, optional
+    :param ignore_zero: ignore components with an attribute value of zero. Defaults to False
+    :type ignore_zero: boolean, optional
     :param SAVE_ALL_SMOOTH_RESULTS: save return value of `run_smooth`
         for all evaluated individuals.
         **Warning!** When writing the result to file,
@@ -674,6 +679,7 @@ class Optimization:
         # set defaults
         self.post_processing = False
         self.plot_progress = False
+        self.ignore_zero = False
         self.SAVE_ALL_SMOOTH_RESULTS = False
 
         # objective functions: tuple with lambdas
@@ -773,7 +779,7 @@ class Optimization:
                 pool.apply_async(
                     fitness_function,
                     (idx, ind, self.model, self.attribute_variation,
-                        dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
+                        dill_objectives, self.ignore_zero, self.SAVE_ALL_SMOOTH_RESULTS),
                     callback=self.set_fitness,
                     error_callback=self.err_callback  # tb
                 )
