@@ -274,7 +274,6 @@ class Individual:
         :rtype: boolean
         """
         return self.fitness is not None and (other.fitness is None or (
-            (self.fitness[0] > other.fitness[0] and self.fitness[1] > other.fitness[1]) or
             (self.fitness[0] >= other.fitness[0] and self.fitness[1] > other.fitness[1]) or
             (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1])))
 
@@ -331,7 +330,8 @@ def fast_non_dominated_sort(p):
         i = i+1
         front.append(Q)
 
-    front.pop(len(front) - 1)
+    if len(front) > 1:
+        front.pop(len(front) - 1)
 
     return front
 
@@ -348,13 +348,16 @@ def CDF(values1, values2, n):
     :return: `n` crowding distance values
     :rtype: list
     """
+
+    if (n == 0 or len(values1) != n or len(values2) != n or
+            max(values1) == min(values1) or max(values2) == min(values2)):
+        return [1e100]*n
+
     distance = [0]*n
     sorted1 = sort_by_values(n, values1)
     sorted2 = sort_by_values(n, values2)
     distance[0] = 1e100  # border
     distance[-1] = 1e100
-    if max(values1) == min(values1) or max(values2) == min(values2):
-        return [1e100]*n
     for k in range(1, n-1):
         distance[k] = distance[k] + (values1[sorted1[k+1]] -
                                      values2[sorted1[k-1]])/(max(values1)-min(values1))
