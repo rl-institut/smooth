@@ -198,7 +198,8 @@ class TestGA:
     def test_fitness(self):
         idx = 1
         ind = opt.Individual([1])
-        (idx2, ind2) = opt.fitness_function(idx, ind, None, [], None, ignore_zero=False, save_results=False)
+        (idx2, ind2) = opt.fitness_function(idx, ind, None, [], None,
+                                            ignore_zero=False, save_results=False)
 
         assert idx == idx2
         for gene_idx, gene in enumerate(ind):
@@ -220,7 +221,7 @@ class TestGA:
 
         # ignore_zero twice on same component
         model = {"components": {"foo": {"bar": 0}, "bar": {"foo": 0}}}
-        ind = opt.Individual([0,0])
+        ind = opt.Individual([0, 0])
         av = [opt.AttributeVariation(self.av_dict)]*2
         opt.fitness_function(idx, ind, model, av, None, ignore_zero=True, save_results=False)
         assert {"bar"} == model["components"].keys()
