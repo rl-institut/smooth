@@ -32,6 +32,8 @@ class Supply (Component):
         # Define the low and the high art. cost value e.g. [EUR/Wh], [EUR/kg]
         self.fs_low_art_cost = None
         self.fs_high_art_cost = None
+        # Define the pressure of the supply if H2 grid
+        self.fs_pressure = None
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)

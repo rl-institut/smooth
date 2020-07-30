@@ -274,7 +274,6 @@ class Individual:
         :rtype: boolean
         """
         return self.fitness is not None and (other.fitness is None or (
-            (self.fitness[0] > other.fitness[0] and self.fitness[1] > other.fitness[1]) or
             (self.fitness[0] >= other.fitness[0] and self.fitness[1] > other.fitness[1]) or
             (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1])))
 
@@ -331,7 +330,8 @@ def fast_non_dominated_sort(p):
         i = i+1
         front.append(Q)
 
-    front.pop(len(front) - 1)
+    if len(front) > 1:
+        front.pop(len(front) - 1)
 
     return front
 
@@ -348,13 +348,16 @@ def CDF(values1, values2, n):
     :return: `n` crowding distance values
     :rtype: list
     """
+
+    if (n == 0 or len(values1) != n or len(values2) != n or
+            max(values1) == min(values1) or max(values2) == min(values2)):
+        return [1e100]*n
+
     distance = [0]*n
     sorted1 = sort_by_values(n, values1)
     sorted2 = sort_by_values(n, values2)
     distance[0] = 1e100  # border
     distance[-1] = 1e100
-    if max(values1) == min(values1) or max(values2) == min(values2):
-        return [1e100]*n
     for k in range(1, n-1):
         distance[k] = distance[k] + (values1[sorted1[k+1]] -
                                      values2[sorted1[k-1]])/(max(values1)-min(values1))
@@ -426,6 +429,7 @@ def fitness_function(
         model,
         attribute_variation,
         dill_objectives,
+        ignore_zero=False,
         save_results=False):
     """Compute fitness for one individual
         Called async: copies of individual and model given
@@ -440,6 +444,8 @@ def fitness_function(
     :type attribute_variation: list of :class:`AttributeVariation`
     :param dill_objectives: objective functions
     :type dill_objectives: tuple of lambda-functions pickled with dill
+    :param ignore_zero: ignore components with an attribute value of zero
+    :type ignore_zero: boolean
     :param save_results: save smooth result in individual?
     :type save_results: boolean
     :return: index, modified individual with fitness (None if failed)
@@ -448,7 +454,12 @@ def fitness_function(
     """
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
-        model['components'][av.comp_name][av.comp_attribute] = individual[i]
+        if ignore_zero and individual[i] == 0:
+            # remove component with zero value from model
+            # use pop instead of del in case component is removed multiple times
+            model['components'].pop(av.comp_name, None)
+        else:
+            model['components'][av.comp_name][av.comp_attribute] = individual[i]
 
     # Now that the model is updated according to the genes given by the GA, run smooth
     try:
@@ -649,6 +660,8 @@ class Optimization:
     :type post_processing: boolean, optional
     :param plot_progress: plot current pareto front. Defaults to False
     :type plot_progress: boolean, optional
+    :param ignore_zero: ignore components with an attribute value of zero. Defaults to False
+    :type ignore_zero: boolean, optional
     :param SAVE_ALL_SMOOTH_RESULTS: save return value of `run_smooth`
         for all evaluated individuals.
         **Warning!** When writing the result to file,
@@ -668,6 +681,7 @@ class Optimization:
         # set defaults
         self.post_processing = False
         self.plot_progress = False
+        self.ignore_zero = False
         self.SAVE_ALL_SMOOTH_RESULTS = False
 
         # objective functions: tuple with lambdas
@@ -767,7 +781,7 @@ class Optimization:
                 pool.apply_async(
                     fitness_function,
                     (idx, ind, self.model, self.attribute_variation,
-                        dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
+                        dill_objectives, self.ignore_zero, self.SAVE_ALL_SMOOTH_RESULTS),
                     callback=self.set_fitness,
                     error_callback=self.err_callback  # tb
                 )
