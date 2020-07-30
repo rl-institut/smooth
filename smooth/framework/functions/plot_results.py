@@ -26,7 +26,7 @@ def plot_smooth_results(smooth_result, comp_label_dict=comp_dict_german,
             plt.ylabel(y_dict[this_bus])
         except KeyError:
             plt.title('bus: ' + this_bus)
-            
+
         plt.grid()
 
         locs, labels = plt.xticks()
