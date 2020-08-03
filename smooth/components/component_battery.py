@@ -1,5 +1,5 @@
 from .component import Component
-from oemof.solph import views
+from oemof import solph
 
 
 class Battery(Component):
