@@ -5,3 +5,4 @@ oemof.network
 oemof.solph
 scipy
 dill
+pyutilib==5.8.0

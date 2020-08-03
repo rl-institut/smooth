@@ -81,3 +81,39 @@ def calc_annual_emissions(component, target):
         target_annuity = target['cost'] / component.life_time
 
     return target_annuity
+
+
+def update_external_annuities(component):
+    # Convert the CAPEX to annuities - MAYBE CHANGE THE NAME?
+    # Parameter:
+    #  component: object of one component.
+
+    # First calculate the annuities for the CAPEX in EUR/a.
+    # If there are no CAPEX (dict is empty), the annuity is 0 EUR/a,
+    # otherwise it is a product of capex and capital recovery factor [-].
+    capex_annuity = calc_annuity(component, component.capex)
+    # Check if OPEX were calculated, if so they are directly in annuity format.
+    if not component.opex:
+        opex = 0
+    else:
+        opex = component.opex['cost']
+
+        # Save the cost results.
+    component.results['annuity_capex'] = capex_annuity
+    component.results['annuity_opex'] = opex
+    component.results['annuity_total'] = capex_annuity + opex
+
+    # Calculate the annual emissions for the installation in kg/a.
+    # If the emissions are not given (dict is empty), the annual emissions are 0 kg/a,
+    # otherwise it is a fraction of fix_emissions divided by the component's life-time in years.
+    fix_emissions_annual = calc_annual_emissions(component, component.fix_emissions)
+    # Check if operational emissions were calculated, if so they are directly in annual format.
+    if not component.op_emissions:
+        op_emissions = 0
+    else:
+        op_emissions = component.op_emissions['cost']
+
+    component.results['annual_fix_emissions'] = fix_emissions_annual
+    component.results['annual_op_emissions'] = op_emissions
+    component.results['annual_total_emissions'] = \
+        fix_emissions_annual + op_emissions

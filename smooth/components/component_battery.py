@@ -1,6 +1,5 @@
-import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
+from oemof.solph import views
 
 
 class Battery(Component):
@@ -134,7 +133,7 @@ class Battery(Component):
 
     def update_states(self, results, sim_params):
         """ Update states """
-        data_storage = views.node(results, self.name)
+        data_storage = solph.views.node(results, self.name)
         df_storage = data_storage["sequences"]
 
         # Loop Through the data frame values and update states accordingly.
