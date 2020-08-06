@@ -925,12 +925,14 @@ class Optimization:
                 self.compute_fitness()
 
                 # check new dominance of parent and children
+                # default: no improvement -> stop ascent of this attribute
                 new_step = [0] * len(step)
                 for idx, child in enumerate(self.population):
                     parent_idx = reference[idx]
                     parent = new_result[parent_idx]
                     if child.dominates(parent):
                         # domination continues: save child, keep base step
+                        # this ensures a new generation
                         new_result[parent_idx] = child
                         new_step[parent_idx] = step[parent_idx]
 
