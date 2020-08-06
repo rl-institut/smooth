@@ -52,14 +52,6 @@ smooth.framework.functions.save\_results module
    :undoc-members:
    :show-inheritance:
 
-smooth.framework.functions.testing module
------------------------------------------
-
-.. automodule:: smooth.framework.functions.testing
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 smooth.framework.functions.update\_annuities module
 ---------------------------------------------------
 
