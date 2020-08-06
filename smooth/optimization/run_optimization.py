@@ -132,6 +132,8 @@ This is done by going one *val_step* in positive and negative direction.
 These new children are then evaluated. Depending on the domination,
 the gradient may be *+val_step*, -*val_step* or 0 (parent is optimal).
 Then, this gradient is followed until the child shows no improvement.
+The population may be topped up with multiples of *val_step*
+to better utilize all cores and speed up the gradient ascent.
 After all solutions have found their optimum for this attribute,
 the next attribute is varied.
 
@@ -813,12 +815,14 @@ class Optimization:
             if not known_fitness:
                 new_result.append(result[i])
 
+        num_results = len(new_result)
+
         for av_idx, av in enumerate(self.attribute_variation):
             # iterate attribute variations (assumed to be independent)
             print("Gradient descending {} / {}".format(av_idx+1, len(self.attribute_variation)))
             step_size = av.val_step or 1.0  # required for ascent
             self.population = []
-            for i in range(len(new_result)):
+            for i in range(num_results):
                 # generate two children around parent to get gradient
                 parent = new_result[i]
                 # "below" parent, clip to minimum
@@ -845,8 +849,8 @@ class Optimization:
 
             # take note which direction is best for each individual
             # may be positive or negative step size or 0 (no fitness improvement)
-            step = [0] * len(new_result)
-            for i in range(len(new_result)):
+            step = [0] * num_results
+            for i in range(num_results):
                 parent = new_result[i]
                 child1 = self.population[2*i]
                 child2 = self.population[2*i+1]
@@ -872,32 +876,66 @@ class Optimization:
 
             # continue gradient ascent of solutions until local optimum reached for all
             while sum(map(abs, step)) != 0.0:
-                # still improvement
+                # still improvement: create new population
                 self.population = []
-                for i in range(len(new_result)):
-                    # generate new offspring in direction of step (may be 0 -> unchanged)
-                    parent = new_result[i]
-                    child = Individual([gene for gene in parent])
-                    child[av_idx] = min(max(parent[av_idx] + step[i], av.val_min), av.val_max)
-                    fingerprint = str(child)
-                    # add to population. Take evaluated if exists
-                    try:
-                        self.population.append(self.evaluated[fingerprint])
-                    except KeyError:
-                        self.population.append(child)
+                # dict for saving position of parent element
+                reference = {}
+                idx = 0
+
+                # build new population
+                # only parents with step != 0 (still changing)
+                # each parent with step != 0 at least once
+                # fill up to n_cores with multiples of steps
+                # only non-evaluated configurations allowed
+                while(len(self.population) < max(num_results, self.n_core)):
+                    # position of parent element
+                    pos = idx % num_results
+                    # multiplier for step size (at least 1)
+                    mult = (idx // num_results) + 1
+
+                    if mult > 1 and len(self.population) >= self.n_core:
+                        # population full
+                        break
+
+                    if idx > 1000 * num_results:
+                        # avoid endless loop (no more valid entries?)
+                        break
+
+                    if step[pos]:
+                        # result with step: generate child in step direction
+                        parent = new_result[pos]
+                        child = Individual([gene for gene in parent])
+                        mul_step = step[pos] * mult
+                        child[av_idx] = min(max(parent[av_idx] + mul_step, av.val_min), av.val_max)
+
+                        fingerprint = str(child)
+                        # avoid double computation
+                        if fingerprint not in self.evaluated:
+                            # child config not seen so far
+                            self.population.append(child)
+                            # block, so not in population again
+                            self.evaluated[fingerprint] = None
+                            # keep track of parent position
+                            reference[len(self.population) - 1] = pos
+
+                    idx += 1
 
                 # compute fitness of all new children
-                # Keep invalid to preserve order (match parent to children)
+                # Keep invalid to preserve order (match children to parent)
                 self.compute_fitness()
 
-                for i in range(len(new_result)):
-                    # compare fitness of parent and child
-                    child = self.population[i]
-                    if child.dominates(new_result[i]):
-                        new_result[i] = child
-                    else:
-                        # no improvement: stop ascent of this solution
-                        step[i] = 0.0
+                # check new dominance of parent and children
+                new_step = [0] * len(step)
+                for idx, child in enumerate(self.population):
+                    parent_idx = reference[idx]
+                    parent = new_result[parent_idx]
+                    if child.dominates(parent):
+                        # domination continues: save child, keep base step
+                        new_result[parent_idx] = child
+                        new_step[parent_idx] = step[parent_idx]
+
+                # update step sizes
+                step = new_step
 
                 # show current result in plot
                 if self.plot_progress and self.plot_process.is_alive():
