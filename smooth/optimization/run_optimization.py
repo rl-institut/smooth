@@ -167,10 +167,13 @@ This blocks the process, so no new data is received, but user events are still p
 """
 
 import multiprocessing as mp
-from tkinter import TclError
+from tkinter import TclError     # plotting window closed
 import random
 import matplotlib.pyplot as plt  # only needed when plot_progress is set
-import dill
+import os                        # delete old result files
+from datetime import datetime    # get timestamp for filename
+import pickle                    # pickle intermediate results
+import dill                      # dump objective functions
 
 from smooth import run_smooth
 
@@ -568,9 +571,9 @@ class PlottingProcess(mp.Process):
             # cont: any points hovered?
             # ind:  list of points hovered
             cont, ind = self.points.contains(event)
-            ind = ind["ind"]
 
-            if cont:
+            if cont and "ind" in ind:
+                ind = ind["ind"]
                 # points hovered
                 # get all point coordinates
                 x, y = self.points.get_data()
@@ -662,6 +665,9 @@ class Optimization:
     :type plot_progress: boolean, optional
     :param ignore_zero: ignore components with an attribute value of zero. Defaults to False
     :type ignore_zero: boolean, optional
+    :param save_intermediate_results: write intermediate results to pickle file.
+        Only the two most recent results are saved. Defaults to False
+    :type save_intermediate_results: boolean, optional
     :param SAVE_ALL_SMOOTH_RESULTS: save return value of `run_smooth`
         for all evaluated individuals.
         **Warning!** When writing the result to file,
@@ -682,6 +688,7 @@ class Optimization:
         self.post_processing = False
         self.plot_progress = False
         self.ignore_zero = False
+        self.save_intermediate_results = False
         self.SAVE_ALL_SMOOTH_RESULTS = False
 
         # objective functions: tuple with lambdas
@@ -741,6 +748,11 @@ class Optimization:
         self.population = []
         self.evaluated = {}
 
+        # save intermediate results?
+        if self.save_intermediate_results:
+            self.last_result_file_name = ""
+            self.current_result_file_name = ""
+
         # plot intermediate results?
         if self.plot_progress:
             # set up plotting process with unidirectional pipe
@@ -770,7 +782,7 @@ class Optimization:
 
     def compute_fitness(self):
         """Compute fitness of every individual in `population` with `n_core` worker threads.
-        Remove invalid indivuals from `population`
+        Remove invalid individuals from `population`
         """
         # open n_core worker threads
         pool = mp.Pool(processes=self.n_core)
@@ -787,6 +799,31 @@ class Optimization:
                 )
         pool.close()
         pool.join()
+
+    def save_intermediate_result(self, result):
+        """Dump result into pickle file in current working directory.
+        Same content as smooth.save_results.
+        The naming schema follows *date*-*time*-intermediate_result.pickle.
+        Removes second-to-last pickle file from same run.
+
+        :param result: the current results to be saved
+        :type result: list of :class:`Individual`
+        """
+
+        # prepare file name by format
+        filename_format = "%Y-%m-%d_%H-%M-%S_intermediate_result.pickle"
+        new_result_file_name = datetime.now().strftime(filename_format)
+        # write result to file
+        with open(new_result_file_name, 'wb') as save_file:
+            pickle.dump(result, save_file)
+        # delete second-to-last result file (if not rewritten)
+        if (os.path.exists(self.last_result_file_name)
+                and self.last_result_file_name != self.current_result_file_name):
+            os.remove(self.last_result_file_name)
+        # update status
+        self.last_result_file_name = self.current_result_file_name
+        self.current_result_file_name = new_result_file_name
+        print("Save intermediate results in {}".format(new_result_file_name))
 
     def gradient_ascent(self, result):
         """Try to fine-tune result(s) with gradient ascent
@@ -905,7 +942,10 @@ class Optimization:
                         'title': 'Gradient descending AV #{}'.format(av_idx+1),
                         'values': new_result
                     })
-            # no more changes in any solution for this AV: change next AV
+
+            # no more changes in any solution for this AV: give status update
+            if self.save_intermediate_results:
+                self.save_intermediate_result(new_result)
 
             # show current result in plot
             if self.plot_progress and self.plot_process.is_alive():
@@ -913,6 +953,8 @@ class Optimization:
                     'title': 'Front after gradient descending AV #{}'.format(av_idx+1),
                     'values': new_result
                 })
+
+            # change next AV
 
         return new_result
 
@@ -1022,6 +1064,10 @@ class Optimization:
                 print(i, self.population[v], self.population[v].fitness)
             print("\n")
 
+            # save result to file
+            if self.save_intermediate_results:
+                self.save_intermediate_result(result)
+
             # show current pareto front in plot
             if self.plot_progress and self.plot_process.is_alive():
                 self.plot_pipe_tx.send({
@@ -1050,6 +1096,13 @@ class Optimization:
         if self.plot_progress and self.plot_process.is_alive():
             self.plot_pipe_tx.send(None)    # stop drawing, show plot
             self.plot_process.join()        # wait until user closes plot
+
+        # remove old intermediate results
+        if self.save_intermediate_results:
+            if os.path.exists(self.last_result_file_name):
+                os.remove(self.last_result_file_name)
+            if os.path.exists(self.current_result_file_name):
+                os.remove(self.current_result_file_name)
 
         return result
 
