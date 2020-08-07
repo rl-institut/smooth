@@ -23,7 +23,8 @@ class Gate(Component):
     def create_oemof_model(self, busses, _):
         gate = solph.Transformer(
             label=self.name,
-            inputs={busses[self.bus_in]: solph.Flow(variable_costs=self.artificial_costs)},
+            inputs={busses[self.bus_in]: solph.Flow(variable_costs=self.artificial_costs,
+                                                    nominal_value=self.max_input)},
             outputs={busses[self.bus_out]: solph.Flow()}
           )
         return gate
