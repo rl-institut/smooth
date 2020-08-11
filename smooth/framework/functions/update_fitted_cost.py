@@ -99,6 +99,7 @@ def update_cost(component, fitting_dict, index, dependant_value, name):
     :param name: human readable representation of attribute to be updated,
         e.g. "CAPEX/OPEX" or "emissions"
     :type name: string
+    :raises ValueError: on unknown fitting key
     """
     this_key = fitting_dict['key'][index]
     if this_key == 'fix':
@@ -236,6 +237,7 @@ def get_free(component, fitting_dict, index, dependant_value):
     :type dependent_value: number
     :return: calculated costs using "free" fitting
     :rtype: number
+    :raises ValueError: if number of fitting values is odd
     """
 
     # Get the fitting values.
