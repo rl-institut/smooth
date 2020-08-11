@@ -185,7 +185,6 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                 # Add the flow of this component to this bus.
                 busses_to_plot[this_bus][name] = this_comp_flows[this_bus]
 
-
     if nb_trailing_none > 0:
         print(
             'The flow sequences have {} trailing None values. Did the optimization terminate?'
