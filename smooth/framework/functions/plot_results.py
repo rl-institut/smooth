@@ -11,11 +11,17 @@ def plot_smooth_results(smooth_result, comp_label_dict=comp_dict_german,
 
     :param smooth_results: result from run_smooth containing all components
     :type smooth_results: list of :class:`~smooth.components.component.Component`
-    :param comp_label_dict: component labels, key being the component name in the model and value the human readable name. Defaults to comp_dict_german from example_plotting_dicts.
+    :param comp_label_dict: component labels,
+        key being the component name in the model and value the human readable name.
+        Defaults to comp_dict_german from example_plotting_dicts.
     :type comp_label_dict: dictionary, optional
-    :param bus_dict: bus labels, key being the bus name in the model and value the human readable name. Defaults to bus_dict_german from example_plotting_dicts.
+    :param bus_dict: bus labels,
+        key being the bus name in the model and value the human readable name.
+        Defaults to bus_dict_german from example_plotting_dicts.
     :type bus_dict: dictionary, optional
-    :param y_dict: labels for y-axes, key being the bus names from the model to plot and value the y-axis labels. Defaults to y_dict_german from example_plotting_dicts.
+    :param y_dict: labels for y-axes,
+        key being the bus names from the model to plot and value the y-axis labels.
+        Defaults to y_dict_german from example_plotting_dicts.
     :type y_dict: dictionary, optional
     """
 
