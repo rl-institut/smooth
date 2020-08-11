@@ -168,12 +168,14 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                         flow_range = flow[:nb_intervals - nb_trailing_none]
                         this_comp_flows[bus] = [-this_val for this_val in flow_range]
 
-            # Replaces shorthand component names in the results with the
-            # official names for those listed.
+            # get name from dictionary
+            # set default component name
+            name = component_result.name
             try:
-                component_result.name = name_label_dict[component_result.name]
+                # set name from dictionary
+                name = name_label_dict[name]
             except KeyError:
-                print(component_result.name + ": is not defined in the label dict.")
+                print("{}: is not defined in the label dict.".format(name))
 
             for this_bus in this_comp_flows:
                 if this_bus not in busses_to_plot:
@@ -181,7 +183,8 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                     busses_to_plot[this_bus] = dict()
 
                 # Add the flow of this component to this bus.
-                busses_to_plot[this_bus][component_result.name] = this_comp_flows[this_bus]
+                busses_to_plot[this_bus][name] = this_comp_flows[this_bus]
+
 
     if nb_trailing_none > 0:
         print(
