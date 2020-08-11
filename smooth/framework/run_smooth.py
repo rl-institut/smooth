@@ -10,7 +10,8 @@ def run_smooth(model):
     # Run the smooth simulation framework.
     # Parameters:
     #  model: smooth model object containing parameters for components, simulation and busses.
-    """ INITIALIZATION """
+
+    # ------------------- INITIALIZATION -------------------
     # legacy: components may be list. Convert to dict.
     if isinstance(model["components"], list):
         names = [c.pop("name") for c in model["components"]]
@@ -27,7 +28,7 @@ def run_smooth(model):
     df_results = None
     results_dict = None
 
-    """ SIMULATION """
+    # ------------------- SIMULATION -------------------
     for i_interval in range(sim_params.n_intervals):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
@@ -39,7 +40,7 @@ def run_smooth(model):
         oemof_model = solph.EnergySystem(timeindex=this_time_index,
                                          freq='{}min'.format(sim_params.interval_time))
 
-        """ CREATE THE OEMOF MODEL FOR THIS INTERVAL """
+        # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
         # Create all busses and save them to a dict for later use in the components.
         busses = {}
 
@@ -62,7 +63,7 @@ def run_smooth(model):
                 # If None is given back, no model is supposed to be added.
                 pass
 
-        """ RUN THE SIMULATION """
+        # ------------------- RUN THE SIMULATION -------------------
         # Do the simulation for this time step.
         model_to_solve = solph.Model(oemof_model)
 
@@ -75,7 +76,7 @@ def run_smooth(model):
 
         oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
-        """ CHECK IF SOLVING WAS SUCCESSFUL """
+        # ------------------- CHECK IF SOLVING WAS SUCCESSFUL -------------------
         # If the status and temination condition is not ok/optimal, get and
         # print the current flows and status
         status = oemof_results["Solver"][0]["Status"].key
@@ -88,11 +89,12 @@ def run_smooth(model):
             raise SolverNonOptimalError('solver status: ' + status +
                                         " / termination condition: " + termination_condition)
 
-        """ HANDLE RESULTS """
+        # ------------------- HANDLE RESULTS -------------------
         # Get the results of this oemof run.
         results = processing.results(model_to_solve)
-        results_dict = processing.parameter_as_dict(model_to_solve)
-        df_results = processing.create_dataframe(model_to_solve)
+        if sim_params.show_debug_flag:
+            results_dict = processing.parameter_as_dict(model_to_solve)
+            df_results = processing.create_dataframe(model_to_solve)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:

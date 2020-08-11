@@ -1,6 +1,6 @@
 from smooth.examples.example_model import mymodel
-from smooth import run_optimization
 from multiprocessing import freeze_support
+from smooth import run_optimization, save_results
 
 import logging
 logging.getLogger('pyomo.core').setLevel(logging.ERROR)
@@ -15,12 +15,24 @@ def main():
     #  pop_size: Number of individuals in the population [-].
     #  n_gen: Number of generations that will be evaluated [-].
     #  n_core: Number of cores used in the optimization ('max' will use all of them) [-].
-    #  plot_progress: show parteo front during each stop of the simulation [False].
+    #  plot_progress: show pareto front during each stop of the simulation [False].
+    #  objectives: objective functions to maximize [2-tuple].
+    #   Called with result of run_smooth.
+    #   Negative sign for minimizing.
+    #   Defaults to minimum of costs and emissions.
+    #  objective_names: description of objectives [2-tuple]
     opt_params['ga_params'] = {
-        'population_size': 30,
-        'n_generation': 15,
+        'population_size': 8,
+        'n_generation': 2,
         'n_core': 'max',
         'plot_progress': True,
+        'post_processing': True,
+        'objectives': (
+            lambda x: -sum([c.results["annuity_total"] for c in x]),
+            lambda x: -sum([c.results["annual_total_emissions"] for c in x]),
+        ),
+        'objective_names': ('costs', 'emissions'),
+        'SAVE_ALL_SMOOTH_RESULTS': False,
     }
     # Define the attribute variation information that will be used by the genetic algorithm.
     #  comp_name: Name of the component [string].
@@ -36,7 +48,7 @@ def main():
         'comp_attribute': 'power_max',
         'val_min': 100e3,
         'val_max': 2000e3,
-        'val_step': 100e3
+        'val_step': 50e3
     }
     var_storage_capacity = {
         'comp_name': 'h2_storage',
@@ -55,5 +67,4 @@ def main():
 if __name__ == '__main__':
     freeze_support()
     optimization_results = main()
-    # smooth.save_results('optimization_result', optimization_results)
-    # smooth.plot_optimization_results(optimization_results)
+    save_results('optimization_result', optimization_results)

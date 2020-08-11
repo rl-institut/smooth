@@ -64,7 +64,7 @@ class Component:
                 "If variable emissions are defined, " \
                 "dependency_flow for emissions has to be defined as well."
 
-    """ UPDATE THE FLOWS FOR EACH COMPONENT """
+    # ------------------- UPDATE THE FLOWS FOR EACH COMPONENT -------------------
 
     def update_flows(self, results, sim_params, comp_name=None):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
@@ -81,7 +81,7 @@ class Component:
         for i_result in this_df:
             # Check if this result is a flow
             if i_result[1] == 'flow':
-                this_flow_name = 'flow: ' + i_result[0][0] + '-->' + i_result[0][1]
+                this_flow_name = i_result[0][:]
                 # Check if there already is an array to store the flow
                 # information, if not, create one.
                 if this_flow_name not in self.flows:
@@ -89,14 +89,14 @@ class Component:
                 # Saving this flow value to the results file
                 self.flows[this_flow_name][sim_params.i_interval] = this_df[i_result][0]
 
-    """ PREPARE CREATING THE OEMOF MODEL """
+    # ------------------- PREPARE CREATING THE OEMOF MODEL -------------------
 
     def prepare_simulation(self, components):
         # If a component has artificial costs, this update_artificial_costs
         # function is overwritten in that component
         pass
 
-    """ UPDATE STATES (PLACEHOLDER FOR COMPONENTS WITHOUT STATES) """
+    # ------ UPDATE STATES (PLACEHOLDER FOR COMPONENTS WITHOUT STATES) ------
 
     def update_states(self, results, sim_params):
         # If a component has states, this update_states function is overwritten in that component
@@ -106,7 +106,7 @@ class Component:
         # Sometimes special contraints are needed, these can be written here.
         pass
 
-    """ UPDATE THE COSTS """
+    # ------------------- UPDATE THE COSTS -------------------
 
     def update_var_costs(self, results, sim_params):
         # Track the costs and artificial costs of a component for each time step.
@@ -154,7 +154,7 @@ class Component:
             self.results['variable_emissions'][sim_params.i_interval] = \
                 this_dependency_value * self.variable_emissions
 
-    """ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMTER IF THEY ARE NOT NONE """
+    # ------ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMETER IF THEY ARE NOT NONE ------
 
     def get_costs_and_art_costs(self):
         # Initialize the total variable costs and art. costs [EUR/???].

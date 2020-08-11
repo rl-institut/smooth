@@ -1,9 +1,10 @@
 from matplotlib import pyplot as plt
 from smooth.framework.functions.functions import extract_flow_per_bus
-from smooth.examples.example_plotting_dicts import comp_dict, bus_dict, y_dict
+from smooth.examples.example_plotting_dicts import comp_dict_german, bus_dict_german, y_dict_german
 
 
-def plot_smooth_results(smooth_result, comp_label_dict=comp_dict, bus_dict=bus_dict, y_dict=y_dict):
+def plot_smooth_results(smooth_result, comp_label_dict=comp_dict_german,
+                        bus_dict=bus_dict_german, y_dict=y_dict_german):
     # Extract dict containing the busses that will be plotted.
     busses_to_plot = extract_flow_per_bus(smooth_result, comp_label_dict)
 

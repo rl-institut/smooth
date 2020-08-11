@@ -9,38 +9,47 @@ class StorageH2 (Component):
         # Call the init function of the mother class.
         Component.__init__(self)
 
-        """ PARAMETERS """
+        # ------------------- PARAMETERS -------------------
         self.name = 'Storage_default_name'
 
         # Define the hydrogen bus the storage is connected to.
-        self.bus_in_and_out = None
+        self.bus_in = None
+        self.bus_out = None
         # Min. and max. pressure [bar].
         self.p_min = 0
         self.p_max = 450
-        # Storage capacity capacity at p_max (assuming all the can be used,
-        # p_min is not included here) [kg].
+        # Storage capacity at p_max (usable storage + min storage) [kg].
         self.storage_capacity = 500
-        # Initial USABLE storage level [kg].
-        self.storage_level_init = 200
         # Life time [a].
         self.life_time = 20
+        # The initial storage level as a factor of the capacity [-]
+        self.initial_storage_factor = 0.5
+        # Max chargeable hydrogen in one time step in kg/h
+        self.delta_max = None
+        # The storage level wanted as a factor of the capacity
+        self.slw_factor = None
 
-        """ PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) """
+        # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the storage [EUR/kg].
         self.vac_in = 0
         self.vac_out = 0
-        # If a storage level is set as wanted, the vac_low costs apply if the
-        # storage is below that level [kg].
-        self.storage_level_wanted = None
         # Var. art. costs that apply if the storage level is below the wanted
         # storage level [EUR/kg].
         self.vac_low_in = 0
         self.vac_low_out = 0
 
-        """ UPDATE PARAMETER DEFAULT VALUES """
+        # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
+        # Initial storage level [kg].
+        self.storage_level_init = self.initial_storage_factor * self.storage_capacity
+        # If a storage level is set as wanted, the vac_low costs apply if the
+        # storage is below that level [kg].
+        if self.slw_factor is not None:
+            self.storage_level_wanted = self.slw_factor * self.storage_capacity
+        else:
+            self.storage_level_wanted = None
 
-        """ CONSTANTS FOR REAL GAS EQUATION """
+        # ------------------- CONSTANTS FOR REAL GAS EQUATION -------------------
         # Critical temperature [K] and pressure [Pa], molar mass of H2
         # [kg/mol], the gas constant [J/(K*mol)].
         self.T_crit = 33.19
@@ -51,20 +60,22 @@ class StorageH2 (Component):
         self.rk_a = 0.1428
         self.rk_b = 1.8208e-5
 
-        """ FURTHER STORAGE VALUES DEPENDANT ON THE PRESSURE AND CAPACITY """
+        # ----- FURTHER STORAGE VALUES DEPENDANT ON THE PRESSURE/CAPACITY -----
         # Calculate the storage volume [m³].
         self.V = self.get_volume(self.p_max, self.storage_capacity)
         # Calculate the mass at p_min, which can't be used [kg].
         self.storage_level_min = self.get_mass(self.p_min)
+        # Asserts that the initial storage level must be greater than the minimum storage
+        # level
+        assert self.storage_level_init >= self.storage_level_min
 
-        """ STATES """
+        # ------------------- STATES -------------------
         # Storage level [kg of h2]
-        self.storage_level = min(self.storage_level_init +
-                                 self.storage_level_min, self.storage_capacity)
+        self.storage_level = min(self.storage_level_init, self.storage_capacity)
         # Storage pressure [bar].
         self.pressure = self.get_pressure(self.storage_level)
 
-        """ VARIABLE ARTIFICIAL COSTS """
+        # ------------------- VARIABLE ARTIFICIAL COSTS -------------------
         # Store the current artificial costs for input and output [EUR/kg].
         self.current_vac = [0, 0]
 
@@ -81,11 +92,16 @@ class StorageH2 (Component):
 
         self.current_vac = [vac_in, vac_out]
 
+        # max chargeable hydrogen in one time step in kg/h
+        self.delta_max = self.storage_capacity
+
     def create_oemof_model(self, busses, _):
         storage = solph.components.GenericStorage(
             label=self.name,
-            outputs={busses[self.bus_in_and_out]: solph.Flow(variable_costs=self.current_vac[1])},
-            inputs={busses[self.bus_in_and_out]: solph.Flow(variable_costs=self.current_vac[0])},
+            outputs={busses[self.bus_out]: solph.Flow(
+                nominal_value=self.delta_max, variable_costs=self.current_vac[1])},
+            inputs={busses[self.bus_in]: solph.Flow(
+                nominal_value=self.delta_max, variable_costs=self.current_vac[0])},
             initial_storage_level=self.storage_level / self.storage_capacity,
             nominal_storage_capacity=self.storage_capacity,
             min_storage_level=self.storage_level_min / self.storage_capacity,
@@ -131,8 +147,8 @@ class StorageH2 (Component):
         v_spec = 10
         for i in range(10):
             v_spec = (
-                    self.R * T / (p + (self.rk_a / (T**0.5*v_spec * (v_spec + self.rk_b))))
-                ) + self.rk_b
+                self.R * T / (p + (self.rk_a / (T**0.5 * v_spec * (v_spec + self.rk_b))))
+            ) + self.rk_b
 
         # Calculate the mass [kg].
         m = V * self.Mr / v_spec
@@ -152,8 +168,8 @@ class StorageH2 (Component):
         v_spec = 10
         for i in range(10):
             v_spec = (
-                    self.R * T / (p + (self.rk_a / (T**0.5*v_spec * (v_spec + self.rk_b))))
-                ) + self.rk_b
+                self.R * T / (p + (self.rk_a / (T**0.5 * v_spec * (v_spec + self.rk_b))))
+            ) + self.rk_b
 
         # Calculate the volume [m3]
         V = m * v_spec / self.Mr

@@ -82,4 +82,5 @@ Contact ...
 License
 =======
 
-SMOOTH is licensed under the GNU Affero General Public License v3.0. See the `LICENSE file <https://github.com/rl-institut/smooth/blob/dev/LICENSE>`_ for details.
+SMOOTH is licensed under the Apache License, Version 2.0 or the MIT license, at your option.
+See the `COPYRIGHT file <https://github.com/rl-institut/smooth/blob/dev/COPYRIGHT>`_ for details.

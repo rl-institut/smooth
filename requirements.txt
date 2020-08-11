@@ -1,5 +1,7 @@
 matplotlib
 pandas
 numpy
-oemof
 scipy
+dill
+#oemof
+pyutilib==5.8.0
