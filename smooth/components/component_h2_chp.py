@@ -38,45 +38,45 @@ class H2Chp(Component):
             # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
             self.bp_load_electric = [0.0, 1.0]
             # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
-            self.bp_eff_electric = [0.0, 0.377]
+            self.bp_eff_electric = [0.377, 0.377]
 
             # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
             self.bp_load_thermal = [0.0, 1.0]
             # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
-            self.bp_eff_thermal = [0.0, 0.423]
+            self.bp_eff_thermal = [0.423, 0.423]
 
         elif 115e3 < self.power_max <= 170e3:
             # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
             self.bp_load_electric = [0.0, 1.0]
             # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
-            self.bp_eff_electric = [0.0, 0.39]
+            self.bp_eff_electric = [0.39, 0.39]
 
             # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
             self.bp_load_thermal = [0.0, 1.0]
             # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
-            self.bp_eff_thermal = [0.0, 0.419]
+            self.bp_eff_thermal = [0.419, 0.419]
 
         elif 170e3 < self.power_max <= 240e3:
             # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
             self.bp_load_electric = [0.0, 1.0]
             # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
-            self.bp_eff_electric = [0.0, 0.402]
+            self.bp_eff_electric = [0.402, 0.402]
 
             # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
             self.bp_load_thermal = [0.0, 1.0]
             # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
-            self.bp_eff_thermal = [0.0, 0.419]
+            self.bp_eff_thermal = [0.419, 0.419]
 
         elif 240e3 < self.power_max:
             # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
             self.bp_load_electric = [0.0, 1.0]
             # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
-            self.bp_eff_electric = [0.0, 0.405]
+            self.bp_eff_electric = [0.405, 0.405]
 
             # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
             self.bp_load_thermal = [0.0, 1.0]
             # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
-            self.bp_eff_thermal = [0.0, 0.417]
+            self.bp_eff_thermal = [0.417, 0.417]
 
         # Now calculate the absolute values for electricity [Wh] and thermal
         # energy [Wh] and H2 consumption [kg].
