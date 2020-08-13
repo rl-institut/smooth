@@ -2,11 +2,10 @@ import pickle
 
 
 def load_results(file_path):
-    # Load the result of either a smooth run or an optimization run by the genetic algorithm.
-    # Parameter:
-    #  file_path: Path of the result pickle file [str].
+    """Load the result of either a smooth run or an optimization run by the genetic algorithm.
 
-    # Create a pointer to the file.
-    file_to_load = open(file_path, 'rb')
-    # Return the results.
-    return pickle.load(file_to_load)
+    :param file_path: path of the result pickle file
+    :type file_path: string
+    """
+    with open(file_path, 'rb') as file_to_load:
+        return pickle.load(file_to_load)
