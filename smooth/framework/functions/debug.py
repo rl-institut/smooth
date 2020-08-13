@@ -3,6 +3,18 @@ from smooth.framework.functions.plot_results import plot_smooth_results
 
 
 def get_df_debug(df_results, results_dict, new_df_results):
+    """Generate debug info from results.
+
+    :param df_results: results dataframe to compare against (e.g. last iteration)
+    :type df_results: pandas dataframe
+    :param results_dict: results dictionary from oemof.processing.parameter_as_dict
+    :param new_df_results: newest results dataframe
+    :type new_df_results: pandas dataframe
+    :return: debug dataframe
+    :rtype: pandas dataframe
+    :raises TypeError: if df_results or results_dict is not set
+    """
+
     # If no results were calculated yet, raise an exception
     if df_results is None or results_dict is None:
         raise TypeError
@@ -52,6 +64,13 @@ def get_df_debug(df_results, results_dict, new_df_results):
 
 
 def show_debug(df_debug, components):
+    """Print and plot debug info, save to file
+
+    :param df_debug: debug dataframe
+    :type df_debug: pandas dataframe
+    :param components: result from run_smooth for plotting
+    :type components: list of :class:`~smooth.components.component.Component`
+    """
     print("------------------------------------------------------------------------------")
     with pd.option_context(
             "display.max_rows", 99,

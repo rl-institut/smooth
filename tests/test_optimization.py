@@ -198,7 +198,8 @@ class TestGA:
     def test_fitness(self):
         idx = 1
         ind = opt.Individual([1])
-        (idx2, ind2) = opt.fitness_function(idx, ind, None, [], None, False)
+        (idx2, ind2) = opt.fitness_function(idx, ind, None, [], None,
+                                            ignore_zero=False, save_results=False)
 
         assert idx == idx2
         for gene_idx, gene in enumerate(ind):
@@ -206,6 +207,24 @@ class TestGA:
         # smooth throws error: no fitness or result
         assert ind2.fitness is None
         assert ind2.smooth_result is None
+
+        # test ignore_zero
+        ind = opt.Individual([0])
+        model = {"components": {"foo": {"bar": 0}, "bar": {"foo": 0}}}
+        av = [opt.AttributeVariation(self.av_dict)]
+        opt.fitness_function(idx, ind, model, av, None, ignore_zero=False, save_results=False)
+        assert {"foo", "bar"} == model["components"].keys()
+
+        # ignore_zero: remove foo from model
+        opt.fitness_function(idx, ind, model, av, None, ignore_zero=True, save_results=False)
+        assert {"bar"} == model["components"].keys()
+
+        # ignore_zero twice on same component
+        model = {"components": {"foo": {"bar": 0}, "bar": {"foo": 0}}}
+        ind = opt.Individual([0, 0])
+        av = [opt.AttributeVariation(self.av_dict)]*2
+        opt.fitness_function(idx, ind, model, av, None, ignore_zero=True, save_results=False)
+        assert {"bar"} == model["components"].keys()
 
     def test_optimization(self):
         o = opt.Optimization({
