@@ -1,5 +1,5 @@
 from smooth.examples.example_VarGrid.example_model_var_grid import mymodel
-from smooth.examples.example_VarGrid.example_plotting_dict_var_grid import comp_dict_german
+from smooth.examples.example_plotting_dicts import comp_dict_german
 from smooth import run_smooth
 from smooth import plot_smooth_results
 from smooth import print_smooth_results

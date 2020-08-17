@@ -14,11 +14,11 @@ components = list()
 
 components.append({
     'component': 'energy_demand_from_csv',
-    'name': 'charge_demand',
+    'name': 'el_demand',
     'bus_in': 'bel',
     'csv_filename': 'demand.csv',
     'nominal_value': 1000,  # Umrechnungsfaktor in Wh
-    'column_title': 'Charging load',
+    'column_title': 'electrical load',
     'path': my_path
 })
 
