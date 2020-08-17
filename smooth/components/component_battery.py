@@ -69,8 +69,9 @@ class Battery(Component):
         # State of charge [%]
         self.soc = self.soc_init
 
-        # Initialize max. chargeable or dischargeable energy [Wh].
-        self.e_in_max = None
+        # Initialize max. chargeable or dischargeable power [W].
+        self.p_in_max = None
+        self.p_out_max = None
 
         # Adjust loss rate to chosen timestep [%/timestep].
         self.loss_rate = (self.loss_rate / 24) * (self.sim_params.interval_time / 60)
@@ -97,30 +98,30 @@ class Battery(Component):
 
         # ToDo: c_rate depending on the soc
 
-        # Max. chargeable or dischargeable energy [Wh] goinge in from the bus
+        # Max. chargeable or dischargeable power [W] going in from the bus
         # due to c_rate depending on the soc. To ensure that the battery can
         # be fully charged in one timestep, the nominal value of the input-flow
         # needs to be higher than what's actually going into the battery.
         # Therefore we need to divide by the efficiency_charge.  Due to the
         # inflow_conversion_factor (in "create oemof model") the battery will
         # then receive right amount.
-        self.e_in_max = min(
-            self.c_rate_charge * self.battery_capacity * self.sim_params.interval_time / 60,
-            self.battery_capacity - self.soc * self.battery_capacity) / \
-            self.efficiency_charge
-        self.e_out_max = min(
-            self.c_rate_discharge * self.battery_capacity * self.sim_params.interval_time / 60,
-            self.soc * self.battery_capacity)
+
+        self.p_in_max = min(self.c_rate_charge * self.battery_capacity,
+                            (self.battery_capacity - self.soc * self.battery_capacity)
+                            * 60/self.sim_params.interval_time) / self.efficiency_charge
+        self.p_out_max = min(
+            self.c_rate_discharge * self.battery_capacity,
+            (self.soc * self.battery_capacity) * 60/self.sim_params.interval_time)
 
     def create_oemof_model(self, busses, _):
         """ Create oemof model """
         storage = solph.components.GenericStorage(
             label=self.name,
             inputs={busses[self.bus_in_and_out]: solph.Flow(
-                    nominal_value=self.e_in_max, variable_costs=self.current_vac[0])
+                    nominal_value=self.p_in_max, variable_costs=self.current_vac[0])
                     },
             outputs={busses[self.bus_in_and_out]: solph.Flow(
-                nominal_value=self.e_out_max, variable_costs=self.current_vac[1])
+                nominal_value=self.p_out_max, variable_costs=self.current_vac[1])
             },
             loss_rate=self.loss_rate,
             initial_storage_level=self.soc,

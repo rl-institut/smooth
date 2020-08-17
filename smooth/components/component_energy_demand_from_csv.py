@@ -5,7 +5,11 @@ import smooth.framework.functions.functions as func
 
 
 class EnergyDemandFromCsv(Component):
-    """ Energy demand created through this class from a csv file """
+    """ Energy demand per hour is created through this class from a csv file
+
+    Each line in the csv file represents one timestep and each value
+    the respective power demand (e.g. in [W]) at that timestep
+    """
 
     def __init__(self, params):
 

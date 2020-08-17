@@ -127,12 +127,12 @@ class Component:
         if self.variable_costs is not None:
             this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
             self.results['variable_costs'][sim_params.i_interval] = this_dependency_value * \
-                self.variable_costs
+                self.variable_costs * sim_params.interval_time/60
         # Update the artificial costs for this time step [EUR].
         if self.artificial_costs is not None:
             this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
             self.results['art_costs'][sim_params.i_interval] = this_dependency_value * \
-                self.artificial_costs
+                self.artificial_costs * sim_params.interval_time/60
 
     def update_var_emissions(self, results, sim_params):
         # Track the emissions of a component for each time step.
@@ -152,7 +152,7 @@ class Component:
             this_dependency_value = \
                 self.flows[self.dependency_flow_emissions][sim_params.i_interval]
             self.results['variable_emissions'][sim_params.i_interval] = \
-                this_dependency_value * self.variable_emissions
+                this_dependency_value * self.variable_emissions * sim_params.interval_time/60
 
     # ------ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMETER IF THEY ARE NOT NONE ------
 
