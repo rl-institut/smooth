@@ -3,7 +3,7 @@ from .component import Component
 from oemof.outputlib import views
 
 
-class Battery(Component):
+class VarBattery(Component):
     """ Stationary battery is created through this class """
 
     def __init__(self, params):
@@ -16,8 +16,59 @@ class Battery(Component):
 
         # Define the electric bus the battery is connected to.
         self.bus_in_and_out = None
+
+        self.battery_type = 1
+
         # Battery capacity (assuming all the capacity can be used) [Wh].
-        self.battery_capacity = 5000
+        # Battery type 1: Li_battery 1 - 50 kWh
+        self.battery_capacity_bt1 = 10 * 1e3
+        # Battery type 2: Li_battery 50 - 1000 kWh
+        self.battery_capacity_bt2 = 100 * 1e3
+        # Battery type 3: Li_battery > 1000 kWh
+        self.battery_capacity_bt3 = 1 * 1e6
+        # Battery type 4: ????
+        self.battery_capacity_bt4 = 1
+        # Battery type 5: ????
+        self.battery_capacity_bt5 = 1
+        # Battery type 6: ????
+        self.battery_capacity_bt6 = 1
+
+        # Capex for each battery type
+        self.capex_bt1 = {
+            'key': ['poly'],
+            'fitting_value': [[0, 2109.62368 / 1e3, -147.52325 / 1e6, 6.97016 / 1e9,
+                               -0.13996 / 1e12, 0.00102 / 1e15]],
+            'dependant_value': ['battery_capacity']},
+
+        self.capex_bt2 = {
+             'key': ['poly'],
+             'fitting_value': [[0, 1000.2 / 1e3, -0.4983 / 1e6]],
+             'dependant_value': ['battery_capacity']},
+
+        self.capex_bt3 = {
+             'key': ['poly', 'spec'],
+             'fitting_value': [[0.353, 0.149], 'cost'],  # für 2020
+             # 'fitting_value': [[0.289, 0.126], 'cost'],  # für 2025
+             # 'fitting_value': [[0.251, 0.114], 'cost'],  # für 2030
+             # 'fitting_value': [[0.206, 0.0971], 'cost'],  # für 2035
+             # 'fitting_value': [[0.179, 0.0857], 'cost'],  # für 2040
+             'dependant_value': ['c_rate_charge', 'battery_capacity']},
+
+        self.capex_bt4 = {
+            'key': ['poly'],
+            'fitting_value': [[500000, 0.02]],
+            'dependant_value': ['output_max']}
+
+        self.capex_bt5 = {
+            'key': ['poly'],
+            'fitting_value': [[1000000, 0.01]],
+            'dependant_value': ['output_max']}
+
+        self.capex_bt6 = {
+            'key': ['poly'],
+            'fitting_value': [[10000000, 0.01]],
+            'dependant_value': ['output_max']}
+
         # Initial State of charge [-].
         self.soc_init = 0.5
         # ToDo: set default value for efficiency
@@ -27,14 +78,15 @@ class Battery(Component):
         self.efficiency_discharge = 0.95
         # ToDo: set default value loss rate
         # Loss rate [%/day]
-        self.loss_rate = None
+        self.loss_rate = 0
         # ToDo: set default value for c-rate
         # C-Rate [-/h].
-        self.c_rate_charge = 1
-        self.c_rate_discharge = 1
+        self.c_rate = 1
+        # self.c_rate_charge = 1
+        # self.c_rate_discharge = 1
         # ToDo: set default value for depth of discharge
         # Depth of discharge [-].
-        self.dod = None
+        self.dod = 0
         # ToDo: set default value life time. Per cycle or time
         # Life time [a].
         self.life_time = 20
@@ -64,6 +116,31 @@ class Battery(Component):
             raise ValueError(
                 'Initial state of charge is set below depth of discharge! '
                 'Please adjust soc_init or dod.')
+        if self.battery_type == 1:
+            self.battery_capacity = self.battery_capacity_bt1
+            self.capex = self.capex_bt1
+        elif self.battery_type == 2:
+            self.battery_capacity = self.battery_capacity_bt2
+            self.capex = self.capex_bt2
+        elif self.battery_type == 3:
+            self.battery_capacity = self.battery_capacity_bt3
+            self.capex = self.capex_bt3
+        elif self.battery_type == 4:
+            self.battery_capacity = self.battery_capacity_bt4
+            self.capex = self.capex_bt4
+        elif self.battery_type == 5:
+            self.battery_capacity = self.battery_capacity_bt5
+            self.capex = self.capex_bt5
+        elif self.battery_type == 6:
+            self.battery_capacity = self.battery_capacity_bt6
+            self.capex = self.capex_bt6
+
+        self.c_rate_discharge = self.c_rate
+        self.c_rate_charge = self.c_rate
+        # This value can be used as faktor in capex to add an insignificant cost for higher c-rates.
+        # The optimization then strives towards a low c-rate,
+        # even for price models which are independet of the c-rate
+        self.c_rate_insig_cost = 1 + self.c_rate * 0.00001
 
         # ------------------- STATES -------------------
         # State of charge [%]
