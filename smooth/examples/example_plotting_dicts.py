@@ -18,10 +18,10 @@ comp_dict_german = {
 }
 
 bus_dict_german = {
-    'bel': 'Elektrische Leistung',
-    'bel_wind':	'Wind Leistung',
-    'bel_pv': 'PV Leistung',
-    'bth': 'Thermische Leistung',
+    'bel': 'Elektrische Energie',
+    'bel_wind':	'Wind Energie',
+    'bel_pv': 'PV Energie',
+    'bth': 'Thermische Energie',
     'bh2_lp': 'Wasserstoff-Fluss bei Niederdruck',
     'bh2_mp': 'Wasserstoff-Fluss bei Mitteldruck',
     'bh2_hp': 'Wasserstoff-Fluss bei Hochdruck',
@@ -29,14 +29,14 @@ bus_dict_german = {
 }
 
 y_dict_german = {
-    'bel': 'Leistung in W',
-    'bel_wind':	'Leistung in W',
-    'bel_pv': 'Leistung in W',
-    'bth': 'Leistung in W',
-    'bh2_lp': 'Wasserstoff in kg/h',
-    'bh2_mp': 'Wasserstoff in kg/h',
-    'bh2_hp': 'Wasserstoff in kg/h',
-    'bch4': 'Biomethan in kg/h',
+    'bel': 'Energie in Wh',
+    'bel_wind':	'Energie in Wh',
+    'bel_pv': 'Energie in Wh',
+    'bth': 'Energie in Wh',
+    'bh2_lp': 'Wasserstoff in kg',
+    'bh2_mp': 'Wasserstoff in kg',
+    'bh2_hp': 'Wasserstoff in kg',
+    'bch4': 'Biomethan in kg',
 }
 
 # ------------------- ENGLISH DICTIONARIES -------------------
@@ -59,10 +59,10 @@ comp_dict_english = {
 }
 
 bus_dict_english = {
-    'bel': 'Electrical power',
-    'bel_wind':	'Wind power',
-    'bel_pv': 'PV power',
-    'bth': 'Thermal power',
+    'bel': 'Electrical energy',
+    'bel_wind':	'Wind energy',
+    'bel_pv': 'PV energy',
+    'bth': 'Thermal energy',
     'bh2_lp': 'Low pressure hydrogen flow',
     'bh2_mp': 'Medium pressure hydrogen flow',
     'bh2_hp': 'High pressure hydrogen flow',
@@ -70,12 +70,12 @@ bus_dict_english = {
 }
 
 y_dict_english = {
-    'bel': 'Power in W',
-    'bel_wind':	'Power in W',
-    'bel_pv': 'Power in W',
-    'bth': 'Power in W',
-    'bh2_lp': 'Hydrogen in kg/h',
-    'bh2_mp': 'Hydrogen in kg/h',
-    'bh2_hp': 'Hydrogen in kg/h',
-    'bch4': 'Biomethane in kg/h',
+    'bel': 'Energy in Wh',
+    'bel_wind':	'Energy in Wh',
+    'bel_pv': 'Energy in Wh',
+    'bth': 'Energy in Wh',
+    'bh2_lp': 'Hydrogen in kg',
+    'bh2_mp': 'Hydrogen in kg',
+    'bh2_hp': 'Hydrogen in kg',
+    'bch4': 'Biomethane in kg',
 }
