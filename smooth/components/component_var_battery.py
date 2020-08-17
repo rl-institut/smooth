@@ -36,7 +36,8 @@ class VarBattery(Component):
         # Capex for each battery type
         self.capex_bt1 = {
             'key': ['poly'],
-            'fitting_value': [[0, 2109.62368 / 1e3, -147.52325 / 1e6, 6.97016 / 1e9, -0.13996 / 1e12, 0.00102 / 1e15]],
+            'fitting_value': [[0, 2109.62368 / 1e3, -147.52325 / 1e6, 6.97016 / 1e9,
+                               -0.13996 / 1e12, 0.00102 / 1e15]],
             'dependant_value': ['battery_capacity']},
 
         self.capex_bt2 = {
@@ -137,7 +138,8 @@ class VarBattery(Component):
         self.c_rate_discharge = self.c_rate
         self.c_rate_charge = self.c_rate
         # This value can be used as faktor in capex to add an insignificant cost for higher c-rates.
-        # The optimization then strives towards a low c-rate, even for price models which are independet of the c-rate
+        # The optimization then strives towards a low c-rate,
+        # even for price models which are independet of the c-rate
         self.c_rate_insig_cost = 1 + self.c_rate * 0.00001
 
         # ------------------- STATES -------------------
