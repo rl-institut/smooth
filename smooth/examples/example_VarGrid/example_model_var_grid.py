@@ -11,16 +11,6 @@ busses = ['bel']
 
 """ Define components """
 components = list()
-components.append({
-    'component': 'energy_source_from_csv',
-    'name': 'solar_output',
-    'bus_out': 'bel',
-    'csv_filename': 'ts_pv.csv',
-    'csv_separator': ';',
-    'nominal_value': 1000,  # Umrechnungsfaktor in kWh
-    'column_title': 'PV generation [kWh]',
-    'path': my_path
-})
 
 components.append({
     'component': 'energy_demand_from_csv',
@@ -67,16 +57,6 @@ components.append({
         'dependant_value': 'capex'
     }
 
-})
-
-components.append({
-    'component': 'sink',
-    'name': 'to_grid',
-    'bus_in': 'bel',
-    # 'artificial_costs': 2,
-    'variable_costs': 0.05 / 1000,
-    'dependency_flow_costs': ('bel', 'to_grid'),
-    'input_max': 800000000,
 })
 
 sim_params = {
