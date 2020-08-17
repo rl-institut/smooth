@@ -3,7 +3,26 @@ from .component import Component
 
 
 class VarGrid(Component):
-    """ An electric grid with different connection levels can be created through this class """
+    """ An electric grid with different connection levels can be created through this class
+
+        Gridlevels [1,2,3,4,5,6] describe the grid connection, if left unmodified these are:
+        [1] house connection, [2] lov voltage grid, [3] lov voltage local network station
+        [4] medium voltage grid, [5] medium voltage transformer station, [6] High Voltage.
+        These can be associated with different output_max and capex for each level.
+
+    :param self.name: unique name of the component
+    :type self.name: str
+
+    :param self.grid_level: set the grid level to be used
+    :type self.grid_level: int (1-6)
+
+    :param self.grid_l1_output_max: Maximum power output of specific grid level [W]
+    :type self.grid_l1_output_max: int
+
+    :param self.capex_l1: Capex for each grid level (e.g grid connection costs
+    :type self.capex_l1: dict
+
+    """
 
     def __init__(self, params):
 
