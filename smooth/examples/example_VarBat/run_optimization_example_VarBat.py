@@ -47,7 +47,7 @@ def main():
     # possible values 5, 15, 25, 35, 45 and 55.
 
     var_bat_type = {
-        'comp_name': 'Li_battery',
+        'comp_name': 'li_battery',
         'comp_attribute': 'battery_type',
         'val_min': 1,
         'val_max': 3,
@@ -55,21 +55,21 @@ def main():
     }
 
     var_battery_capacity_bt1 = {
-        'comp_name': 'Li_battery',
+        'comp_name': 'li_battery',
         'comp_attribute': 'battery_capacity_bt1',
         'val_min': 0,
         'val_max': 50 * 1e3,
         'val_step': 10 * 1e3,
     }
     var_battery_capacity_bt2 = {
-        'comp_name': 'Li_battery',
+        'comp_name': 'li_battery',
         'comp_attribute': 'battery_capacity_bt2',
         'val_min': 50 * 1e3,
         'val_max': 1000 * 1e3,
         'val_step': 50 * 1e3,
     }
     var_battery_capacity_bt3 = {
-        'comp_name': 'Li_battery',
+        'comp_name': 'li_battery',
         'comp_attribute': 'battery_capacity_bt3',
         # 'val_min': 1 * 1e6,
         # 'val_max': 5 * 1e6,
@@ -79,7 +79,7 @@ def main():
         'val_step': 500000,
     }
     var_c_rate = {
-        'comp_name': 'Li_battery',
+        'comp_name': 'li_battery',
         'comp_attribute': 'c_rate',
         'val_min': 0.1,
         'val_max': 2,

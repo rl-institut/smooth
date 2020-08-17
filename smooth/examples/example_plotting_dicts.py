@@ -5,6 +5,7 @@ comp_dict_german = {
     'this_pem_ely': 'PEM-Elektrolyseur',
     'pv_output': 'PV-Anlage',
     'wind_output': 'WE-Anlage',
+    'el_demand': 'Strombedarf',
     'th_demand': 'Heizbedarf',
     'h2_demand': 'Wasserstoffbedarf',
     'h2_compressor': 'Wasserstoffkompressor (Hochdruck)',
@@ -15,6 +16,7 @@ comp_dict_german = {
     'CHP_Methane': 'Biogas-BHKW',
     'ch4_grid': 'Biogas-Zufuhr',
     'h2_compressor_from_ely': 'Wasserstoffkompressor (Niederdruck)',
+    'li_battery': 'Lithium Batterie',
 }
 
 bus_dict_german = {
@@ -46,6 +48,7 @@ comp_dict_english = {
     'this_pem_ely': 'PEM electrolyser',
     'pv_output': 'PV system',
     'wind_output': 'WE system',
+    'el_demand': 'Electricity demand',
     'th_demand': 'Thermal demand',
     'h2_demand': 'Hydrogen demand',
     'h2_compressor': 'Hydrogen compressor (higher pressure)',
@@ -56,6 +59,7 @@ comp_dict_english = {
     'CHP_Methane': 'Methane CHP',
     'ch4_grid': 'Biogas supply',
     'h2_compressor_from_ely': 'Hydrogen compressor (lower pressure)',
+    'li_battery': 'Lithium battery',
 }
 
 bus_dict_english = {
