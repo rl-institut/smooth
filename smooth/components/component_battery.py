@@ -116,7 +116,8 @@ class Battery(Component):
             ) / self.efficiency_charge
         self.p_out_max = min(
             self.c_rate_discharge * self.battery_capacity,
-            (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60))
+            (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60)
+            )
 
     def create_oemof_model(self, busses, _):
         """ Create oemof model """
