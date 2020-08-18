@@ -105,13 +105,18 @@ class Battery(Component):
         # Therefore we need to divide by the efficiency_charge.  Due to the
         # inflow_conversion_factor (in "create oemof model") the battery will
         # then receive right amount.
+        # Flows are calculated as Power [W], so the amount of charge- or dischargeable
+        # energy [Wh] has to be divided by the intervaltime [h]  (P = E / t)
+        # The c-rate is given in [W/Wh], multiplication with capacity [Wh] results in power [W]
 
-        self.p_in_max = min(self.c_rate_charge * self.battery_capacity,
-                            (self.battery_capacity - self.soc * self.battery_capacity)
-                            * 60/self.sim_params.interval_time) / self.efficiency_charge
+        self.p_in_max = min(
+            self.c_rate_charge * self.battery_capacity,
+            (self.battery_capacity - self.soc * self.battery_capacity) /
+            (self.sim_params.interval_time/60)
+            ) / self.efficiency_charge
         self.p_out_max = min(
             self.c_rate_discharge * self.battery_capacity,
-            (self.soc * self.battery_capacity) * 60/self.sim_params.interval_time)
+            (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60))
 
     def create_oemof_model(self, busses, _):
         """ Create oemof model """
