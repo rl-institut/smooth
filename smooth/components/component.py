@@ -124,15 +124,19 @@ class Component:
             self.results['art_costs'] = [0] * sim_params.n_intervals
 
         # Update the costs for this time step [EUR].
+        # Costs are associated with absolute values (e.g. [Wh] org [kg]), flows are given in
+        # time derivatives (e.g. [W] org [kg/h]) and have to be adjusted to interval time [h]
         if self.variable_costs is not None:
             this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
-            self.results['variable_costs'][sim_params.i_interval] = this_dependency_value * \
-                self.variable_costs * sim_params.interval_time/60
+            self.results['variable_costs'][sim_params.i_interval] = \
+                this_dependency_value * sim_params.interval_time/60 * self.variable_costs
         # Update the artificial costs for this time step [EUR].
+        # Costs are associated with absolute values (e.g. [Wh] org [kg]), flows are given in
+        # time derivatives (e.g. [W] org [kg/h]) and have to be adjusted to interval time [h]
         if self.artificial_costs is not None:
             this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
-            self.results['art_costs'][sim_params.i_interval] = this_dependency_value * \
-                self.artificial_costs * sim_params.interval_time/60
+            self.results['art_costs'][sim_params.i_interval] = \
+                this_dependency_value * sim_params.interval_time/60 * self.artificial_costs
 
     def update_var_emissions(self, results, sim_params):
         # Track the emissions of a component for each time step.
@@ -148,11 +152,13 @@ class Component:
 
         # Update the emissions for this time step [kg]. Before, verify if a
         # flow name is given as emission dependency.
+        # Emissions are associated with absolute values (e.g. [Wh] org [kg]), flows are given in
+        # time derivatives (e.g. [W] org [kg/h]) and have to be adjusted to interval time [h]
         if self.variable_emissions is not None:
             this_dependency_value = \
                 self.flows[self.dependency_flow_emissions][sim_params.i_interval]
             self.results['variable_emissions'][sim_params.i_interval] = \
-                this_dependency_value * self.variable_emissions * sim_params.interval_time/60
+                this_dependency_value * sim_params.interval_time/60 * self.variable_emissions
 
     # ------ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMETER IF THEY ARE NOT NONE ------
 
