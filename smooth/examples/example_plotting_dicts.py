@@ -16,6 +16,7 @@ comp_dict_german = {
     'CHP_Methane': 'Biogas-BHKW',
     'ch4_grid': 'Biogas-Zufuhr',
     'h2_compressor_from_ely': 'Wasserstoffkompressor (Niederdruck)',
+    'li_battery': 'Lithium Batterie',
 }
 
 bus_dict_german = {
@@ -58,6 +59,7 @@ comp_dict_english = {
     'CHP_Methane': 'Methane CHP',
     'ch4_grid': 'Biogas supply',
     'h2_compressor_from_ely': 'Hydrogen compressor (lower pressure)',
+    'li_battery': 'Lithium battery',
 }
 
 bus_dict_english = {
