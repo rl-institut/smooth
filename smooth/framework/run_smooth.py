@@ -26,15 +26,19 @@ def run_smooth(model, mpc_params):
         initial_inputs.extend([this_in['mpc_data']] * mpc_params['control_horizon'])
     # mpc_iter = 0
 
+    # create bounds and constraints dor the mpc optimization
+    bounds = mpc.create_bounds_mpc(mpc_params['system_inputs'], mpc_params['control_horizon'])
+    if mpc_params['constraints']:
+        constraints = mpc.create_constraints_mpc(mpc_params['constraints'], mpc_params['control_horizon'])
+    else:
+        constraints = []
+
     # GET SIMULATION PARAMETERS
-    # Create an object with the simulation parameters.
-    # QUICK FIX:
+    # Create an object with the simulation parameters with extended date time index
     model['sim_params']['n_intervals'] = model['sim_params']['n_intervals'] + mpc_params['prediction_horizon']
     sim_params = sp(model['sim_params'])
-    # Create simulation parameters for mpc with extended date_time_index
-    dict_sim_params_mpc = deepcopy(model['sim_params'])
-    dict_sim_params_mpc['n_intervals'] = model['sim_params']['n_intervals'] + mpc_params['prediction_horizon']
-    sim_params_mpc = sp(dict_sim_params_mpc)
+    # deep copy simulation parameters for mpc
+    sim_params_mpc = deepcopy(sim_params)
 
     # CREATE COMPONENT OBJECTS
     components = create_component_obj(model, sim_params)
@@ -66,6 +70,7 @@ def run_smooth(model, mpc_params):
                                                                     mpc_params['control_horizon'],
                                                                     mpc_params['prediction_horizon'],
                                                                     mpc_params['minimize_options'],
+                                                                    bounds, constraints,
                                                                     initial_inputs, sim_params_mpc, i_interval)
         mpc.set_system_input_mpc(components, mpc_params['system_inputs'], iteration=0)
         initial_inputs = []
@@ -152,4 +157,4 @@ def run_smooth(model, mpc_params):
     sim_params.date_time_index = sim_params.date_time_index[:sim_params.n_intervals - mpc_params['prediction_horizon']]
     sim_params.n_intervals = sim_params.n_intervals - mpc_params['prediction_horizon']
 
-    return components, status, system_outputs
+    return components, status
