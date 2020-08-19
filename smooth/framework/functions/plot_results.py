@@ -10,8 +10,8 @@ def plot_smooth_results(smooth_result, comp_label_dict=comp_dict_german,
 
     All plots are drawn in a new window.
 
-    :param smooth_results: result from run_smooth containing all components
-    :type smooth_results: list of :class:`~smooth.components.component.Component`
+    :param smooth_result: result from run_smooth containing all components
+    :type smooth_result: list of :class:`~smooth.components.component.Component`
     :param comp_label_dict: component labels,
         key being the component name in the model and value the name to display.
         Defaults to comp_dict_german from example_plotting_dicts.
