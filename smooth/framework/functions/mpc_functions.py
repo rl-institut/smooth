@@ -2,7 +2,8 @@ from oemof.outputlib import views
 from oemof import solph
 from oemof.outputlib import processing
 import math
-from scipy.optimize import Bounds, minimize
+from scipy.optimize import Bounds, LinearConstraint, minimize
+import numpy as np
 from smooth.framework.functions.debug import get_df_debug, show_debug
 from copy import deepcopy
 from smooth.framework.functions.load_results import load_results
@@ -171,17 +172,50 @@ def sine_list_input_mpc(operating_point,amplitude,time_end):
     return sine
 
 
+def create_bounds_mpc(system_inputs, control_horizon):
+    lb = []
+    ub = []
+    for this_in in system_inputs:
+        lb.extend(this_in['lower_bound'] * control_horizon)
+        ub.extend(this_in['upper_bound'] * control_horizon)
+    return Bounds(lb, ub)
+
+
+def create_constraints_mpc(constraints, control_horizon):
+    a = np.empty(0)
+    for this_coeff in constraints['coeffs']:
+        to_add = np.diagflat([this_coeff] * control_horizon)
+        if not a.any():
+            a = to_add
+        else:
+            a = np.hstack((a, to_add))
+    return LinearConstraint(a, [constraints['lower_bound']] * control_horizon,
+                            [constraints['upper_bound']] * control_horizon)
+
+
 def model_predictive_control(model, components, system_inputs, control_horizon, prediction_horizon, minimize_options,
-                    initial_inputs, sim_params_mpc, i_interval):
+                             bounds, constraints, initial_inputs, sim_params_mpc, i_interval):
     # define system inputs
     # system_inputs = define_system_inputs_mpc()
     # a. constraints definieren
+    """
     lb = []
     ub = []
     for this_in in system_inputs:
         lb.extend(this_in['lower_bound'] * control_horizon)
         ub.extend(this_in['upper_bound'] * control_horizon)
     bounds = Bounds(lb, ub)
+    if constraints:
+        a = np.empty(0)
+        for this_coeff in constraints['coeffs']:
+            to_add = np.diagflat([this_coeff] * control_horizon)
+            if not a.any():
+                a = to_add
+            else:
+                a = np.hstack((a, to_add))
+        linear_constraint = LinearConstraint(a, [constraints['lower_bound']] * control_horizon,
+                                            [constraints['upper_bound']] * control_horizon)
+    """
     # b. Startwerte u_vec_0 vorgeben
     # u_vec_0 = []
     # for i in range(len(initial_inputs)):
@@ -198,9 +232,10 @@ def model_predictive_control(model, components, system_inputs, control_horizon, 
             control_data.extend([control_data[-1]] * (prediction_horizon - control_horizon))
             this_in['mpc_data'] = control_data
         # c. run_model_mpc() aufrufen  Rückgabe: Regelgrößen-Vektoren für Prädiktionshorizont
-        system_outputs = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
+        system_outputs, i_interval_break = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
         if not system_outputs:
-            cost = 1e12
+            cost = 1e12 * (prediction_horizon - i_interval_break + i_interval)**2
+            print(prediction_horizon - i_interval_break + i_interval)
         else:
             mass_h2_avl = system_outputs[3]['flow_value']
             mass_h2_demand = system_outputs[2]['flow_value']
@@ -209,36 +244,69 @@ def model_predictive_control(model, components, system_inputs, control_horizon, 
             mass_h2_supply = system_outputs[4]['flow_value']
             mass_h2_sink = system_outputs[5]['flow_value']
             # d. Teil-Kostenfunktionen als nested functions definieren
+            """
             def cost_function_demand(iteration):
                 return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 2
+            """
+            def cost_function_demand(iteration):
+                # print('demand_cost')
+                # print(mass_h2_avl[iteration] * (-9.5))
+                return mass_h2_avl[iteration] * (-9.5)
             def cost_function_supply(iteration):
+                # print('supply_cost')
+                # print(power_supply[iteration] * 0.0001855)
                 return power_supply[iteration] * 0.0001855
             def cost_function_sink(iteration):
+                # print('sink_cost')
+                # print(power_sink[iteration] * (-0.00004))
                 return power_sink[iteration] * (-0.00004)
             def cost_function_supply_h2(iteration):
-                return mass_h2_supply[iteration] * 10 # 100 Euro pro kg H2
+                # print('supply_h2_cost')
+                # print(mass_h2_supply[iteration] * 100)
+                return mass_h2_supply[iteration] * 100 # 100 Euro pro kg H2
             def cost_function_sink_h2(iteration):
-                return mass_h2_sink[iteration] * (0)
+                # print('sinkh2_cost')
+                # print(mass_h2_sink[iteration] * (9.5))
+                return mass_h2_sink[iteration] * (9.5)
+            def cost_function_electrolyzer(iteration):
+                gamma1 = 0.5*1e-6 # 0.0005 # 0.5
+                cost_electrolyzer = 0
+                if iteration == 0:
+                    return 0
+                else:
+                    for this_in in system_inputs:
+                        if this_in['comp_name'] == 'this_ely':
+                            cost_electrolyzer = (this_in['mpc_data'][iteration] -
+                                                    this_in['mpc_data'][iteration - 1]) ** 2 * gamma1
+                    print('ely_cost')
+                    print(cost_electrolyzer)
+                    return cost_electrolyzer
             # e. Iteration über Prädiktionshorizont:
             cost = 0
             for k in range(0, prediction_horizon):
+                # cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) \
+                #        + cost_function_electrolyzer(k) + cost_function_supply_h2(k) + cost_function_sink_h2(k)
                 cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) \
-                       + cost_function_supply_h2(k) + cost_function_sink_h2(k)
+                        + cost_function_supply_h2(k) + cost_function_sink_h2(k)
         # f. Rückgabe der Kosten
         return cost
     # d. Optimierer aufrufen mit cost_function_mpc()
     # res = minimize(cost_function_mpc, u_vec_0, method='trust-constr', options = {'verbose': 1}, bounds = bounds)
-    res = minimize(cost_function_mpc, initial_inputs, method='L-BFGS-B', options = minimize_options, bounds = bounds)
+    if constraints:
+        res = minimize(cost_function_mpc, initial_inputs, method='trust-constr', options=minimize_options,
+                       bounds=bounds, constraints=constraints)
+    else:
+        res = minimize(cost_function_mpc, initial_inputs, method='L-BFGS-B', options = minimize_options,
+                       bounds = bounds)
     # e. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
     iter = 0
     for this_in in system_inputs:
         this_in['mpc_data'] = res.x[(control_horizon * iter): (control_horizon * (iter + 1))]
         iter = iter + 1
-
     return system_inputs
 
 
-def run_model_mpc(model, components_init, sim_params, i_interval_start, prediction_horizon ,system_inputs):
+def run_model_mpc(model, components_init, sim_params, i_interval_start, prediction_horizon, system_inputs):
     # There are no results yet.
     df_results = None
     results_dict = None
@@ -298,7 +366,7 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
         oemof_results = model_to_solve.solve(solver='cbc', solve_kwargs={'tee': False})
 
         # ------------------- CHECK IF SOLVING WAS SUCCESSFUL -------------------
-        # If the status and temination condition is not ok/optimal, get and
+        # If the status and termination condition is not ok/optimal, get and
         # print the current flows and status
         status = oemof_results["Solver"][0]["Status"].key
         termination_condition = oemof_results["Solver"][0]["Termination condition"].key
@@ -309,8 +377,10 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
                 show_debug(df_debug, components)
             # raise SolverNonOptimalError('solver status: ' + status +
             #                            " / termination condition: " + termination_condition)
+            print('solver status: ' + status +
+                 " / termination condition: " + termination_condition)
             system_outputs = []
-            return system_outputs
+            return system_outputs, i_interval
         else:
             # ------------------- HANDLE RESULTS -------------------
             # Get the results of this oemof run.
@@ -335,7 +405,7 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
 
     # d. Rückgabe der Vektoren der Regelgröße über Prädiktionshorizont
     # track system outputs for mpc
-    return system_outputs
+    return system_outputs, i_interval
 
 
 def remove_trailing_nones_mpc(this_comp, n_intervals, prediction_horizon):
