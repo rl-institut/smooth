@@ -90,7 +90,7 @@ class TrailerH2Delivery(Component):
                                            fs_origin_capacity_4/2)
 
             # Get the availability mass of hydrogen of the fullest origin storage
-            self.fs_origin_available_kg = min(fs_origin_available_kg_1, fs_origin_available_kg_2,
+            self.fs_origin_available_kg = max(fs_origin_available_kg_1, fs_origin_available_kg_2,
                                               fs_origin_available_kg_3, fs_origin_available_kg_4)
 
             # Obtains the destination storage level [kg]
