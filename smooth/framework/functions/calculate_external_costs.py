@@ -22,7 +22,7 @@ def calculate_costs_for_external_components(model):
     components = model.get('components', [])
     ext_components = []
     if type(components) == list:
-        comp_names = [comp['name'] for comp in model]
+        comp_names = [comp['name'] for comp in components]
     elif type(components) == dict:
         comp_names = components.keys()
     else:
