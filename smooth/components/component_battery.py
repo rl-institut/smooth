@@ -20,22 +20,17 @@ class Battery(Component):
         self.battery_capacity = 5000
         # Initial State of charge [-].
         self.soc_init = 0.5
-        # ToDo: set default value for efficiency
         # Efficiency charge [-].
         self.efficiency_charge = 0.95
         # Efficiency discharge [-].
         self.efficiency_discharge = 0.95
-        # ToDo: set default value loss rate
         # Loss rate [%/day]
-        self.loss_rate = None
-        # ToDo: set default value for c-rate
+        self.loss_rate = 0
         # C-Rate [-/h].
         self.c_rate_charge = 1
         self.c_rate_discharge = 1
-        # ToDo: set default value for depth of discharge
         # Depth of discharge [-].
-        self.dod = None
-        # ToDo: set default value life time. Per cycle or time
+        self.dod = 0
         # Life time [a].
         self.life_time = 20
         # ToDo: set default value for degradation over lifetime
@@ -117,7 +112,7 @@ class Battery(Component):
         self.p_out_max = min(
             self.c_rate_discharge * self.battery_capacity,
             (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60)
-            )
+            ) * self.efficiency_discharge
 
     def create_oemof_model(self, busses, _):
         """ Create oemof model """

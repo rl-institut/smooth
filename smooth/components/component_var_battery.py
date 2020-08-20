@@ -143,7 +143,7 @@ class VarBattery(Component):
 
         self.c_rate_discharge = self.c_rate
         self.c_rate_charge = self.c_rate
-        # This value can be used as faktor in capex to add an insignificant cost for higher c-rates.
+        # This value can be used as factor in capex to add an insignificant cost for higher c-rates.
         # The optimization then strives towards a low c-rate,
         # even for price models which are otherwise independet of the c-rate
         self.c_rate_insig_cost = 1 + self.c_rate * 0.00001
