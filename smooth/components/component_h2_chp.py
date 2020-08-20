@@ -198,8 +198,10 @@ class H2Chp(Component):
             expr += - model.flow[busses[self.bus_h2], self.model_el, t]
             return (expr == 0)
 
-        constraint = po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
-        setattr(model_to_solve, 'chp_flow_ratio_fix_{}'.format(self.name), constraint)
+        setattr(model_to_solve,
+            'chp_flow_ratio_fix_{}'.format(self.name.replace(' ', '')),
+            po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
+        )
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
