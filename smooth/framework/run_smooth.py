@@ -135,7 +135,7 @@ def run_smooth(model, mpc_params):
         df_results = processing.create_dataframe(model_to_solve)
 
         # track system outputs for mpc
-        system_outputs = mpc.get_system_output_mpc(results,system_outputs)
+        # system_outputs = mpc.get_system_output_mpc(results,system_outputs) # wird das noch gebraucht???????
 
         # Loop through every component and call the result handling functions
         for this_comp in components:

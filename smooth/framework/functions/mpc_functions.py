@@ -232,22 +232,25 @@ def model_predictive_control(model, components, system_inputs, control_horizon, 
             control_data.extend([control_data[-1]] * (prediction_horizon - control_horizon))
             this_in['mpc_data'] = control_data
         # c. run_model_mpc() aufrufen  Rückgabe: Regelgrößen-Vektoren für Prädiktionshorizont
-        system_outputs, i_interval_break = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
+        # system_outputs, i_interval_break, costs = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
+        costs = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
+        """
         if not system_outputs:
             cost = 1e12 * (prediction_horizon - i_interval_break + i_interval)**2
             print(prediction_horizon - i_interval_break + i_interval)
         else:
             mass_h2_avl = system_outputs[3]['flow_value']
+            # print(mass_h2_avl)
             mass_h2_demand = system_outputs[2]['flow_value']
             power_supply = system_outputs[0]['flow_value']
             power_sink = system_outputs[1]['flow_value']
             mass_h2_supply = system_outputs[4]['flow_value']
             mass_h2_sink = system_outputs[5]['flow_value']
+            # x = [y-z for y,z in zip(mass_h2_avl,mass_h2_sink)]
+            # print(x)
             # d. Teil-Kostenfunktionen als nested functions definieren
-            """
-            def cost_function_demand(iteration):
+            def cost_function_demand_old(iteration):
                 return (mass_h2_avl[iteration] - mass_h2_demand[iteration]) ** 2
-            """
             def cost_function_demand(iteration):
                 # print('demand_cost')
                 # print(mass_h2_avl[iteration] * (-9.5))
@@ -282,14 +285,17 @@ def model_predictive_control(model, components, system_inputs, control_horizon, 
                     print(cost_electrolyzer)
                     return cost_electrolyzer
             # e. Iteration über Prädiktionshorizont:
-            cost = 0
-            for k in range(0, prediction_horizon):
+            # cost = 0
+            # for k in range(0, prediction_horizon):
                 # cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) \
                 #        + cost_function_electrolyzer(k) + cost_function_supply_h2(k) + cost_function_sink_h2(k)
-                cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) \
-                        + cost_function_supply_h2(k) + cost_function_sink_h2(k)
+                # cost = cost + cost_function_demand(k) + cost_function_supply(k) + cost_function_sink(k) \
+                #         + cost_function_supply_h2(k) + cost_function_sink_h2(k)
         # f. Rückgabe der Kosten
-        return cost
+        # print('cost-diff')
+        # print(cost-costs)
+        """
+        return costs
     # d. Optimierer aufrufen mit cost_function_mpc()
     # res = minimize(cost_function_mpc, u_vec_0, method='trust-constr', options = {'verbose': 1}, bounds = bounds)
     if constraints:
@@ -307,6 +313,8 @@ def model_predictive_control(model, components, system_inputs, control_horizon, 
 
 
 def run_model_mpc(model, components_init, sim_params, i_interval_start, prediction_horizon, system_inputs):
+    # There are no costs yet.
+    costs = 0
     # There are no results yet.
     df_results = None
     results_dict = None
@@ -379,8 +387,11 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
             #                            " / termination condition: " + termination_condition)
             print('solver status: ' + status +
                  " / termination condition: " + termination_condition)
-            system_outputs = []
-            return system_outputs, i_interval
+            # system_outputs = []
+            costs = 1e12 * (prediction_horizon - i_interval + i_interval_start)**2
+            print(prediction_horizon - i_interval + i_interval_start)
+            # return system_outputs, i_interval, costs
+            return costs
         else:
             # ------------------- HANDLE RESULTS -------------------
             # Get the results of this oemof run.
@@ -390,7 +401,7 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
 
             # ii. Regelgrößen abgreifen und in Vektor speichern
             # track system outputs for mpc
-            system_outputs = get_system_output_mpc(results,system_outputs)
+            # system_outputs = get_system_output_mpc(results,system_outputs)
 
             # Loop through every component and call the result handling functions
             for this_comp in components:
@@ -402,10 +413,14 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
                 this_comp.update_var_costs(results, sim_params)
                 # Update the costs and artificial costs.
                 this_comp.update_var_emissions(results, sim_params)
+                # add mpc costs after update of flows and states!
+                costs += this_comp.mpc_cost_function()
 
     # d. Rückgabe der Vektoren der Regelgröße über Prädiktionshorizont
     # track system outputs for mpc
-    return system_outputs, i_interval
+    # return system_outputs, i_interval, costs
+    print(costs)
+    return costs
 
 
 def remove_trailing_nones_mpc(this_comp, n_intervals, prediction_horizon):
