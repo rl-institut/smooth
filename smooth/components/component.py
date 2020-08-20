@@ -229,3 +229,8 @@ class Component:
                     'In component {} CAPEX or fix_emissions are given '
                     'but the life_time is either None or not greater than zero. '
                     'Please choose another life_time value!'.format(self.name))
+
+    def mpc_cost_function(self):
+        # If a component contributes costs to the overall mpc cost function,
+        # this function is overwritten in that component
+        return 0
