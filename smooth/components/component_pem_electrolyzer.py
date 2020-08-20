@@ -164,9 +164,9 @@ class PemElectrolyzer(Component):
             return (expr == 0)
 
         setattr(model_to_solve,
-            'electrolyzer_flow_ratio_fix_{}'.format(self.name.replace(' ', '')),
-            po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
-        )
+                'electrolyzer_flow_ratio_fix_{}'.format(self.name.replace(' ', '')),
+                po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
+                )
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
