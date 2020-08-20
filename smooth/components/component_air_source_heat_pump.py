@@ -7,7 +7,28 @@ import pandas as pd
 
 
 class AirSourceHeatPump(Component):
-    """ An air source heat pump component is created through this class """
+    """
+    :param name: unique name given to the air source heat pump component
+    :type name: str
+    :param bus_el: electrical bus input of the heat pump
+    :type bus_el: str
+    :param bus_th: thermal bus output of the heat pump
+    :type bus_el: str
+    :param power_max: maximum heating output [W]
+    :type power_max: numerical
+    :param life_time: life time of the component
+    :type life_time: numerical
+    :param csv_filename: The csv filename containing the desired timeseries,
+        e.g. 'my_filename.csv'
+    :type csv_filename: str
+    :param csv_separator: The separator of the csv file, e.g. ',' or ';' (default is ',')
+    :type csv_separator: str
+    :param column_title: The column title (or index) of the timeseries, default is 0
+    :type column_title: str or int
+    :param path: The path where the timeseries csv file can be located
+    :type path: str
+
+    """
 
     def __init__(self, params):
 

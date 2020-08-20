@@ -1,3 +1,26 @@
+"""
+This module represents a stratified thermal storage vessel.
+
+******
+Scope
+******
+A stratified thermal storage vessel is able to store thermal energy
+through stratification, and thus minimise energy wastage in systems.
+
+*******
+Concept
+*******
+This component has been largely based on oemof's stratified thermal
+storage component. Visit oemof thermal's readthedocs site for
+detailed information on how the component was constructed [1].
+
+References
+----------
+[1] oemof thermal (2019). Stratified thermal storage, Read the Docs:
+    https://oemof-thermal.readthedocs.io/en/latest/stratified_thermal_storage.html
+
+"""
+
 import oemof.solph as solph
 from smooth.components.component import Component
 from numpy import pi

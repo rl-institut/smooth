@@ -35,6 +35,24 @@ Linear Transformer component.
 
 Waste heat
 ----------
+The waste heat equation is derived from the heat balance equation, found in [3].
+From this equation, it is shown that the change of the electrolyzer temperature
+comes from the electrical power input dissipated as heat, without the inclusion
+of the heat losses to the environment, the heat removed by the cooling water,
+and the sum of the enthalpy leaving the system with the hydrogen and oxygen
+streams and the enthalpy gained from the deionized water to warm up the
+electrolyzer from ambient to operating temperature [3]:
+
+.. math::
+    C_t * \frac{dT}{dt} = P_{heat} - Q_{loss} - Q_{cooling} - h_j * m_j
+
+#ToDo: sort out this equation including derivatives etc.
+
+For the waste heat model in SMOOTH, the heat balance is assumed for
+stationary conditions. This is because the model only applies when the
+maximum temperature is reached, and this temperature is then kept constant
+because of the removal of the waste heat from the system.
+
 The waste heat, which is removed from the electrolyzer by the cooling water,
 is calculated using the following equation, based on [3]:
 
@@ -50,20 +68,24 @@ is calculated using the following equation, based on [3]:
 Internal heat generation
 ------------------------
 The internal heat generation within an electrolyzer is as a result of a greater
-energy supply to the electrolyzer than is thermodynamically required. This is
+energy supply to the electrolyzer than is required . This is
 necessary for reaching high water electrolysis rates [3]. The internal heat
 gemeration is calculated as follows:
 
 .. math::
-   Q_{gen} = E_{sup} - E_{H_{2}}
+   Q_{gen} = E_{sup} - H_2_{prod} * HHV_{H_{2}} * \frac{1e6}{3600}
 
 * :math:`E_{sup}` = total energy supply to the electrolyzer
-* :math:`E_{H_{2}}` = the energy equivalent of the produced hydrogen
+* :math:`H_2_{prod}` = the amount of hydrogen produced
+* :math:`HHV_{H_{2}}` = the higher heating value of hydrogen
 
 Heat losses
 -----------
 In order to calculate the heat losses to the environment, the heat transfer
-coefficient is first calculated based on [3]:
+coefficient is first calculated based on [3]. It should be noted that the
+following equation is specifically to determine the heat transfer coefficient
+for horizontal cylinders, and since the parts of the alkaline have a cylindrical
+shape, this equation is used for the alkaline electrolyzer component:
 
 .. math::
   h = 1.32 * \\frac{\\Delta T}{d}^{0.25}
@@ -121,7 +143,8 @@ Thus, the sensible heat is calculated using mass and specific heat:
 
 **Latent heat** \n
 
-The latent heat is neglected since the mass of :math:`H_{2O}` vapor is neglected.
+The latent heat is neglected since the mass of :math:`H_{2O}` vapor
+(leaving the system with the oxygen and hydrogen streams) is neglected.
 
 Piecewise Linear Transformer
 ----------------------------
