@@ -213,9 +213,8 @@ class ElectrolyzerWasteHeat(Electrolyzer):
             expr += -model.flow[busses[self.bus_el], self.model_h2, t]
             return expr == 0
 
-        model_to_solve.electrolyzer_flow_ratio_fix = po.Constraint(
-            model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule
-        )
+        constraint = po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
+        setattr(model_to_solve, 'electrolyzer_flow_ratio_fix_{}'.format(self.name), constraint)
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
