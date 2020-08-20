@@ -24,7 +24,7 @@ def calculate_costs_for_external_components(model):
     if type(components) == list:
         comp_names = [comp['name'] for comp in components]
     elif type(components) == dict:
-        comp_names = components.keys()
+        comp_names = list(components.keys())
     else:
         raise "Components are neither list nor dictionary. Can't get component names."
 
