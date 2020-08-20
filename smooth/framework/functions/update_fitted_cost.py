@@ -14,6 +14,7 @@ def update_financials(component, financials):
     * "exp"      --> exponential cost fitting
     * "poly"     --> polynomial cost fitting
     * "free"     --> polynomial cost fitting with free choosable exponents
+    * "addspec"  --> 'spec' costs are added to previously calculated costs using a different key
 
     If multiple keys are defined, the calculations are done sequentially in order.
 
@@ -56,11 +57,12 @@ def update_emissions(component, emissions):
     * "exp"      --> exponential cost fitting
     * "poly"     --> polynomial cost fitting
     * "free"     --> polynomial cost fitting with free choosable exponents
+    * "addspec"  --> 'spec' costs are added to previously calculated costs using a different key
 
     If multiple keys are defined, the calculations are done sequentially in order.
 
     :param component: object of this component
-    :type component: object
+    :type component: :class:`~smooth.components.component.Component`
     :param emissions: emission object of this component
     :type emissions: fix_emissions or op_emissions dict
     """
@@ -94,8 +96,8 @@ def update_cost(component, fitting_dict, index, dependant_value, name):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :param name: human readable representation of attribute to be updated,
         e.g. "CAPEX/OPEX" or "emissions"
     :type name: string
@@ -113,6 +115,8 @@ def update_cost(component, fitting_dict, index, dependant_value, name):
         fitting_dict['cost'] = get_poly(component, fitting_dict, index, dependant_value)
     elif this_key == 'free':
         fitting_dict['cost'] = get_free(component, fitting_dict, index, dependant_value)
+    elif this_key == 'addspec':
+        fitting_dict['cost'] = get_addspec(component, fitting_dict, index, dependant_value)
     else:
         raise ValueError(
             '{} key "{}" not recognized. Please choose a valid key.'.format(name, this_key))
@@ -127,14 +131,19 @@ def get_spec(component, fitting_dict, index, dependant_value):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :return: calculated costs using a fitting value
     :rtype: number
     """
 
     # Get the fitting value, which is the current cost if "cost" is chosen.
     if fitting_dict['fitting_value'][index] == 'cost':
+
+        assert 'cost' in fitting_dict.keys(), \
+            'No previously calculated costs found, ' \
+            'use \'cost\' keyword only to multiply existing costs with new dependant value'
+
         fitting_value = fitting_dict['cost']
     else:
         fitting_value = fitting_dict['fitting_value'][index]
@@ -162,8 +171,8 @@ def get_exp(component, fitting_dict, index, dependant_value):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :return: calculated costs using exponential fitting
     :rtype: number
     """
@@ -197,8 +206,8 @@ def get_poly(component, fitting_dict, index, dependant_value):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :return: calculated costs using polynomial fitting
     :rtype: number
     """
@@ -233,8 +242,8 @@ def get_free(component, fitting_dict, index, dependant_value):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :return: calculated costs using "free" fitting
     :rtype: number
     :raises ValueError: if number of fitting values is odd
@@ -255,6 +264,39 @@ def get_free(component, fitting_dict, index, dependant_value):
     cost = 0
     for i in range(int(n_fv/2)):
         cost += fv[i*2] * dependant_value**fv[i*2 + 1]
+
+    # Return the costs.
+    return cost
+
+
+def get_addspec(component, fitting_dict, index, dependant_value):
+    """Case: Additional costs are added to existing costs.
+    The fitting value is multiplied with the dependant value to get the additional costs.
+
+    :param component: object of this component
+    :type component: :class:`~smooth.components.component.Component`
+    :param fitting_dict: usually financial or emission object of this component
+    :type fitting_dict: dict
+    :param index: current position in fitting_dict
+    :type index: integer
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
+    :return: calculated costs using a fitting value
+    :rtype: number
+    """
+
+    assert 'cost' in fitting_dict.keys(),\
+        'No previously calculated costs found, ' \
+        'use \'addspec\' key only to add costs to existing costs'
+
+    oldcost = fitting_dict['cost']
+    # Get the fitting value, which is the current cost if "cost" is chosen.
+    if fitting_dict['fitting_value'][index] == 'cost':
+        fitting_value = fitting_dict['cost']
+    else:
+        fitting_value = fitting_dict['fitting_value'][index]
+    # Calculate the costs.
+    cost = oldcost + dependant_value * fitting_value
 
     # Return the costs.
     return cost
