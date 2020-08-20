@@ -18,23 +18,25 @@ def calculate_costs_for_external_components(model):
     # Create an object with the simulation parameters.
     sim_params = sp(model['sim_params'])
 
+    # get all component names to compare against
+    components = model.get('components', [])
     ext_components = []
-    if type(model) == list:
-        ext_comp_names = [comp['name'] for comp in model]
-    elif type(model) == dict:
-        ext_comp_names = model.keys()
+    if type(components) == list:
+        comp_names = [comp['name'] for comp in model]
+    elif type(components) == dict:
+        comp_names = components.keys()
     else:
-        raise "Model is neither list nor dictionary. Can't get component names."
+        raise "Components are neither list nor dictionary. Can't get component names."
 
     for this_ext_comp in model.get('external_components', []):
         # ENSURE EXTERNAL COMPONENT NAME IS UNIQUE
         this_ext_comp_name = this_ext_comp['name']
-        if this_ext_comp_name in ext_comp_names:
+        if this_ext_comp_name in comp_names:
             raise ValueError(
                 'External component name "{}" is not unique,'
                 ' please name components unique.'.format(this_ext_comp_name))
         else:
-            ext_comp_names.append(this_ext_comp_name)
+            comp_names.append(this_ext_comp_name)
 
         this_ext_comp_name = this_ext_comp['external_component']
         # Add simulation parameters to the components so they can be used
