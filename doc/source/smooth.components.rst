@@ -12,6 +12,22 @@ smooth.components.component module
    :undoc-members:
    :show-inheritance:
 
+AC-DC Converter
+-------------------------------------------
+
+.. automodule:: smooth.components.component_ac_dc_converter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Air Source Heat Pump
+-------------------------------------------
+
+.. automodule:: smooth.components.component_air_source_heat_pump
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
 smooth.components.component\_battery module
 -------------------------------------------
 
