@@ -2,7 +2,7 @@ import importlib
 from smooth.framework.simulation_parameters import SimulationParameters as sp
 
 
-def calculate_costs_for_external_components(model):
+def costs_for_ext_components(model):
     """Calculates costs for components in the system which are not to be
     included in the optimization but their costs must still be taken into consideration.
     The name of an external component must be unique within the model.
