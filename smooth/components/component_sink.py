@@ -35,3 +35,6 @@ class Sink(Component):
                 nominal_value=self.input_max
             )})
         return sink
+
+    def mpc_cost_function(self):
+        return self.flows[(self.bus_in, self.name)][self.sim_params.i_interval] * self.commodity_costs

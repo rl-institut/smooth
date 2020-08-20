@@ -143,3 +143,9 @@ class CompressorH2(Component):
 
         # self.states['specific_compression_work'][sim_params.i_interval] =
         # self.spec_compression_energy
+
+    def mpc_cost_function(self):
+        if self.artificial_costs:
+            return self.flows[(self.name, self.bus_h2_out)][self.sim_params.i_interval] * self.artificial_costs
+        else:
+            return 0

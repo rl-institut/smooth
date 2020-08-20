@@ -61,3 +61,6 @@ class Supply (Component):
                 variable_costs=self.current_ac
             )})
         return from_grid
+
+    def mpc_cost_function(self):
+        return self.flows[(self.name, self.bus_out)][self.sim_params.i_interval] * self.current_ac
