@@ -1,3 +1,30 @@
+"""
+This module represents an air source heat pump that uses ambient air and
+electricity for heat generation, based on oemof thermal's component.
+
+*****
+Scope
+*****
+Air source heat pumps as a means of heat generation extract outside air and
+increase its temperature using a pump that requires electricity as an input.
+These components have the potential for the efficient utilization of
+energy production and distribution in a system, particularly in times of
+high renewable electricity production coupled with a high thermal demand.
+
+*******
+Concept
+*******
+The basis for the air source heat pump component stems from the oemof
+thermal component, in particular using the cmpr_hp_chiller to
+pre-calculate the coefficient of performance. For further information
+on how this function works, visit oemof thermal's readthedocs site [1].
+
+References
+----------
+[1] oemof thermal (2019). Compression Heat Pumps and Chillers, Read the Docs:
+https://oemof-thermal.readthedocs.io/en/latest/compression_heat_pumps_and_chillers.html
+"""
+
 import os
 import oemof.solph as solph
 from .component import Component
@@ -18,20 +45,44 @@ class AirSourceHeatPump(Component):
     :type power_max: numerical
     :param life_time: life time of the component
     :type life_time: numerical
-    :param csv_filename: The csv filename containing the desired timeseries,
+    :param csv_filename: csv filename containing the desired timeseries,
         e.g. 'my_filename.csv'
     :type csv_filename: str
-    :param csv_separator: The separator of the csv file, e.g. ',' or ';' (default is ',')
+    :param csv_separator: separator of the csv file, e.g. ',' or ';' (default is ',')
     :type csv_separator: str
-    :param column_title: The column title (or index) of the timeseries, default is 0
+    :param column_title: column title (or index) of the timeseries, default is 0
     :type column_title: str or int
-    :param path: The path where the timeseries csv file can be located
+    :param path: path where the timeseries csv file can be located
     :type path: str
-
+    :param temp_threshold_icing: temperature below which icing occurs [K]
+    :type temp_threshold_icing: numerical
+    :param temp_threshold_icing_C: converts to degrees C for oemof thermal function [C]
+    :type temp_threshold_icing_C: numerical
+    :param temp_high: output temperature from the heat pump [K]
+    :type temp_high: numerical
+    :param temp_high_C: converts to degrees C for oemof thermal function [C]
+    :type temp_high_C: numerical
+    :param temp_high_C_list: converts to list for oemof thermal function
+    :type temp_high_C_list: list
+    :param temp_low: ambient temperature [K]
+    :type temp_low: numerical
+    :param temp_low_C: converts to degrees C for oemof thermal function [C]
+    :type temp_low_C: numerical
+    :param quality_grade: quality grade of heat pump [-]
+    :type quality_grade: numerical
+    :param mode: can be set to heat_pump or chiller
+    :type mode: str
+    :param factor_icing: COP reduction caused by icing [-]
+    :type factor_icing: numerical
+    :param set_parameters: updates parameter default values (see generic Component class)
+    :type set_parameters(params): function
+    :param cops: coefficient of performance (pre-calculated by oemof thermal function)
+    :type cops: numerical
     """
 
     def __init__(self, params):
-
+        """Constructor method
+        """
         # Call the init function of the mother class.
         Component.__init__(self)
 
@@ -100,6 +151,13 @@ class AirSourceHeatPump(Component):
             self.factor_icing)
 
     def create_oemof_model(self, busses, _):
+        """Creates an oemof Transformer component from information given in
+        the AirSourceHeatPump class, to be used in the oemof model
+
+        :param busses: virtual buses used in the energy system
+        :type busses: list
+        :return: the oemof air source heat pump component
+        """
         air_source_heat_pump = solph.Transformer(
             label=self.name,
             inputs={busses[self.bus_el]: solph.Flow(variable_costs=0)},

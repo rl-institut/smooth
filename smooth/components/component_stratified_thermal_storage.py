@@ -1,5 +1,6 @@
 """
-This module represents a stratified thermal storage vessel.
+This module represents a stratified thermal storage tank, based on
+oemof thermal's component.
 
 ******
 Scope
@@ -10,8 +11,8 @@ through stratification, and thus minimise energy wastage in systems.
 *******
 Concept
 *******
-This component has been largely based on oemof's stratified thermal
-storage component. Visit oemof thermal's readthedocs site for
+This component has been largely based on oemof thermal's stratified
+thermal storage component. Visit oemof thermal's readthedocs site for
 detailed information on how the component was constructed [1].
 
 References
