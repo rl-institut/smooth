@@ -14,8 +14,8 @@ high renewable electricity production coupled with a high thermal demand.
 *******
 Concept
 *******
-The basis for the air source heat pump component stems from the oemof
-thermal component, in particular using the cmpr_hp_chiller to
+The basis for the air source heat pump component is obtained from the oemof
+thermal component, in particular using the cmpr_hp_chiller function to
 pre-calculate the coefficient of performance. For further information
 on how this function works, visit oemof thermal's readthedocs site [1].
 
