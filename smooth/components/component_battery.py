@@ -27,7 +27,7 @@ class Battery(Component):
         # Loss rate [%/day]
         self.loss_rate = 0
         # C-Rate [-/h].
-        # If [symm_c_rate = True]: c_rate_sym is used for both c_rate_charge and c_rate_discharge
+        # If [symm_c_rate = True]: c_rate_symm is used for both c_rate_charge and c_rate_discharge
         self.symm_c_rate = False
         self.c_rate_symm = 1
         self.c_rate_charge = 1
