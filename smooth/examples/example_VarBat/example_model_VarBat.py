@@ -35,34 +35,35 @@ components.append({
     'name': 'li_battery',
     'bus_in_and_out': 'bel',
 
-    'battery_type': 2,
+    'battery_type': 3,
 
     # Battery type 1: Li_battery 1 - 50 kWh
     'battery_capacity_bt1': 50 * 1e3,
     # Battery type 2: Li_battery 50 - 1000 kWh
-    'battery_capacity_bt2': 1000000,
+    'battery_capacity_bt2': 1 * 1e6,
     # Battery type 3: Li_battery > 1 MWh
     'battery_capacity_bt3': 2 * 1e6,
 
     # Capex for each battery type
     'capex_bt1': {
-        'key': ['poly', 'spec'],
-        'fitting_value': [[0, 2109.62368 / 1e3, -147.52325 / 1e6, 6.97016 / 1e9, -0.13996 / 1e12,
-                           0.00102 / 1e15],
-                          'cost'],
-        'dependant_value': ['battery_capacity', 'c_rate_insig_cost']},
+        'key': ['poly'],
+        'fitting_value': [0, 2109.62368 / 1e3, -147.52325 / 1e6, 6.97016 / 1e9, -0.13996 / 1e12,
+                          0.00102 / 1e15],
+        'dependant_value': ['battery_capacity']},
     'capex_bt2': {
-        'key': ['poly', 'spec'],
-        'fitting_value': [[0, 1000.2 / 1e3, -0.4983 / 1e6], 'cost'],
-        'dependant_value': ['battery_capacity', 'c_rate_insig_cost']},
+        'key': ['poly'],
+        'fitting_value': [[0, 1000.2 / 1e3, -0.4983 / 1e6]],
+        'dependant_value': ['battery_capacity']},
     'capex_bt3': {
         'key': ['poly', 'spec'],
         'fitting_value': [[0.353, 0.149], 'cost'],  # für 2020
-        'dependant_value': ['c_rate', 'battery_capacity']},
+        'dependant_value': ['c_rate_symm', 'battery_capacity']},
 
     'soc_init': 1,
-    'c_rate': 0.3,
-    # 'c_rate': 1,
+    'symm_c_rate': True,
+    'c_rate_symm': 1,
+    # 'c_rate_discharge': 1,  # These values are only used if 'symm_c_rate': False
+    # 'c_rate_charge': 1,  # These values are only used if 'symm_c_rate': False
     'life_time': 20,
     'dod': 0.2,
     'loss_rate': 0.001,  # [(%*100)/day]

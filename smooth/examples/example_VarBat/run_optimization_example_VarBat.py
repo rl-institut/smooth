@@ -80,7 +80,7 @@ def main():
     }
     var_c_rate = {
         'comp_name': 'li_battery',
-        'comp_attribute': 'c_rate',
+        'comp_attribute': 'c_rate_symm',
         'val_min': 0.1,
         'val_max': 2,
         'val_step': 0.1,
