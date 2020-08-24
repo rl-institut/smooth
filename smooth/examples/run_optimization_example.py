@@ -26,6 +26,8 @@ def main():
         'n_generation': 2,
         'n_core': 'max',
         'plot_progress': True,
+        'post_processing': True,
+        'save_intermediate_results': True,
         'objectives': (
             lambda x: -sum([c.results["annuity_total"] for c in x]),
             lambda x: -sum([c.results["annual_total_emissions"] for c in x]),

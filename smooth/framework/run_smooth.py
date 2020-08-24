@@ -215,8 +215,9 @@ def run_smooth(model):
         # ------------------- HANDLE RESULTS -------------------
         # Get the results of this oemof run.
         results = processing.results(model_to_solve)
-        results_dict = processing.parameter_as_dict(model_to_solve)
-        df_results = processing.create_dataframe(model_to_solve)
+        if sim_params.show_debug_flag:
+            results_dict = processing.parameter_as_dict(model_to_solve)
+            df_results = processing.create_dataframe(model_to_solve)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:

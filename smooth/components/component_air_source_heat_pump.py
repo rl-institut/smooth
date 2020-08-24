@@ -52,7 +52,7 @@ class AirSourceHeatPump(Component):
         # COP reduction caused by icing [-]
         self.factor_icing = 0.8
         # Ask Jann about this/look more into detail
-        self.consider_icing = False
+        # self.consider_icing = False
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
@@ -62,7 +62,7 @@ class AirSourceHeatPump(Component):
             self.temp_low = func.read_data_file(
                 self.path, self.csv_filename, self.csv_separator, self.column_title)
             self.temp_low_series = self.temp_low[self.column_title]
-            self.temp_low_series_C = self.temp_low_series - 273.15
+            self.temp_low_series_C = pd.Series(self.temp_low_series - 273.15)
         else:
             self.temp_low_list = [self.temp_low_C] * self.sim_params.n_intervals
             self.temp_low_series_C = pd.Series(self.temp_low_list)
@@ -70,13 +70,13 @@ class AirSourceHeatPump(Component):
         # A function taken from oemof thermal that calculates the coefficient
         # of performance (pre-calculated)
         self.cops = cmpr_hp_chiller.calc_cops(
+            self.mode,
             self.temp_high_C_list,
             self.temp_low_series_C,
             self.quality_grade,
             self.temp_threshold_icing_C,
-            self.consider_icing,
-            self.factor_icing,
-            self.mode)
+            # self.consider_icing,
+            self.factor_icing)
 
     def create_oemof_model(self, busses, _):
         air_source_heat_pump = solph.Transformer(
