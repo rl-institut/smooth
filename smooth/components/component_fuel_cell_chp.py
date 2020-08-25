@@ -313,8 +313,10 @@ class FuelCellChp(Component):
             expr += - model.flow[busses[self.bus_h2], self.model_el, t]
             return (expr == 0)
 
-        model_to_solve.chp_flow_ratio_fix = po.Constraint(
-            model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
+        setattr(model_to_solve,
+                'chp_flow_ratio_fix_{}'.format(self.name.replace(' ', '')),
+                po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
+                )
 
     def update_flows(self, results, sim_params):
         """Updates the flows of the fuel cell CHP components for each time step.
