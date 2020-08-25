@@ -5,46 +5,81 @@ import re
 
 
 def read_data_file(path, filename, csv_separator, column_title):
-    # Function to read the input data files.
-    # Parameters:
-    #  path = path where the csv file is located [string].
-    #  filename = name of csv file [string].
+    """Function to read the input data files.
+
+    :param path: path where the csv file is located
+    :type path: string
+    :param filename: name of csv file
+    :type filename: string
+    :param csv_separator: separator of csv data
+    :type csv_separator: character
+    :param column_title: title of data column
+    :type column_title: string
+    :return: column of data from csv file
+    :rtype: pandas dataframe
+    """
     file_path = os.path.join(path, filename)
     # create specific string for chosen data type
-    data = pd.read_csv(file_path, sep=csv_separator, usecols=[column_title])
+    data = pd.read_csv(file_path, sep=csv_separator, usecols=[column_title], encoding='latin-1')
     return data
 
 
 def get_date_time_index(start_date, n_intervals, step_size):
-    # Function defining the parameters for perfect/myopic foresight:
-    # Parameters:
-    #  start_date: the first evaluated time period (e.g. '1/1/2019') [string].
-    #  n_intervals: number of times the 'for' loop should run [-].
-    #  step_size: Size of one time step [min].
+    """Function defining the parameters for perfect/myopic foresight.
+
+    :param start_date: the first evaluated time period, e.g. '1/1/2019'
+    :type start_date: string
+    :param n_intervals: number of time periods
+    :type n_intervals: integer
+    :param step_size: length of one time step in minutes
+    :type step_size: number
+    :return: *n_intervals* dates, each *step_size* minutes apart
+    :rtype: pandas `DateTimeIndex <https://pandas.pydata.org/ \
+    pandas-docs/stable/reference/api/pandas.DatetimeIndex.html>`_
+    """
     date_time_index = pd.date_range(start_date, periods=n_intervals, freq='{}min'.format(step_size))
     return date_time_index
 
 
 def interval_time_index(date_time_index, i_interval):
-    # Function to divide the set date time index into hourly intervals.
-    # Parameters:
-    #  date_time_index: chosen date range for the model
-    #  this_time_index: the time at each 'for' loop
+    """Function to divide the set date time index into hourly intervals.
+
+    This function seems to be unused.
+
+    :param date_time_index: chosen date range for the model
+    :type date_time_index: DateTimeIndex
+    :param i_interval: current interval index
+    :type i_interval: integer
+    :return: pandas `DateTimeIndex <https://pandas.pydata.org/pandas-docs/stable/ \
+    reference/api/pandas.DatetimeIndex.html>`_ for current interval
+    """
     this_time_index = date_time_index[i_interval: (i_interval + 1)]
     return this_time_index
 
 
 def get_sim_time_span(n_interval, step_size):
-    # Calculate the time span of the simulation.
-    # Parameters:
-    #  n_interval: number of intervals [-].
-    #  step_size: Size of one time step [min].
+    """Calculate the time span of the simulation.
 
-    # Return the time delta in minutes [min].
+    :param n_interval: number of intervals
+    :type n_interval: integer
+    :step_size: length of one time step in minutes
+    :type step_size: number
+    :return: time delta in minutes
+    :rtype: number
+    """
     return n_interval * step_size
 
 
 def create_component_obj(model, sim_params):
+    """Create components from model.
+
+    :param model: smooth model
+    :type model: dictionary
+    :param sim_params: simulation parameters
+    :type sim_params: :class:`~smooth.framework.simulation_parameters.SimulationParameters`
+    :return: list of components in model
+    :rtype: list of :class:`~smooth.components.component.Component`
+    """
     # CREATE COMPONENT OBJECTS
     components = []
     for name, this_comp in model['components'].items():
@@ -77,10 +112,15 @@ def create_component_obj(model, sim_params):
 
 
 def replace_at_idx(tup, i, val):
-    # Replaces a value at index 'i' of a tuple 'tup' with value 'val'
-    #  tup: Tuple to be updated
-    #  i: Index at which the value should be replaced
-    #  val: The new value at index i
+    """Replaces a value at index *i* of a tuple *tup* with value *val*
+
+    :param tup: tuple to be updated
+    :param i: index at which the value should be replaced
+    :type i: integer
+    :param val: new value at index i
+    :type val: value
+    :return: new tuple with replaced value
+    """
     tup_list = list(tup)
     tup_list[i] = val
 
@@ -88,9 +128,13 @@ def replace_at_idx(tup, i, val):
 
 
 def cut_suffix(name, suffix):
-    # Cuts off the 'suffix' from 'name' string, if it ends with it
-    #  name: String from which suffix will be cut off
-    #  suffix: String, that is removed
+    """Cuts off the *suffix* from *name* string, if it ends with it
+
+    :param name: original name from which suffix will be cut off
+    :type name: string
+    :param suffix: string to be removed
+    :return: string without suffix
+    """
     if isinstance(name, str) and name.endswith(suffix):
         name = name[:-len(suffix)]
 
@@ -98,9 +142,13 @@ def cut_suffix(name, suffix):
 
 
 def cut_suffix_loop(name_tuple, suffix_list):
-    # Cuts off the all suffixes of 'suffix_list' from names in 'name_tuple'
-    #  name_tuple: Tuple of strings from which suffixes will be cut off
-    #  suffix_list: List of strings, that are removed
+    """Cuts off all suffixes present in *suffix_list* from names in *name_tuple*
+
+    :param name_tuple: tuple of strings from which suffixes will be cut off
+    :param suffix_list: list of strings to be removed
+    :return: updated *name_tuple*
+    :rtype: tuple of strings
+    """
     for i in range(len(name_tuple)):
         for s in suffix_list:
             new_name = cut_suffix(name_tuple[i], s)
@@ -110,8 +158,13 @@ def cut_suffix_loop(name_tuple, suffix_list):
 
 
 def extract_flow_per_bus(smooth_result, name_label_dict):
-    """
-    Extract dict containing the busses that will be plotted.
+    """Extract dict containing the busses that will be plotted.
+
+    :param smooth_result: result from run_smooth
+    :type smooth_result: list of :class:`~smooth.components.component.Component`
+    :param name_label_dict: dictionary
+        with key being a component name in the model and value the name to display
+    :return: dictionary of all busses from the model with their flow values over time
     """
     # Creates empty dict which will later contain the busses that will be plotted.
     busses_to_plot = dict()
@@ -168,12 +221,14 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                         flow_range = flow[:nb_intervals - nb_trailing_none]
                         this_comp_flows[bus] = [-this_val for this_val in flow_range]
 
-            # Replaces shorthand component names in the results with the
-            # official names for those listed.
+            # get name from dictionary
+            # set default component name
+            name = component_result.name
             try:
-                component_result.name = name_label_dict[component_result.name]
+                # set name from dictionary
+                name = name_label_dict[name]
             except KeyError:
-                print(component_result.name + ": is not defined in the label dict.")
+                print("{}: is not defined in the label dict.".format(name))
 
             for this_bus in this_comp_flows:
                 if this_bus not in busses_to_plot:
@@ -181,7 +236,7 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
                     busses_to_plot[this_bus] = dict()
 
                 # Add the flow of this component to this bus.
-                busses_to_plot[this_bus][component_result.name] = this_comp_flows[this_bus]
+                busses_to_plot[this_bus][name] = this_comp_flows[this_bus]
 
     if nb_trailing_none > 0:
         print(
