@@ -70,8 +70,9 @@ class ElectricHeater(Component):
         """Creates an oemof Transformer component from the information given in the
         ElectricHeater class, to be used in the oemof model
 
-        :param busses: The virtual buses used in the energy system
+        :param busses: virtual buses used in the energy system
         :type busses: list
+        :return: 'electric_heater' oemof component
         """
         electric_heater = solph.Transformer(
             label=self.name,

@@ -100,32 +100,32 @@ class FuelCellChp(Component):
     :type power_max: numerical
     :param set_parameters(params): updates parameter default values (see generic Component class)
     :type set_parameters(params): function
-    :param heating_value: heating value of hydrogen [kWh/kg]
-    :type heating_value: numerical
-    :param bp_load_electric: electrical efficiency load break points [-]
-    :type bp_load_electric: list
-    :param bp_eff_electric: electrical efficiency break points [-]
-    :type bp_eff_electric: list
-    :param bp_load_thermal: thermal efficiency load break points [-]
-    :type bp_load_thermal: list
-    :param bp_eff_thermal: thermal efficiency break points [-]
-    :type bp_eff_thermal: list
+    :param heating_value_h2: heating value of hydrogen [kWh/kg]
+    :type heating_value_h2: numerical
+    :param bp_load_el: electrical efficiency load break points [-]
+    :type bp_load_el: list
+    :param bp_eff_el: electrical efficiency break points [-]
+    :type bp_eff_el: list
+    :param bp_load_th: thermal efficiency load break points [-]
+    :type bp_load_th: list
+    :param bp_eff_th: thermal efficiency break points [-]
+    :type bp_eff_th: list
     :param h2_input_max: maximum hydrogen input that leads to maximum electrical energy in Wh [kg]
     :type h2_input_max: numerical
-    :param bp_h2_consumed_electric: converted electric load points according to maximum hydrogen
+    :param bp_h2_consumed_el: converted electric load points according to maximum hydrogen
         input per time step [kg]
-    :type bp_h2_consumed_electric: list
-    :param bp_h2_consumed_thermal: converted thermal load points according to maximum hydrogen
+    :type bp_h2_consumed_el: list
+    :param bp_h2_consumed_th: converted thermal load points according to maximum hydrogen
         input per time step [kg]
-    :type bp_h2_consumed_thermal: list
-    :param bp_energy_electric: absolute electrical energy values over the load points [Wh]
-    :type bp_energy_electric: list
-    :param bp_energy_thermal: absolute thermal energy values over the load points [Wh]
-    :type bp_energy_thermal: list
-    :param bp_h2_consumed_electric_half: half the amount of hydrogen that is consumed [kg]
-    :type bp_h2_consumed_electric_half: list
-    :param bp_h2_consumed_thermal_half: half the amount of hydrogen that is consumed [kg]
-    :type bp_h2_consumed_thermal_half: list
+    :type bp_h2_consumed_th: list
+    :param bp_energy_el: absolute electrical energy values over the load points [Wh]
+    :type bp_energy_el: list
+    :param bp_energy_th: absolute thermal energy values over the load points [Wh]
+    :type bp_energy_th: list
+    :param bp_h2_consumed_el_half: half the amount of hydrogen that is consumed [kg]
+    :type bp_h2_consumed_el_half: list
+    :param bp_h2_consumed_th_half: half the amount of hydrogen that is consumed [kg]
+    :type bp_h2_consumed_th_half: list
     :param model_el: electric model to set constraints later
     :type model_el: model
     :param model_th: thermal model to set constraints later
@@ -155,7 +155,7 @@ class FuelCellChp(Component):
 
         # INTERNAL PARAMETERS
         # Heating value of hydrogen [kWh/kg].
-        self.heating_value = 33.33
+        self.heating_value_h2 = 33.33
 
         # The CHP an electrical efficiency and a thermal efficiency, both over
         # the load point, according to: Scholta, J. et.al. Small Scale PEM Fuel
@@ -163,14 +163,14 @@ class FuelCellChp(Component):
         # http://afrodita.rcub.bg.ac.rs/~todorom/tutorials/rad24.html
 
         # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
-        self.bp_load_electric = [0.0, 0.0481, 0.0694, 0.0931, 0.1272, 0.1616, 0.2444, 0.5912, 1.0]
+        self.bp_load_el = [0.0, 0.0481, 0.0694, 0.0931, 0.1272, 0.1616, 0.2444, 0.5912, 1.0]
         # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
-        self.bp_eff_electric = [0.0, 0.1996, 0.3028, 0.4272, 0.5034, 0.5381, 0.5438, 0.4875, 0.3695]
+        self.bp_eff_el = [0.0, 0.1996, 0.3028, 0.4272, 0.5034, 0.5381, 0.5438, 0.4875, 0.3695]
 
         # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
-        self.bp_load_thermal = [0.0, 0.0517, 0.1589, 0.2482, 1.0]
+        self.bp_load_th = [0.0, 0.0517, 0.1589, 0.2482, 1.0]
         # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
-        self.bp_eff_thermal = [0.0, 0.0915, 0.2188, 0.2795, 0.5238]
+        self.bp_eff_th = [0.0, 0.0915, 0.2188, 0.2795, 0.5238]
 
         # Now calculate the absolute values for electricity [Wh] and thermal
         # energy [Wh] and H2 consumption [kg].
@@ -178,66 +178,64 @@ class FuelCellChp(Component):
         # Therefor first calculate the max. hydrogen input that lead to the
         # max. electrical energy in Wh [kg].
         self.h2_input_max = self.power_max / (
-            self.heating_value * self.bp_eff_electric[-1]) * \
+            self.heating_value_h2 * self.bp_eff_el[-1]) * \
             self.sim_params.interval_time / 60 / 1000
         # Now convert the load points according to the max. hydrogen input per time step [kg].
-        self.bp_h2_consumed_electric = [
-            this_bp * self.h2_input_max for this_bp in self.bp_load_electric]
-        self.bp_h2_consumed_thermal = [
-            this_bp * self.h2_input_max for this_bp in self.bp_load_thermal]
+        self.bp_h2_consumed_el = [
+            this_bp * self.h2_input_max for this_bp in self.bp_load_el]
+        self.bp_h2_consumed_th = [
+            this_bp * self.h2_input_max for this_bp in self.bp_load_th]
 
         # Now get the absolute electrical energy values over the load points [Wh].
-        self.bp_energy_electric = []
-        for i_bp in range(len(self.bp_load_electric)):
+        self.bp_energy_el = []
+        for i_bp in range(len(self.bp_load_el)):
             # Calculate the electrical energy produced at this breaking point [Wh]
-            this_energy_electric = \
-                self.bp_h2_consumed_electric[i_bp] * \
-                self.bp_eff_electric[i_bp] * self.heating_value * 1000
-            self.bp_energy_electric.append(this_energy_electric)
+            this_energy_el = \
+                self.bp_h2_consumed_el[i_bp] * \
+                self.bp_eff_el[i_bp] * self.heating_value_h2 * 1000
+            self.bp_energy_el.append(this_energy_el)
 
         # Now get the absolute thermal energy values over the load points [Wh].
-        self.bp_energy_thermal = []
-        for i_bp in range(len(self.bp_load_thermal)):
+        self.bp_energy_th = []
+        for i_bp in range(len(self.bp_load_th)):
             # Calculate the thermal energy produced at this breaking point [Wh]
-            this_energy_thermal = \
-                self.bp_h2_consumed_thermal[i_bp] * \
-                self.bp_eff_thermal[i_bp] * self.heating_value * 1000
-            self.bp_energy_thermal.append(this_energy_thermal)
+            this_energy_th = \
+                self.bp_h2_consumed_th[i_bp] * \
+                self.bp_eff_th[i_bp] * self.heating_value_h2 * 1000
+            self.bp_energy_th.append(this_energy_th)
 
         # While we will create two oemof components, one for thermal energy and
         # one for electrical energy, and make a constraint that both inflows of
         # hydrogen have to be the same, each component will get only half the
         # amount of hydrogen. Therefore we need to make a list of hydrogen
         # consumed that is halfed [kg]
-        self.bp_h2_consumed_electric_half = [
-            this_bp / 2 for this_bp in self.bp_h2_consumed_electric]
-        self.bp_h2_consumed_thermal_half = [this_bp / 2 for this_bp in self.bp_h2_consumed_thermal]
+        self.bp_h2_consumed_el_half = [
+            this_bp / 2 for this_bp in self.bp_h2_consumed_el]
+        self.bp_h2_consumed_th_half = [this_bp / 2 for this_bp in self.bp_h2_consumed_th]
 
         # Save the two models to set constraints later.
         self.model_el = None
         self.model_th = None
 
-    def get_electrical_energy_by_h2(self, h2_consumption):
+    def get_el_energy_by_h2(self, h2_consumption):
         """Gets the electrical energy produced by the according hydrogen production value.
 
         :param h2_consumption: hydrogen production value [kg]
         :return: according electrical energy value [Wh]
         """
         # Check the index of this load point.
-        this_index = self.bp_h2_consumed_electric_half.index(h2_consumption)
-        # Return the according hydrogen production value [kg].
-        return self.bp_energy_electric[this_index]
+        this_index = self.bp_h2_consumed_el_half.index(h2_consumption)
+        return self.bp_energy_el[this_index]
 
-    def get_thermal_energy_by_h2(self, h2_consumption):
+    def get_th_energy_by_h2(self, h2_consumption):
         """Gets the thermal energy produced by the according hydrogen production value.
 
         :param h2_consumption: hydrogen production value [kg]
         :return: according thermal energy value [Wh]
         """
         # Check the index of this load point.
-        this_index = self.bp_h2_consumed_thermal_half.index(h2_consumption)
-        # Return the according hydrogen production value [kg].
-        return self.bp_energy_thermal[this_index]
+        this_index = self.bp_h2_consumed_th_half.index(h2_consumption)
+        return self.bp_energy_th[this_index]
 
     def create_oemof_model(self, busses, model):
         """Creates two separate oemof Piecewise Linear Transformer components for the
@@ -256,17 +254,17 @@ class FuelCellChp(Component):
         # accept 2 outputs yet.
 
         flow_electric = solph.Flow(
-            nominal_value=self.bp_h2_consumed_electric_half[-1],
+            nominal_value=self.bp_h2_consumed_el_half[-1],
             variable_costs=0)
-        flow_thermal = solph.Flow(nominal_value=self.bp_h2_consumed_electric_half[-1])
+        flow_thermal = solph.Flow(nominal_value=self.bp_h2_consumed_el_half[-1])
 
         # First create the electrical oemof component.
         fuel_cell_chp_electric = solph.custom.PiecewiseLinearTransformer(
             label=self.name+'_electric',
             inputs={busses[self.bus_h2]: flow_electric},
             outputs={busses[self.bus_el]: solph.Flow()},
-            in_breakpoints=self.bp_h2_consumed_electric_half,
-            conversion_function=self.get_electrical_energy_by_h2,
+            in_breakpoints=self.bp_h2_consumed_el_half,
+            conversion_function=self.get_el_energy_by_h2,
             pw_repn='CC')
 
         # Then create the thermal oemof component.
@@ -274,8 +272,8 @@ class FuelCellChp(Component):
             label=self.name+'_thermal',
             inputs={busses[self.bus_h2]: flow_thermal},
             outputs={busses[self.bus_th]: solph.Flow()},
-            in_breakpoints=self.bp_h2_consumed_thermal_half,
-            conversion_function=self.get_thermal_energy_by_h2,
+            in_breakpoints=self.bp_h2_consumed_th_half,
+            conversion_function=self.get_th_energy_by_h2,
             pw_repn='CC')
 
         # Add the two components to the model.
@@ -283,19 +281,6 @@ class FuelCellChp(Component):
 
         self.model_el = fuel_cell_chp_electric
         self.model_th = fuel_cell_chp_thermal
-
-        """
-        # Get the input H2 flows of both oemof components that need to be set equal.
-        flow_electric = model.nodes[len(model.nodes)-2].inputs[busses[self.bus_h2]]
-        flow_thermal = model.nodes[len(model.nodes) - 1].inputs[busses[self.bus_h2]]
-
-        # Get
-        fl_el = model.groups[self.name + '_electric'].inputs[busses[self.bus_h2]]
-        fl_th = model.groups[self.name + '_thermal'].inputs[busses[self.bus_h2]]
-        """
-        # Now set the two inflows of H2 in the electrical in the thermal CHP
-        # component to be the same.
-        # solph.constraints.equate_variables(model, flow_electric, flow_thermal)
 
         return None
 

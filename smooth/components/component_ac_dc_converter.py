@@ -15,16 +15,16 @@ A simple AC-DC converter component is created which intakes an AC electric
 bus and transforms it into a DC electric bus with an assumed constant
 efficiency. The default efficiency is taken to be 95%, as stated in [1][2],
 but this value can be modified by the user in the model definition. The
-amount of electricity that can leave the inverter is limited by the defined
+amount of electricity that can leave the converter is limited by the defined
 maximum power.
 
 References
 ----------
 [1] Harrison, K.W. et. al. (2009). The Wind-to-Hydrogen Project: Operational Experience,
-    Performance Testing, and Systems Integration, NREL.
-    https://www.nrel.gov/docs/fy09osti/44082.pdf
+Performance Testing, and Systems Integration, NREL.
+https://www.nrel.gov/docs/fy09osti/44082.pdf
 [2] Hayashi, Y. (2013). High Power Density Rectifier for Highly Efficient Future DC
-    Distribution System, NTT Facilities Japan.
+Distribution System, NTT Facilities Japan.
 """
 
 import oemof.solph as solph
@@ -40,8 +40,8 @@ class ACDCConverter(Component):
     :param bus_el_dc: DC electric bus the converter is connected to
     :type bus_el_dc: str
     :param output_power_max: maximum output power [W]
-    :type: numerical
-    :param: efficiency: efficiency of the converter
+    :type output_power_max: numerical
+    :param efficiency: efficiency of the converter
     :type efficiency: numerical
 
     """

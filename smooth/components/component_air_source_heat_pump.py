@@ -156,7 +156,7 @@ class AirSourceHeatPump(Component):
 
         :param busses: virtual buses used in the energy system
         :type busses: list
-        :return: the oemof air source heat pump component
+        :return: oemof 'air_source_heat_pump' component
         """
         air_source_heat_pump = solph.Transformer(
             label=self.name,

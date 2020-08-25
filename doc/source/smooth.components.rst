@@ -44,10 +44,18 @@ smooth.components.component\_chp module
    :undoc-members:
    :show-inheritance:
 
-Hydrogen Compressor
+Compressor (Hydrogen)
 --------------------------------------------------
 
 .. automodule:: smooth.components.component_compressor_h2
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+DC-AC Inverter
+---------------------------------------
+
+.. automodule:: smooth.components.component_dc_ac_inverter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -99,8 +107,8 @@ Fuel cell CHP
    :members:
    :undoc-members:
    :show-inheritance:
-
-smooth.components.component\_gas\_engine\_chp\_biogas module
+   
+Gas Engine CHP Biogas
 ------------------------------------------------------------
 
 .. automodule:: smooth.components.component_gas_engine_chp_biogas
