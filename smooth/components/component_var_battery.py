@@ -1,6 +1,4 @@
-import oemof.solph as solph
 from .component_battery import Battery
-from oemof.outputlib import views
 
 
 class VarBattery(Battery):

@@ -100,6 +100,13 @@ smooth.components.component\_supply module
    :undoc-members:
    :show-inheritance:
 
+smooth.components.component\_var\_battery module
+------------------------------------------
+
+.. automodule:: smooth.components.component_var_battery
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------

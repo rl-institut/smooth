@@ -27,6 +27,9 @@ class Battery(Component):
         # Loss rate [%/day]
         self.loss_rate = 0
         # C-Rate [-/h].
+        # If [symm_c_rate = True]: c_rate_symm is used for both c_rate_charge and c_rate_discharge
+        self.symm_c_rate = False
+        self.c_rate_symm = 1
         self.c_rate_charge = 1
         self.c_rate_discharge = 1
         # Depth of discharge [-].
@@ -59,6 +62,9 @@ class Battery(Component):
             raise ValueError(
                 'Initial state of charge is set below depth of discharge! '
                 'Please adjust soc_init or dod.')
+        if self.symm_c_rate:
+            self.c_rate_charge = self.c_rate_symm
+            self.c_rate_discharge = self.c_rate_symm
 
         # ------------------- STATES -------------------
         # State of charge [%]
