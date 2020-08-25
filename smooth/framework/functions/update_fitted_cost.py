@@ -289,14 +289,13 @@ def get_addspec(component, fitting_dict, index, dependant_value):
         'No previously calculated costs found, ' \
         'use \'addspec\' key only to add costs to existing costs'
 
-    oldcost = fitting_dict['cost']
     # Get the fitting value, which is the current cost if "cost" is chosen.
     if fitting_dict['fitting_value'][index] == 'cost':
         fitting_value = fitting_dict['cost']
     else:
         fitting_value = fitting_dict['fitting_value'][index]
     # Calculate the costs.
-    cost = oldcost + dependant_value * fitting_value
+    cost = fitting_dict['cost'] + dependant_value * fitting_value
 
     # Return the costs.
     return cost
