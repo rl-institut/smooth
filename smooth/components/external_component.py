@@ -1,4 +1,4 @@
-from smooth.framework.functions.update_fitted_cost import update_financials
+from smooth.framework.functions.update_fitted_cost import update_financials, update_emissions
 from smooth.framework.functions.update_annuities import update_external_annuities
 
 
@@ -25,6 +25,10 @@ class ExternalComponent:
         self.opex = dict()
         self.capex = dict()
 
+        # Initializing fixed and operational emission values.
+        self.op_emissions = dict()
+        self.fix_emissions = dict()
+
     def set_parameters(self, params):
         for this_param in params:
             if not hasattr(self, this_param):
@@ -41,6 +45,9 @@ class ExternalComponent:
         # Compute the CAPEX and then the OPEX results.
         update_financials(self, self.capex)
         update_financials(self, self.opex)
+        # Compute the emissions due to installation and operation.
+        update_emissions(self, self.fix_emissions)
+        update_emissions(self, self.op_emissions)
         # Calculate the annuities of the CAPEX
         update_external_annuities(self)
 
@@ -49,7 +56,7 @@ class ExternalComponent:
         # if the component attributes are valid.
 
         # Check if a life time is given when there are CAPEX given.
-        if self.capex:
+        if self.capex or self.fix_emissions:
             if self.life_time is None or self.life_time <= 0:
                 raise ValueError('In component {} CAPEX or fix_emissions are given'
                                  ' but the life_time is either None or '

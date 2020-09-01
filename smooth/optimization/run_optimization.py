@@ -132,6 +132,8 @@ This is done by going one *val_step* in positive and negative direction.
 These new children are then evaluated. Depending on the domination,
 the gradient may be *+val_step*, -*val_step* or 0 (parent is optimal).
 Then, this gradient is followed until the child shows no improvement.
+The population may be topped up with multiples of *val_step*
+to better utilize all cores and speed up the gradient ascent.
 After all solutions have found their optimum for this attribute,
 the next attribute is varied.
 
@@ -167,10 +169,13 @@ This blocks the process, so no new data is received, but user events are still p
 """
 
 import multiprocessing as mp
-from tkinter import TclError
+from tkinter import TclError     # plotting window closed
 import random
 import matplotlib.pyplot as plt  # only needed when plot_progress is set
-import dill
+import os                        # delete old result files
+from datetime import datetime    # get timestamp for filename
+import pickle                    # pickle intermediate results
+import dill                      # dump objective functions
 
 from smooth import run_smooth
 
@@ -274,7 +279,6 @@ class Individual:
         :rtype: boolean
         """
         return self.fitness is not None and (other.fitness is None or (
-            (self.fitness[0] > other.fitness[0] and self.fitness[1] > other.fitness[1]) or
             (self.fitness[0] >= other.fitness[0] and self.fitness[1] > other.fitness[1]) or
             (self.fitness[0] > other.fitness[0] and self.fitness[1] >= other.fitness[1])))
 
@@ -331,7 +335,8 @@ def fast_non_dominated_sort(p):
         i = i+1
         front.append(Q)
 
-    front.pop(len(front) - 1)
+    if len(front) > 1:
+        front.pop(len(front) - 1)
 
     return front
 
@@ -348,13 +353,16 @@ def CDF(values1, values2, n):
     :return: `n` crowding distance values
     :rtype: list
     """
+
+    if (n == 0 or len(values1) != n or len(values2) != n or
+            max(values1) == min(values1) or max(values2) == min(values2)):
+        return [1e100]*n
+
     distance = [0]*n
     sorted1 = sort_by_values(n, values1)
     sorted2 = sort_by_values(n, values2)
     distance[0] = 1e100  # border
     distance[-1] = 1e100
-    if max(values1) == min(values1) or max(values2) == min(values2):
-        return [1e100]*n
     for k in range(1, n-1):
         distance[k] = distance[k] + (values1[sorted1[k+1]] -
                                      values2[sorted1[k-1]])/(max(values1)-min(values1))
@@ -426,6 +434,7 @@ def fitness_function(
         model,
         attribute_variation,
         dill_objectives,
+        ignore_zero=False,
         save_results=False):
     """Compute fitness for one individual
         Called async: copies of individual and model given
@@ -440,6 +449,8 @@ def fitness_function(
     :type attribute_variation: list of :class:`AttributeVariation`
     :param dill_objectives: objective functions
     :type dill_objectives: tuple of lambda-functions pickled with dill
+    :param ignore_zero: ignore components with an attribute value of zero
+    :type ignore_zero: boolean
     :param save_results: save smooth result in individual?
     :type save_results: boolean
     :return: index, modified individual with fitness (None if failed)
@@ -448,7 +459,12 @@ def fitness_function(
     """
     # update (copied) oemof model
     for i, av in enumerate(attribute_variation):
-        model['components'][av.comp_name][av.comp_attribute] = individual[i]
+        if ignore_zero and individual[i] == 0:
+            # remove component with zero value from model
+            # use pop instead of del in case component is removed multiple times
+            model['components'].pop(av.comp_name, None)
+        else:
+            model['components'][av.comp_name][av.comp_attribute] = individual[i]
 
     # Now that the model is updated according to the genes given by the GA, run smooth
     try:
@@ -557,9 +573,9 @@ class PlottingProcess(mp.Process):
             # cont: any points hovered?
             # ind:  list of points hovered
             cont, ind = self.points.contains(event)
-            ind = ind["ind"]
 
-            if cont:
+            if cont and "ind" in ind:
+                ind = ind["ind"]
                 # points hovered
                 # get all point coordinates
                 x, y = self.points.get_data()
@@ -649,6 +665,11 @@ class Optimization:
     :type post_processing: boolean, optional
     :param plot_progress: plot current pareto front. Defaults to False
     :type plot_progress: boolean, optional
+    :param ignore_zero: ignore components with an attribute value of zero. Defaults to False
+    :type ignore_zero: boolean, optional
+    :param save_intermediate_results: write intermediate results to pickle file.
+        Only the two most recent results are saved. Defaults to False
+    :type save_intermediate_results: boolean, optional
     :param SAVE_ALL_SMOOTH_RESULTS: save return value of `run_smooth`
         for all evaluated individuals.
         **Warning!** When writing the result to file,
@@ -668,6 +689,8 @@ class Optimization:
         # set defaults
         self.post_processing = False
         self.plot_progress = False
+        self.ignore_zero = False
+        self.save_intermediate_results = False
         self.SAVE_ALL_SMOOTH_RESULTS = False
 
         # objective functions: tuple with lambdas
@@ -727,6 +750,11 @@ class Optimization:
         self.population = []
         self.evaluated = {}
 
+        # save intermediate results?
+        if self.save_intermediate_results:
+            self.last_result_file_name = ""
+            self.current_result_file_name = ""
+
         # plot intermediate results?
         if self.plot_progress:
             # set up plotting process with unidirectional pipe
@@ -756,7 +784,7 @@ class Optimization:
 
     def compute_fitness(self):
         """Compute fitness of every individual in `population` with `n_core` worker threads.
-        Remove invalid indivuals from `population`
+        Remove invalid individuals from `population`
         """
         # open n_core worker threads
         pool = mp.Pool(processes=self.n_core)
@@ -767,12 +795,37 @@ class Optimization:
                 pool.apply_async(
                     fitness_function,
                     (idx, ind, self.model, self.attribute_variation,
-                        dill_objectives, self.SAVE_ALL_SMOOTH_RESULTS),
+                        dill_objectives, self.ignore_zero, self.SAVE_ALL_SMOOTH_RESULTS),
                     callback=self.set_fitness,
                     error_callback=self.err_callback  # tb
                 )
         pool.close()
         pool.join()
+
+    def save_intermediate_result(self, result):
+        """Dump result into pickle file in current working directory.
+        Same content as smooth.save_results.
+        The naming schema follows *date*-*time*-intermediate_result.pickle.
+        Removes second-to-last pickle file from same run.
+
+        :param result: the current results to be saved
+        :type result: list of :class:`Individual`
+        """
+
+        # prepare file name by format
+        filename_format = "%Y-%m-%d_%H-%M-%S_intermediate_result.pickle"
+        new_result_file_name = datetime.now().strftime(filename_format)
+        # write result to file
+        with open(new_result_file_name, 'wb') as save_file:
+            pickle.dump(result, save_file)
+        # delete second-to-last result file (if not rewritten)
+        if (os.path.exists(self.last_result_file_name)
+                and self.last_result_file_name != self.current_result_file_name):
+            os.remove(self.last_result_file_name)
+        # update status
+        self.last_result_file_name = self.current_result_file_name
+        self.current_result_file_name = new_result_file_name
+        print("Save intermediate results in {}".format(new_result_file_name))
 
     def gradient_ascent(self, result):
         """Try to fine-tune result(s) with gradient ascent
@@ -799,12 +852,14 @@ class Optimization:
             if not known_fitness:
                 new_result.append(result[i])
 
+        num_results = len(new_result)
+
         for av_idx, av in enumerate(self.attribute_variation):
             # iterate attribute variations (assumed to be independent)
             print("Gradient descending {} / {}".format(av_idx+1, len(self.attribute_variation)))
             step_size = av.val_step or 1.0  # required for ascent
             self.population = []
-            for i in range(len(new_result)):
+            for i in range(num_results):
                 # generate two children around parent to get gradient
                 parent = new_result[i]
                 # "below" parent, clip to minimum
@@ -831,8 +886,8 @@ class Optimization:
 
             # take note which direction is best for each individual
             # may be positive or negative step size or 0 (no fitness improvement)
-            step = [0] * len(new_result)
-            for i in range(len(new_result)):
+            step = [0] * num_results
+            for i in range(num_results):
                 parent = new_result[i]
                 child1 = self.population[2*i]
                 child2 = self.population[2*i+1]
@@ -858,32 +913,68 @@ class Optimization:
 
             # continue gradient ascent of solutions until local optimum reached for all
             while sum(map(abs, step)) != 0.0:
-                # still improvement
+                # still improvement: create new population
                 self.population = []
-                for i in range(len(new_result)):
-                    # generate new offspring in direction of step (may be 0 -> unchanged)
-                    parent = new_result[i]
-                    child = Individual([gene for gene in parent])
-                    child[av_idx] = min(max(parent[av_idx] + step[i], av.val_min), av.val_max)
-                    fingerprint = str(child)
-                    # add to population. Take evaluated if exists
-                    try:
-                        self.population.append(self.evaluated[fingerprint])
-                    except KeyError:
-                        self.population.append(child)
+                # dict for saving position of parent element
+                reference = {}
+                idx = 0
+
+                # build new population
+                # only parents with step != 0 (still changing)
+                # each parent with step != 0 at least once
+                # fill up to n_cores with multiples of steps
+                # only non-evaluated configurations allowed
+                while(len(self.population) < max(num_results, self.n_core)):
+                    # position of parent element
+                    pos = idx % num_results
+                    # multiplier for step size (at least 1)
+                    mult = (idx // num_results) + 1
+
+                    if mult > 1 and len(self.population) >= self.n_core:
+                        # population full
+                        break
+
+                    if idx > 1000 * num_results:
+                        # avoid endless loop (no more valid entries?)
+                        break
+
+                    if step[pos]:
+                        # result with step: generate child in step direction
+                        parent = new_result[pos]
+                        child = Individual([gene for gene in parent])
+                        mul_step = step[pos] * mult
+                        child[av_idx] = min(max(parent[av_idx] + mul_step, av.val_min), av.val_max)
+
+                        fingerprint = str(child)
+                        # avoid double computation
+                        if fingerprint not in self.evaluated:
+                            # child config not seen so far
+                            self.population.append(child)
+                            # block, so not in population again
+                            self.evaluated[fingerprint] = None
+                            # keep track of parent position
+                            reference[len(self.population) - 1] = pos
+
+                    idx += 1
 
                 # compute fitness of all new children
-                # Keep invalid to preserve order (match parent to children)
+                # Keep invalid to preserve order (match children to parent)
                 self.compute_fitness()
 
-                for i in range(len(new_result)):
-                    # compare fitness of parent and child
-                    child = self.population[i]
-                    if child.dominates(new_result[i]):
-                        new_result[i] = child
-                    else:
-                        # no improvement: stop ascent of this solution
-                        step[i] = 0.0
+                # check new dominance of parent and children
+                # default: no improvement -> stop ascent of this attribute
+                new_step = [0] * len(step)
+                for idx, child in enumerate(self.population):
+                    parent_idx = reference[idx]
+                    parent = new_result[parent_idx]
+                    if child.dominates(parent):
+                        # domination continues: save child, keep base step
+                        # this ensures a new generation
+                        new_result[parent_idx] = child
+                        new_step[parent_idx] = step[parent_idx]
+
+                # update step sizes
+                step = new_step
 
                 # show current result in plot
                 if self.plot_progress and self.plot_process.is_alive():
@@ -891,7 +982,10 @@ class Optimization:
                         'title': 'Gradient descending AV #{}'.format(av_idx+1),
                         'values': new_result
                     })
-            # no more changes in any solution for this AV: change next AV
+
+            # no more changes in any solution for this AV: give status update
+            if self.save_intermediate_results:
+                self.save_intermediate_result(new_result)
 
             # show current result in plot
             if self.plot_progress and self.plot_process.is_alive():
@@ -899,6 +993,8 @@ class Optimization:
                     'title': 'Front after gradient descending AV #{}'.format(av_idx+1),
                     'values': new_result
                 })
+
+            # change next AV
 
         return new_result
 
@@ -1008,6 +1104,10 @@ class Optimization:
                 print(i, self.population[v], self.population[v].fitness)
             print("\n")
 
+            # save result to file
+            if self.save_intermediate_results:
+                self.save_intermediate_result(result)
+
             # show current pareto front in plot
             if self.plot_progress and self.plot_process.is_alive():
                 self.plot_pipe_tx.send({
@@ -1036,6 +1136,13 @@ class Optimization:
         if self.plot_progress and self.plot_process.is_alive():
             self.plot_pipe_tx.send(None)    # stop drawing, show plot
             self.plot_process.join()        # wait until user closes plot
+
+        # remove old intermediate results
+        if self.save_intermediate_results:
+            if os.path.exists(self.last_result_file_name):
+                os.remove(self.last_result_file_name)
+            if os.path.exists(self.current_result_file_name):
+                os.remove(self.current_result_file_name)
 
         return result
 
