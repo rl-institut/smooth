@@ -18,8 +18,6 @@ thermal bus output. The behaviour of the fuel cell CHP component is non-linear,
 which is demonstrated through the use of oemof's Piecewise Linear Transformer
 component.
 
-INCLUDE FIGURE?
-
 Efficiency
 ----------
 The efficiency curves for both electrical and thermal energy output according
@@ -28,42 +26,44 @@ displayed in INSERT FIGURE. From the breakpoints, the electrical and thermal
 production based on the hydrogen consumption and variable efficiency can be
 obtained.
 
+INCLUDE EFFICIENCY CURVE FIGURE
+
 Electrical and thermal energy production
 ----------------------------------------
 In order to calculate the electrical and thermal energy production for
 each load point, first the maximum hydrogen input is calculated:
 
 .. math::
-    H_2_{max} = \\frac{P_{max}}{LHV_{H_2}} * \\mu_{elec_{full load}}
+    H_{2,max} = \\frac{P_{max}}{LHV_{H_2}} \\cdot \\mu_{elec_{full load}}
 
-* :math:`H_{2}_{max}` = maximum hydrogen input per timestep [kg]
+* :math:`H_{2,max}` = maximum hydrogen input per timestep [kg]
 * :math:`P_{max}` = maximum electrical output power [W]
-* :math:`\\mu_{elec_{max}}` = electrical efficiency at full load [-]
+* :math:`\mu_{elec_{max}}` = electrical efficiency at full load [-]
 
 Then the load break points for both the electrical and thermal components
  are converted into how much hydrogen is consumed at each load break point
 according to the maximum hydrogen input per time step:
 
 .. math::
-    bp_{H_{2_el}_{i}} = bp_{load_el}_{i} * H_{2}_{max}
-    bp_{H_{2_th}_{i}} = bp_{load_th}_{i} * H_{2}_{max}
+    bp_{H_{2},el,i} = bp_{load,el,i} \\cdot H_{2,max} \n
+    bp_{H_{2},th,i} = bp_{load,th,i} \\cdot H_{2,max}
 
-* :math:`bp_{H_{2_el}_{i}}` = ith electrical break point in terms of hydrogen consumption [kg]
-* :math:`bp_{load_el}_{i}` = ith electrical break point in terms of nominal load [-]
-* :math:`bp_{H_{2_th}_{i}}` = ith thermal break point in terms of hydrogen consumption [kg]
-* :math:`bp_{load_th}_{i}` = ith thermal break point in terms of nominal load [-]
+* :math:`bp_{H_{2},el,i}` = ith electrical break point in terms of hydrogen consumption [kg]
+* :math:`bp_{load,el,i}` = ith electrical break point in terms of nominal load [-]
+* :math:`bp_{H_{2},th,i}` = ith thermal break point in terms of hydrogen consumption [kg]
+* :math:`bp_{load,th,i}` = ith thermal break point in terms of nominal load [-]
 
 From these hydrogen consumption values, the absolute electrical and thermal
 energy produced at each break point is calculated:
 
 .. math::
-    E_{el}_{i}} = bp_{H_{2_el}_{i}} * \\mu_{el}_{i} * LHV_{H_2} * 1000
-    E_{th}_{i}} = bp_{H_{2_th}_{i}} * \\mu_{th}_{i} * LHV_{H_2} * 1000
+    E_{el,i} = bp_{H_{2},el,i} \\cdot \\mu_{el,i} \\cdot LHV_{H_{2}} \\cdot 1000 \n
+    E_{th,i} = bp_{H_{2},th,i} \\cdot \\mu_{th,i} \\cdot LHV_{H_{2}} \\cdot 1000
 
-* :math:`E_{el}_{i}}` = ith absolute electrical energy value [Wh]
-* :math:`\\mu_{el}_{i}` = ith electrical efficiency [-]
-* :math:`E_{th}_{i}}` = ith absolute thermal energy value [Wh]
-* :math:`\\mu_{th}_{i}` = ith electrical efficiency [-]
+* :math:`E_{el,i}` = ith absolute electrical energy value [Wh]
+* :math:`\\mu_{el,i}` = ith electrical efficiency [-]
+* :math:`E_{th,i}` = ith absolute thermal energy value [Wh]
+* :math:`\\mu_{th,i}` = ith thermal efficiency [-]
 
 Piecewise Linear Transformer
 ----------------------------
@@ -141,40 +141,33 @@ class FuelCellChp(Component):
         # ------------------- PARAMETERS -------------------
         # PARAMETERS TO CHANGE BY THE USER
         self.name = 'Fuel cell CHP default name'
-
         # Busses (H2 in, electrical out, thermal out).
         self.bus_h2 = None
         self.bus_el = None
         self.bus_th = None
-
         # Max. electrical output power [W].
         self.power_max = None
-
+        # Lifetime of the component [a]
+        self.life_time = 15
         # Update the input parameters by the user.
         self.set_parameters(params)
-
         # INTERNAL PARAMETERS
         # Heating value of hydrogen [kWh/kg].
         self.heating_value_h2 = 33.33
-
         # The CHP an electrical efficiency and a thermal efficiency, both over
         # the load point, according to: Scholta, J. et.al. Small Scale PEM Fuel
         # Cells in Combined Heat/Power Co-generation. RCUB Afrodita.
         # http://afrodita.rcub.bg.ac.rs/~todorom/tutorials/rad24.html
-
         # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
         self.bp_load_el = [0.0, 0.0481, 0.0694, 0.0931, 0.1272, 0.1616, 0.2444, 0.5912, 1.0]
         # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
         self.bp_eff_el = [0.0, 0.1996, 0.3028, 0.4272, 0.5034, 0.5381, 0.5438, 0.4875, 0.3695]
-
         # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
         self.bp_load_th = [0.0, 0.0517, 0.1589, 0.2482, 1.0]
         # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
         self.bp_eff_th = [0.0, 0.0915, 0.2188, 0.2795, 0.5238]
-
         # Now calculate the absolute values for electricity [Wh] and thermal
         # energy [Wh] and H2 consumption [kg].
-
         # Therefor first calculate the max. hydrogen input that lead to the
         # max. electrical energy in Wh [kg].
         self.h2_input_max = self.power_max / (
@@ -185,7 +178,6 @@ class FuelCellChp(Component):
             this_bp * self.h2_input_max for this_bp in self.bp_load_el]
         self.bp_h2_consumed_th = [
             this_bp * self.h2_input_max for this_bp in self.bp_load_th]
-
         # Now get the absolute electrical energy values over the load points [Wh].
         self.bp_energy_el = []
         for i_bp in range(len(self.bp_load_el)):
@@ -194,7 +186,6 @@ class FuelCellChp(Component):
                 self.bp_h2_consumed_el[i_bp] * \
                 self.bp_eff_el[i_bp] * self.heating_value_h2 * 1000
             self.bp_energy_el.append(this_energy_el)
-
         # Now get the absolute thermal energy values over the load points [Wh].
         self.bp_energy_th = []
         for i_bp in range(len(self.bp_load_th)):
@@ -203,7 +194,6 @@ class FuelCellChp(Component):
                 self.bp_h2_consumed_th[i_bp] * \
                 self.bp_eff_th[i_bp] * self.heating_value_h2 * 1000
             self.bp_energy_th.append(this_energy_th)
-
         # While we will create two oemof components, one for thermal energy and
         # one for electrical energy, and make a constraint that both inflows of
         # hydrogen have to be the same, each component will get only half the
@@ -212,15 +202,14 @@ class FuelCellChp(Component):
         self.bp_h2_consumed_el_half = [
             this_bp / 2 for this_bp in self.bp_h2_consumed_el]
         self.bp_h2_consumed_th_half = [this_bp / 2 for this_bp in self.bp_h2_consumed_th]
-
         # Save the two models to set constraints later.
         self.model_el = None
         self.model_th = None
 
     def get_el_energy_by_h2(self, h2_consumption):
-        """Gets the electrical energy produced by the according hydrogen production value.
+        """Gets the electrical energy produced by the according hydrogen consumption value.
 
-        :param h2_consumption: hydrogen production value [kg]
+        :param h2_consumption: hydrogen consumption value [kg]
         :return: according electrical energy value [Wh]
         """
         # Check the index of this load point.
@@ -228,9 +217,9 @@ class FuelCellChp(Component):
         return self.bp_energy_el[this_index]
 
     def get_th_energy_by_h2(self, h2_consumption):
-        """Gets the thermal energy produced by the according hydrogen production value.
+        """Gets the thermal energy produced by the according hydrogen consumption value.
 
-        :param h2_consumption: hydrogen production value [kg]
+        :param h2_consumption: hydrogen consumption value [kg]
         :return: according thermal energy value [Wh]
         """
         # Check the index of this load point.
@@ -249,9 +238,8 @@ class FuelCellChp(Component):
         :type model: model
         :return: the oemof fuel cell CHP electric and thermal components
         """
-        # Create the non-linear oemof component. The CHP has to be modelled as
-        # two components, while the piecewise linear transformer does not
-        # accept 2 outputs yet.
+        # The CHP has to be modelled as two components, while the piecewise linear
+        # transformer does not accept 2 outputs yet.
 
         flow_electric = solph.Flow(
             nominal_value=self.bp_h2_consumed_el_half[-1],
@@ -290,7 +278,8 @@ class FuelCellChp(Component):
         piecewise linear transformer cannot have two outputs yet and
         therefore the two parts need to be separate components).
 
-        :param busses:
+        :param busses: virtual buses used in the energy system
+        :type busses: list
         :param model_to_solve: The oemof model that will be solved
         :type model_to_solve: model
         """
@@ -301,7 +290,7 @@ class FuelCellChp(Component):
             component are equal.
 
             :param model: The oemof model containing the electrical energy production and
-                thermal energy production of the electrolyser
+                thermal energy production of the fuel cell
             :type model: model
             :param t: ?
             :return: expression = 0
@@ -309,7 +298,6 @@ class FuelCellChp(Component):
             # Inverter flow
             expr = 0
             expr += model.flow[busses[self.bus_h2], self.model_th, t]
-            # force discharge to zero when grid available
             expr += - model.flow[busses[self.bus_h2], self.model_el, t]
             return (expr == 0)
 

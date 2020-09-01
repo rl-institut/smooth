@@ -116,6 +116,22 @@ Gas Engine CHP Biogas
    :undoc-members:
    :show-inheritance:
 
+Gate
+------------------------------------------------------------
+
+.. automodule:: smooth.components.component_gate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+H2 Refuel Cooling System
+------------------------------------------------------------
+
+.. automodule:: smooth.components.component_h2_refuel_cooling_system
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 smooth.components.component\_sink module
 ----------------------------------------
 

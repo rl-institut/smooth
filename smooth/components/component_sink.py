@@ -1,15 +1,34 @@
+"""
+A generic sink component (usually for excess electricity, heat etc.) is
+created through this class.
+
+
+"""
+
 import oemof.solph as solph
 from .component import Component
 
 
 class Sink(Component):
-    """ Generic sink component (usually for excess electricity, heat etc.) is
-    created through this class """
+    """
+    :param name: unique name given to the sink component
+    :type name: str
+    :param input_max: maximum input per timestep of commodity e.g.
+        for the electricity grid [Wh], thermal grid [Wh], hydrogen grid [kg]
+    :type input_max: numerical
+    :param bus_in: input bus of the sink component
+    :type bus_in: str
+    :param set_parameters(params): updates parameter default values
+        (see generic Component class)
+    :type set_parameters(params): function
+    :param commodity_costs: 
+    """
 
     def __init__(self, params):
 
         # Call the init function of the mother class.
         Component.__init__(self)
+
         # ------------------- PARAMETERS -------------------
         self.name = 'Grid_default_name'
 

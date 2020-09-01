@@ -44,7 +44,7 @@ streams and the enthalpy gained from the deionized water to warm up the
 electrolyzer from ambient to operating temperature [3]:
 
 .. math::
-    C_t * \frac{dT}{dt} = P_{heat} - Q_{loss} - Q_{cooling} - h_j * m_j
+    C_t \\cdot \\frac{dT}{dt} = P_{heat} - Q_{loss} - Q_{cooling} - h_j \\cdot m_j
 
 #ToDo: sort out this equation including derivatives etc.
 
@@ -73,10 +73,10 @@ necessary for reaching high water electrolysis rates [3]. The internal heat
 gemeration is calculated as follows:
 
 .. math::
-   Q_{gen} = E_{sup} - H_2_{prod} * HHV_{H_{2}} * \frac{1e6}{3600}
+   Q_{gen} = E_{sup} - H_{2,prod} \\cdot HHV_{H_{2}} \\cdot \\frac{1e6}{3600}
 
 * :math:`E_{sup}` = total energy supply to the electrolyzer
-* :math:`H_2_{prod}` = the amount of hydrogen produced
+* :math:`H_{2,prod}` = the amount of hydrogen produced
 * :math:`HHV_{H_{2}}` = the higher heating value of hydrogen
 
 Heat losses
@@ -88,7 +88,7 @@ for horizontal cylinders, and since the parts of the alkaline have a cylindrical
 shape, this equation is used for the alkaline electrolyzer component:
 
 .. math::
-  h = 1.32 * \\frac{\\Delta T}{d}^{0.25}
+  h = 1.32 \\cdot \\frac{\\Delta T}{d}^{0.25}
 
 The heat losses are then calculated taking into consideration the heat
 transfer coefficient, the total surface area of the main parts of the
@@ -97,7 +97,7 @@ difference between the surface of the electrolyzer and the ambient temperature [
 The equation is as follows:
 
 .. math::
-    Q_L = A_{sep} * h * (T_{sep} - T_{amb}) + A_{stack} * h * (T_{stack} - T_{amb})
+    Q_L = A_{sep} \\cdot h \\cdot (T_{sep} - T_{amb}) + A_{stack} \\cdot h \\cdot (T_{stack} - T_{amb})
 
 * :math:`A_{sep}` = total surface area of the gas separators
 * :math:`T_{sep}` = separator surface temperature
@@ -117,7 +117,7 @@ molar masses of :math:`H_2` and :math:`O_2`, the mass of produced oxygen is
 determined:
 
 .. math::
-    m_{O_{2}} = m_{H_{2}} * 0.5 * \\frac{M_{O_{2}}}{M_{H_{2}}}
+    m_{O_{2}} = m_{H_{2}} \\cdot 0.5 \\cdot \\frac{M_{O_{2}}}{M_{H_{2}}}
 
 * :math:`m_{O_{2}}` = mass of oxygen stream
 * :math:`m_{H_{2}}` = mass of hydrogen stream
@@ -134,12 +134,12 @@ The mass of :math:`H_2O` is then determined as follows:
 Thus, the sensible heat is calculated using mass and specific heat:
 
 .. math::
-    S = \\frac{m_{H_{2}O} * c_{p_{H_{2}O}} *-\\Delta T - m_{H_{2}} * c_{p_{H_{2}} * \\Delta T + m_{O_{2}} * c_{p_{O_{2}} * \\Delta T}{3.6e6}
+    S = \\frac{m_{H_{2}O} \\cdot c_{p,H_{2}O} \\cdot -\\Delta T - m_{H_{2}} \\cdot c_{p,H_{2}} \\cdot \\Delta T + m_{O_{2}} \\cdot c_{p,O_{2}} \\cdot \\Delta T}{3.6e6}
 
-* :math:`c_{p_{H_{2}O}}` = specific heat of water
+* :math:`c_{p,H_{2}O}` = specific heat of water
 * :math:`\\Delta T` = the temperature change between the ambient and electrolyzer temperature
-* :math:`c_{p_{H_{2}}}` = specific heat of hydrogen
-* :math:`c_{p_{O_{2}}}` = specific heat of oxygen
+* :math:`c_{p,H_{2}}` = specific heat of hydrogen
+* :math:`c_{p,O_{2}}` = specific heat of oxygen
 
 **Latent heat** \n
 

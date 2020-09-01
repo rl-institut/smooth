@@ -31,7 +31,7 @@ Then the output temperature is calculated, and the initial assumption
 for the polytropic exponent is assumed to be 1.6:
 
 .. math::
-    T_{out} = min(max(T_{in}, T_{in} * p_{ratio} ^ \\frac{n_{init} - 1/n_{init}),
+    T_{out} = min(max(T_{in}, T_{in} \\cdot p_{ratio} ^ \\frac{n_{init} - 1}{n_{init}}),
     T_{in} + 60)
 
 * :math:`T_{out}` = output temperature [K]
@@ -48,7 +48,7 @@ Then the temperature ratio is calculated:
 Then the polytropic exponent is calculated:
 
 .. math::
-    n = \\frac{1}{\\frac{1 - log_{T_{ratio}}{log_{p_{ratio}}}}
+    n = \\frac{1}{1 - \\frac{log_{T_{ratio}}}{log_{p,ratio}}}
 
 The compressibility factors of the hydrogen entering and leaving
 the compressor is then calculated using interpolation considering
@@ -67,7 +67,7 @@ as follows:
 Thus the specific compression work is finally calculated:
 
 .. math::
-    c_{w_{1}} = \\frac{1}{\\mu} * R_{H_{2}} * T_{in} * \\frac{n}{n-1} * p_{ratio} ^ (\\frac{n-1}{n} -1) * \\frac{Z_{real}{1000}
+    c_{w_{1}} = \\frac{1}{\\mu} \\cdot R_{H_{2}} \\cdot T_{in} \\cdot \\frac{n}{n-1} \\cdot p_{ratio} ^ {(\\frac{n-1}{n} -1)} \\cdot \\frac{Z_{real}}{1000}
 
 * :math:`c_{w_{1}}` = specific compression work [kJ/kg]
 * :math:`\\mu` = compression efficiency
@@ -134,24 +134,16 @@ class CompressorH2(Component):
 
         # ------------------- PARAMETERS -------------------
         self.name = 'Compressor_default_name'
-
-        # Busses
         self.bus_h2_in = None
         self.bus_h2_out = None
         self.bus_el = None
-
-        # Max. mass flow [kg/h].
         self.m_flow_max = 33.6
-
-        # Life time [a].
         self.life_time = 20
-
         # It is assumed that hydrogen always enters the compressor at room temperature [K]
         # FIXME: An assumption from MATLAB is that hydrogen always enters the
         # compressor at this temp, should it be calculated instead of assumed??
         self.temp_in = 293.15
-
-        # Overall efficiency of the compressor (value taken from MATLAB) [-]
+        # value taken from MATLAB
         self.efficiency = 0.88829
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------

@@ -35,10 +35,14 @@ multiplying the mass percentage with the LHV of methane, which is
 demonstrated below:
 
 .. math::
-    LHV_{Bg} = \\frac{P_{max}}{LHV_{H_2}} * \\mu_{elec_{full load}}
-    CH_{4_{share}} * M_{CH_{4}}
+    LHV_{Bg} = \\frac{CH_{4_{share}} \\cdot M_{CH_{4}}}{CH_{4_{share}} \\cdot M_{CH_{4}} + CO_{2_{share}} \\cdot M_{CO_{2}}} \\cdot LHV_{CH_{4}} \n
 
-    FINISH
+* :math:`LHV_{Bg}` = heating value of biogas [kWh/kg]
+* :math:`CH_{4_{share}` = proportion of methane in biogas [-]
+* :math:`M_{CH_{4}}` = molar mass of methane [kg/mol]
+* :math:`CO_{2_{share}}` = proportion of carbon dioxide in biogas [-]
+* :math:`M_{CO_{2}}` = molar mass of carbon dioxide [kg/mol]
+* :math:`LHV_{CH_{4}}` = heating value of methane [kWh/kg]
 
 Efficiency
 ----------
@@ -52,7 +56,7 @@ The maximum biogas input is initially calculated so that the electrical
 and thermal energy production for each load point can be calculated:
 
 .. math::
-    Bg_{max} = \\frac{P_{max}}{LHV_{Bg}} * \\mu_{elec_{full load}}
+    Bg_{max} = \\frac{P_{max}}{LHV_{Bg}} \\cdot \\mu_{elec_{full load}}
 
 * :math:`Bg_{max}` = maximum biogas input per timestep [kg]
 * :math:`P_{max}` = maximum electrical output power [W]
@@ -63,25 +67,25 @@ Then the load break points for both the electrical and thermal components
 according to the maximum biogas input per time step:
 
 .. math::
-    bp_{Bg_{el}_{i}} = bp_{load_el}_{i} * Bg_{max}
-    bp_{Bg_{th}_{i}} = bp_{load_th}_{i} * Bg_{max}
+    bp_{Bg,el,i} = bp_{load,el,i} \\cdot Bg_{max} \n
+    bp_{Bg,th,i} = bp_{load,th,i} \\cdot Bg_{max}
 
-* :math:`bp_{Bg_{el}_{i}}` = ith electrical break point in terms of biogas consumption [kg]
-* :math:`bp_{load_el}_{i}` = ith electrical break point in terms of nominal load [-]
-* :math:`bp_{Bg_{th}_{i}}` = ith thermal break point in terms of biogas consumption [kg]
-* :math:`bp_{load_th}_{i}` = ith thermal break point in terms of nominal load [-]
+* :math:`bp_{Bg,el,i}` = ith electrical break point in terms of biogas consumption [kg]
+* :math:`bp_{load,el,i}` = ith electrical break point in terms of nominal load [-]
+* :math:`bp_{Bg,th,i}` = ith thermal break point in terms of biogas consumption [kg]
+* :math:`bp_{load,th,i}` = ith thermal break point in terms of nominal load [-]
 
 From these biogas consumption values, the absolute electrical and thermal
 energy produced at each break point is calculated:
 
 .. math::
-    E_{el}_{i}} = bp_{Bg_{el}_{i}} * \\mu_{el}_{i} * LHV_{Bg} * 1000
-    E_{th}_{i}} = bp_{Bg_{th}_{i}} * \\mu_{th}_{i} * LHV_{Bg} * 1000
+    E_{el,i} = bp_{Bg,el,i} \\cdot \\mu_{el,i} \\cdot LHV_{Bg} \\cdot 1000 \n
+    E_{th,i} = bp_{Bg,th,i} \\cdot \\mu_{th,i} \\cdot LHV_{Bg} \\cdot 1000
 
-* :math:`E_{el}_{i}}` = ith absolute electrical energy value [Wh]
-* :math:`\\mu_{el}_{i}` = ith electrical efficiency [-]
-* :math:`E_{th}_{i}}` = ith absolute thermal energy value [Wh]
-* :math:`\\mu_{th}_{i}` = ith electrical efficiency [-]
+* :math:`E_{el,i}` = ith absolute electrical energy value [Wh]
+* :math:`\\mu_{el,i}` = ith electrical efficiency [-]
+* :math:`E_{th,i}` = ith absolute thermal energy value [Wh]
+* :math:`\\mu_{th,i}` = ith electrical efficiency [-]
 
 Piecewise Linear Transformer
 ----------------------------
