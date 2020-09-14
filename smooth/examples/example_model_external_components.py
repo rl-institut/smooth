@@ -1,11 +1,53 @@
-""" DEFINE THE MODEL YOU WANT TO SIMULATE """
+"""
+This example is similar to the Example Model but with the inclusion of
+external components that are not included in the simulation/optimization,
+although the costs should still be considered.
+
+The only changes in this example are the creation of external components
+in a list e.g.:
+
+.. code:: bash
+
+    external_components = list()
+
+    external_components.append({
+    'external_component': 'h2_dispenser',
+    'name': 'test',
+    'life_time': 20,
+    # Financials
+    'capex': {
+        'key': 'spec',
+        'fitting_value': 107000,
+        'dependant_value': 'number_of_units'
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.05,
+        'dependant_value': 'capex'
+    },
+    'csv_filename': 'ts_demand_h2.csv',
+    'nominal_value': 1,
+    'column_title': 'Hydrogen load',
+    'path': my_path
+    })
+
+And now the model includes the external components too:
+
+.. code:: bash
+
+    mymodel = {
+    'busses': busses,
+    'components': components,
+    'sim_params': sim_params,
+    'external_components': external_components
+    }
+"""
 import os
 
 # Define where Python should look for csv files
 my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
-""" Create busses """
-# create hydrogen bus
+# Create busses
 busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
 
 
@@ -132,22 +174,7 @@ components.append({
 
 })
 
-sim_params = {
-    'start_date': '1/1/2019',
-    'n_intervals': 10,
-    'interval_time': 60,
-    'interest_rate': 0.03,
-    'print_progress': False,
-    'show_debug_flag': False,
-}
-
-mymodel = {
-    'busses': busses,
-    'components': components,
-    'sim_params': sim_params,
-}
-
-"""Define any external components that should not be considered in the simulation/optimization"""
+# Define any external components that should not be considered in the simulation/optimization
 external_components = list()
 
 external_components.append({

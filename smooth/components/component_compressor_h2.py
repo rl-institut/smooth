@@ -131,7 +131,6 @@ class CompressorH2(Component):
         """
         # Call the init function of th mother class.
         Component.__init__(self)
-
         # ------------------- PARAMETERS -------------------
         self.name = 'Compressor_default_name'
         self.bus_h2_in = None

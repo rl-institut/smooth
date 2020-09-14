@@ -1,15 +1,56 @@
-""" DEFINE THE MODEL YOU WANT TO SIMULATE """
+"""
+This example demonstrates how the components can be created in a dictionary
+instead of a list, which has advantages over the list form such as the
+inherent uniqueness of component names as well as easier access to components
+by name. This is particularly useful for large systems with many components.
+
+An example of a component created as a dictionary entry is displayed below:
+
+.. code:: bash
+
+    components = {
+    "this_ely": {
+        "component": "electrolyzer",
+        "bus_el": "bel",
+        "bus_h2": "bh2_lp",
+        "power_max": 100000.0,
+        "temp_init": 293.15,
+        "life_time": 20,
+        "capex": {
+            "key": [
+                "free",
+                "spec"
+            ],
+            "fitting_value": [
+                [
+                    193,
+                    -0.366
+                ],
+                "cost"
+            ],
+            "dependant_value": [
+                "power_max",
+                "power_max"
+            ]
+        },
+        "opex": {
+            "key": "spec",
+            "fitting_value": 0.04,
+            "dependant_value": "capex"
+        }
+    }
+
+"""
 import os
 
 # Define where Python should look for csv files
 my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
-""" Create busses """
-# create hydrogen bus
+# Create busses
 busses = ['bel', 'bh2_lp', 'bh2_hp']
 
 
-""" Define components """
+# Define components
 components = {
     "this_ely": {
         "component": "electrolyzer",
@@ -148,7 +189,6 @@ components = {
         }
     }
 }
-
 
 sim_params = {
     'start_date': '1/1/2019',

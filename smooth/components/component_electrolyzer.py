@@ -76,10 +76,10 @@ current density. Here, linear interpolation is used:
 * :math:`T_{old}` = old temperature of electrolyzer [K]
 * :math:`t` = interval time [min]
 
-Calculating current density
----------------------------
-!TO DO! DECIDE IF GET_ELECTRICITY_BY_POWER FUNCTION SHOULD BE DESCRIBED IN DETAIL OR NOT
-
+Additional calculations
+-----------------------
+For more in depth information on how parameters such as the current density or reversible
+voltage are calculated, see inside the component for the necessary functions.
 
 """
 

@@ -1,10 +1,86 @@
+"""
+This module represents a hydrogen trailer delivery.
+
+*****
+Scope
+*****
+Hydrogen trailers can be crucial in an energy system as a means of transporting
+hydrogen from the production site to the destination site (e.g. a refuelling
+station).
+
+*******
+Concept
+*******
+The hydrogen trailer component is a transformer component with a hydrogen
+bus input and a hydrogen bus output, which should be distinct from each other
+in order to maintain a one way flow from the production site to the destination
+site. The amount of hydrogen that can be transported in a given time step
+is determined, and this value restricts the flow in the component.
+
+Trailer activity
+----------------
+Thresholds are set for both the origin and destination storages. The component
+then:
+
+* Checks the level of destination storage component: if it is below specified
+  threshold, low artificial costs are implemented (to encourage system to fill it).
+* Checks the level of non-central storage component: if it is below specified
+  threshold, the trailer cannot take any hydrogen from it.
+* Checks the mass of hydrogen in both storages along with taking the trailer
+  capacity into consideration, and transports the maximum possible amount of
+  hydrogen.
+* Considers the round trip distance along with the assumptions that the
+  trailer can travel at 100 km/h and that the refuelling time for the trailer
+  is 15 minutes. With this information, it is determined whether or not
+  delivery is possible for the following time step with the trailer.
+"""
+
 import oemof.solph as solph
 from .component import Component
 from oemof.outputlib import views
 
 
 class TrailerH2Delivery(Component):
-    """Component created for a hydrogen trailer delivery"""
+    """
+    :param name: unique name given to the h2 trailer delivery component
+    :type name: str
+    :param bus_in: hydrogen bus that enters the component
+    :type bus_in: str
+    :param bus_out: hydrogen bus that leaves the component
+    :type bus_out: str
+    :param trailer_capacity: trailer capacity (at maximum pressure) [kg]
+    :type trailer_capacity: numerical
+    :param fs_destination_storage_threshold: threshold for the destination storage to
+        encourage/discourage the use of the trailer (percentage of capacity) [-]
+    :type fs_destination_storage_threshold: numerical
+    :param fs_origin_storage_threshold: threshold for the origin storage to
+        encourage/discourage the use of the trailer (percentage of capacity) [-]
+    :type fs_origin_storage_threshold: numerical
+    :param hydrogen_transported: amount of hydrogen transported by the trailer [kg]
+    :type hydrogen_transported: numerical
+    :param hydrogen_needed: amount of hydrogen needed [kg]
+    :type hydrogen_needed: numerical
+    :param fs_low_art_cost: low artificial cost value (set for destination storage) [EUR/kg]
+    :type fs_low_art_cost: numerical
+    :param fs_high_art_cost: high artificial cost value (set for destination storage) [EUR/kg]
+    :type fs_high_art_cost: numerical
+    :param set_parameters(params): updates parameter default values
+        (see generic Component class)
+    :type set_parameters(params): function
+    :param round_trip_distance: round-trip distance [km]
+    :type round_trip_distance: numerical
+    :param flow_switch: this determines whether there is a flow in the current
+        timestep: 0 = off, 1 = on
+    :type flow_switch: int
+    :param max_delivery_value: maximum amount of hydrogen that can be delivered in
+        the given timestep [kg]
+    :type max_delivery_value: numerical
+    :param delivery_possible: this states whether or not delivery is possible in the given
+        timestep: 0 = no, 1 = yes
+    :type delivery_possible: int
+    :param current_ac: current artificial cost value [EUR/kg]
+    :type current_ac: numerical
+    """
 
     def __init__(self, params):
 
@@ -13,7 +89,6 @@ class TrailerH2Delivery(Component):
 
         # ------------------- PARAMETERS -------------------
         self.name = 'Trailer_default_name'
-
         self.bus_in = None
         self.bus_out = None
 
@@ -25,53 +100,41 @@ class TrailerH2Delivery(Component):
         #  hour - this needs to be changed if the single trip distance from the origin to
         #  destination is longer than 45 minutes (1 hour - 15 mins refuelling)
 
-        # Trailer capacity (at maximum pressure) [kg]
         self.trailer_capacity = 500
-
-        # Single trip distance [km]
         self.single_trip_distance = 30
-
         # Define the threshold value for the artificial costs.
-        # The threshold for the destination storage to encourage/discourage the use of the trailer
-        # (percentage of capacity) [-]
         self.fs_destination_storage_threshold = None
-        # The threshold for the origin storage to encourage/discourage the use of the trailer
-        # (percentage of capacity) [-]
         self.fs_origin_storage_threshold = None
-        # The amount of hydrogen transported by the trailer [kg]
         self.hydrogen_transported = 0
-        # The amount of hydrogen needed [kg]
         self.hydrogen_needed = 0
-        # Define the low and the high art. cost value (these will be set for the destination
-        # storage) [EUR/kg]
         self.fs_low_art_cost = None
         self.fs_high_art_cost = None
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
-        # Round-trip distance [km]
         self.round_trip_distance = self.single_trip_distance * 2
 
         # ------------------- STATES -------------------
-        # This determines whether there is a flow in the current timestep: 0 = off, 1 = on
         self.flow_switch = None
         # This defines the maximum amount of hydrogen that can be delivered in the given timestep:
         # - 0 if the origin storage level is below the specified threshold
         # - else, the capacity of the trailer
         self.max_delivery_value = None
-        # This states whether or not delivery is possible in the given timestep: 0 = no, 1 = yes
         self.delivery_possible = 1
 
         # ------------------- INTERNAL VALUES -------------------
-        # The current artificial cost value [EUR/kg].
         self.current_ac = 0
 
     def update_var_costs(self, results, sim_params):
-        # Track the costs and artificial costs of a component for each time step.
-        # Parameters:
-        #  results: oemof result object for this time step.
-        #  sim_params: simulation parameters defined by the user.
+        """Tracks the costs and artificial costs of a component for each time step.
+
+        :param results: oemof results for the given time step
+        :type results: object
+        :param sim_params: simulation parameters for the energy system (defined by user)
+        :type sim_params: object
+        :return: updated artificial costs for this time step [EUR]
+        """
         # In this component, the variable costs are calculated differently to the other components,
         # to only apply if the trailer is used based on the distance travelled by the trailer.
 
@@ -103,6 +166,12 @@ class TrailerH2Delivery(Component):
                     this_dependency_value * self.artificial_costs
 
     def prepare_simulation(self, components):
+        """Prepares the simulation by determining whether hydrogen should be transported
+        from the origin storage, and if so, how much hydrogen can be transported.
+
+        :param components: List containing each component object
+        :type components: list
+        """
         # Check level of destination storage component: if it is below specified threshold,
         # implement low artificial costs (to encourage system to fill it)
         # Check level of non-central storage component: if it is below specified threshold, the
@@ -163,6 +232,13 @@ class TrailerH2Delivery(Component):
         self.current_ac = self.get_costs_and_art_costs()
 
     def create_oemof_model(self, busses, _):
+        """Creates an oemof Transformer component from the information given in the
+        TrailerH2Delivery class, to be used in the oemof model.
+
+        :param busses: List of the virtual buses used in the energy system
+        :type busses: list
+        :return: 'trailer' oemof component
+        """
         trailer = solph.Transformer(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_ac)},
@@ -171,6 +247,14 @@ class TrailerH2Delivery(Component):
         return trailer
 
     def update_states(self, results, sim_params):
+        """Updates the states of the storage component for each time step.
+
+        :param results: oemof results for the given time step
+        :type results: object
+        :param sim_params: simulation parameters for the energy system (defined by user)
+        :type sim_params: object
+        :return: updated state values for each state in the 'state' dict
+        """
         data_trailer = views.node(results, self.name)
         df_trailer = data_trailer['sequences']
 

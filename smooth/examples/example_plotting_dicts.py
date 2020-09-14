@@ -1,3 +1,14 @@
+"""
+In order to label the components and busses differently to those set in the
+components and model description, dictionaries are created which are then
+imported in other functions such as
+:func:`~smooth.framework.functions.plot_results.plot_smooth_results`. An
+English set of dictionaries and a German set of dictionaries has been created
+to easily switch between the two languages, and the same can be applied to
+any other language.
+"""
+
+
 # ------------------- GERMAN DICTIONARIES -------------------
 
 comp_dict_german = {

@@ -12,7 +12,7 @@ Welcome to smooth's documentation!
 
    getting_started
    smooth.components
-
+   smooth.optimization
 
 Indices and tables
 ==================

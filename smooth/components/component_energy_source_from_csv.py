@@ -16,6 +16,8 @@ The energy source component is suitable for any energy type once the output bus
 has been defined as well as a time series in the form of a CSV file, which
 can be created through oemof's windpowerlib or pvlib, for example [1][2].
 
+References
+----------
 [1] oemof Team (2016). windpowerlib documentation, https://windpowerlib.readthedocs.io/en/stable/.
 [2] pvlib Team (2020). pvlib documentation, https://pvlib-python.readthedocs.io/en/v0.7.2/.
 """

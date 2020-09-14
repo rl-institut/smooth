@@ -1,10 +1,30 @@
 smooth.components package
 =========================
+Listed below are components that can already be used in an energy system model (see 
+`examples directory <https://github.com/rl-institut/smooth/tree/dev/smooth/examples>`_ for the usage of components 
+in an energy system). It is also possible to build your own component if your energy system requires one
+that is not already in the framework. 
+
+Building a component
+--------------------
+In order to build a component, you must do the following:
+
+#. Create a subclass of the mother Component (or External Component) class. 
+
+#. In the :func:`__init__` function, define all parameters that are specific to your component, and set default values.
+
+#. Consider if the component requires variable artificial costs depending on system behaviour. If it does, the method for setting the appropriate costs is defined in the :func:`prepare_simulation` function. 
+
+#. Define any other functions that are specific to your component.
+
+#. All components built in SMOOTH must be created as oemof components to be used in the oemof model (see `oemof-solph's component list <https://oemof-solph.readthedocs.io/en/latest/usage.html#solph-components>`_ to choose the best fitting component. Then create the oemof component in the :func:`create_oemof_model` function, defining all of the necessary parameters.
+
+#. If the states of the component need updating after each time step, specifiy these in the :func:`update_states` function. 
 
 Submodules
 ----------
 
-smooth.components.component module
+Component
 ----------------------------------
 
 .. automodule:: smooth.components.component
@@ -28,18 +48,10 @@ Air Source Heat Pump
    :undoc-members:
    :show-inheritance:
    
-smooth.components.component\_battery module
+Battery
 -------------------------------------------
 
 .. automodule:: smooth.components.component_battery
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smooth.components.component\_chp module
----------------------------------------
-
-.. automodule:: smooth.components.component_chp
    :members:
    :undoc-members:
    :show-inheritance:
@@ -92,7 +104,7 @@ Energy Demand from CSV
    :undoc-members:
    :show-inheritance:
 
-smooth.components.component\_energy\_source\_from\_csv module
+Energy Source from CSV
 -------------------------------------------------------------
 
 .. automodule:: smooth.components.component_energy_source_from_csv
@@ -132,7 +144,7 @@ H2 Refuel Cooling System
    :undoc-members:
    :show-inheritance:
 
-smooth.components.component\_sink module
+Sink
 ----------------------------------------
 
 .. automodule:: smooth.components.component_sink
@@ -140,7 +152,7 @@ smooth.components.component\_sink module
    :undoc-members:
    :show-inheritance:
 
-smooth.components.component\_storage\_h2 module
+Storage H2
 -----------------------------------------------
 
 .. automodule:: smooth.components.component_storage_h2
@@ -156,7 +168,7 @@ Stratified Thermal Storage
    :undoc-members:
    :show-inheritance:
 
-smooth.components.component\_supply module
+Supply
 ------------------------------------------
 
 .. automodule:: smooth.components.component_supply
@@ -164,11 +176,27 @@ smooth.components.component\_supply module
    :undoc-members:
    :show-inheritance:
 
+Trailer H2 Delivery
+------------------------------------------
 
-Module contents
----------------
-
-.. automodule:: smooth.components
+.. automodule:: smooth.components.component_trailer_h2_delivery
    :members:
    :undoc-members:
    :show-inheritance:
+
+External Components
+------------------------------------------
+
+.. automodule:: smooth.components.external_component
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+H2 Dispenser
+------------------------------------------
+
+.. automodule:: smooth.components.external_component_h2_dispenser
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

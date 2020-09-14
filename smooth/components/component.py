@@ -1,59 +1,55 @@
+"""
+The generic component class is the mother class for all of the components. The parameters and
+functions defined here can be applied to each of the specific components.
+"""
+
 from oemof.outputlib import views
 from smooth.framework.functions.update_fitted_cost import update_financials, update_emissions
 from smooth.framework.functions.update_annuities import update_annuities
 
 
 class Component:
-    """The generic component class is the mother class for all of the components. The parameters and
-    functions defined here can be applied to each of the specific components.
-
-    :param component: The component type
-    :type component: str
-    :param name: The specific name of the component (must be different to other component names in the system)
-    :type name: str
-    :param life_time: The lifetime of the component [a]
-    :type life_time: float
-    :param sim_params: The simulation parameters such as the interval time and interest rate
-    :type sim_params: object ToDo: check this
-
-    :param results: The dictionary containing the main results for the component
-    :type results: dict
-    :param states: The dictionary containing the varying states for the component
-    :type states: dict
-
-    :param variable_costs: The variable costs of the component [EUR/*]
-    :type variable_costs: numeric
-    :param artificial_costs: The artificial costs of the component [EUR/*] (Note: these costs are not included in the final financial analysis)
-    :type artificial_costs: numeric
-    :param dependency_flow_costs: The flow that the costs are dependent on
-    :type dependency_flow_costs: str ToDo: maybe this changes with Timo's new pull request?
-
-    :param capex: The capital costs
-    :type capex: dict
-    :param opex: The operational and maintenance costs
-    :type opex: dict
-
-    :param variable_emissions: The variable emissions of the component [kg/*]
-    :type variable_emissions: float
-    :param dependency_flow_emissions: The flow that the emissions are dependent on
-    :type dependency_flow_emissions: str ToDo: maybe this changes with Timo's new pull request?
-    :param op_emissions: The operational emission values
-    :type op_emissions: dict
-    :param fix_emissions: The fixed emission values
-    :type fix_emissions: dict
-
-    :param fs_component_name: The foreign state component name
-    :type fs_component_name: str
-    :param fs_attribute_name: The foreign state attribute name
-    :type fs_attribute_name: str
-
-    Notes
-    -----
-    ToDo: maybe CAPEX/OPEX explanations here? Or outside of component description
     """
+    :param component: component type
+    :type component: str
+    :param name: specific name of the component (must be different to other component names in the system)
+    :type name: str
+    :param life_time: lifetime of the component [a]
+    :type life_time: numerical
+    :param sim_params: simulation parameters such as the interval time and interest rate
+    :type sim_params: object
+    :param results: dictionary containing the main results for the component
+    :type results: dict
+    :param states: dictionary containing the varying states for the component
+    :type states: dict
+    :param variable_costs: variable costs of the component [EUR/*]
+    :type variable_costs: numeric
+    :param artificial_costs: artificial costs of the component [EUR/*] (Note: these costs are not included in the final financial analysis)
+    :type artificial_costs: numeric
+    :param dependency_flow_costs: flow that the costs are dependent on
+    :type dependency_flow_costs: tuple
+    :param capex: capital costs
+    :type capex: dict
+    :param opex: operational and maintenance costs
+    :type opex: dict
+    :param variable_emissions: variable emissions of the component [kg/*]
+    :type variable_emissions: float
+    :param dependency_flow_emissions: flow that the emissions are dependent on
+    :type dependency_flow_emissions: tuple
+    :param op_emissions: operational emission values
+    :type op_emissions: dict
+    :param fix_emissions: fixed emission values
+    :type fix_emissions: dict
+    :param fs_component_name: foreign state component name
+    :type fs_component_name: str
+    :param fs_attribute_name: foreign state attribute name
+    :type fs_attribute_name: str
+    """
+
     def __init__(self):
         """Constructor method
         """
+        # ------------------- PARAMETERS -------------------
         self.component = None
         self.name = None
         self.life_time = None
@@ -77,7 +73,7 @@ class Component:
     def set_parameters(self, params):
         """Sets the parameters that have been defined by the user (in the model definition) in
         the necessary components, overwriting the default parameter values. Errors are raised if:
-        - the given parameter is not part of the component (interval time is an exception)
+        - the given parameter is not part of the component
         - the dependency flows have not been defined
 
         :param params: The set of parameters defined in the specific component class
@@ -310,7 +306,8 @@ class Component:
         """This function is called immediately after the component object is created
         and checks if the component attributes are valid.
 
-        :raises ValueError: Value error raised if the life time is not defined or is less than or equal to 0
+        :raises ValueError: Value error raised if the life time is not defined or is less
+            than or equal to 0
         """
         # Check if a life time is given when there are CAPEX given.
         if self.capex or self.fix_emissions:

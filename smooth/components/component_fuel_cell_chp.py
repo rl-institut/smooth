@@ -98,6 +98,8 @@ class FuelCellChp(Component):
     :type bus_th: str
     :param power_max: maximum electrical output power [W]
     :type power_max: numerical
+    :param life_time: lifetime of the component [a]
+    :type life_time: numerical
     :param set_parameters(params): updates parameter default values (see generic Component class)
     :type set_parameters(params): function
     :param heating_value_h2: heating value of hydrogen [kWh/kg]

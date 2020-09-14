@@ -5,7 +5,7 @@ algorithm for multi-objective optimization of smooth components.
 **********
 How to use
 **********
-To use, call run_optimzation with a configuration dictionary and your smooth model.
+To use, call run_optimization with a configuration dictionary and your smooth model.
 You will receive a list of :class:`Individual` in return. These individuals are
 pareto-optimal in regard to the given objective functions (limited to two functions).
 
@@ -193,7 +193,7 @@ class AttributeVariation:
     :type comp_attribute: string
     :param val_min: minimum value of component attribute
     :type val_min: number
-    :param val_max: maximum value of component attribute (inklusive)
+    :param val_max: maximum value of component attribute (inclusive)
     :type val_max: number
     :param val_step: step size of component attribute
     :type val_step: number, optional
