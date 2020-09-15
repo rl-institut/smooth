@@ -1,6 +1,6 @@
 matplotlib
-pandas
-numpy
+pandas<0.26
+numpy<1.18
 scipy
 dill
 git+https://github.com/oemof/oemof-solph.git@585b123e3dc02b191fead4d202ba60c057c473fd
