@@ -2,7 +2,19 @@
 Getting started
 ~~~~~~~~~~~~~~~
 
-SMOOTH stands for "Simulation Model for Optimized Operation and Topology of Hybrid energy systems"
+SMOOTH stands for "Simulation Model for Optimized Operation and Topology of Hybrid energy systems", and this
+tool serves to minimise costs and maximise the sustainability of dynamic energy systems. The key features 
+of SMOOTH are:
+
+* The real world energy system is reduced to its relevant components
+* Detailed modelling of components including:
+
+  * Non-linear component behaviour
+  * State-dependant component behaviour
+  * Tracking arbitrary states of component 
+
+* Stepwise simulation without using perfect foresight
+* Parameter optimization possible in combination with a genetic algorithm
 
 
 .. contents::
@@ -60,17 +72,36 @@ which contains the component, to a new branch BRANCHNAME of your choice.
 documentation page.
 
 
-Structure of the smooth module
+Structure of the SMOOTH module
 ==============================
 
-Componentes, Framework, ...
+The SMOOTH module consists of four sections: components, examples, framework and optimization. 
 
+Components
+==========
+The :ref:`smooth.components package` section contains all of the existing components of an energy
+system that have already been built in SMOOTH, along with any related functions. Input parameters
+that are defined by the user in the model definition, or default values that are specified within
+the component, are used to calculate and determine the behaviour of the component for each timestep.  
+Within each component, an oemof component is created using the parameters defined or 
+calculated in the SMOOTH component to be used later in the oemof model. Visit the section for 
+detailed information on each of the components and how to build a new component. 
 
 Examples
 ========
+In order to get a better, applied understanding of how to define a model, and either run a simulation
+or an optimization, see the `examples directory <https://github.com/rl-institut/smooth/tree/dev/smooth/examples>`_ 
+for examples, and the :ref:`smooth.examples package` section for corresponding explanations.
 
-See the `examples directory <https://github.com/rl-institut/smooth/tree/dev/smooth/examples>`_ for examples.
+Framework
+=========
+The :ref:`smooth.framework package` consists of the main function that runs the SMOOTH simulation
+framework (the :func:`run_smooth` function) as well as other functions that are necessary for 
+updating and evaluating the simulation results (in the :ref:`smooth.framework.functions package`). 
+Click on the above links to see how the simulation works. 
 
+Optimization
+============
 
 
 Got further questions on using SMOOTH?

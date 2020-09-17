@@ -774,7 +774,7 @@ class Optimization:
 
     def set_fitness(self, result):
         """Async success callback
-            Update master individual in population and `evaluated` dictionary
+        Update master individual in population and `evaluated` dictionary
 
         :param result: result from fitness_function
         :type result: tuple(index, :class:`Individual`)

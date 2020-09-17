@@ -90,7 +90,9 @@ Pressure
 The pressure of the storage is calculated as follows:
 
 .. math::
-    p = \\frac{R \\cdot T}{(V \\cdot \\frac{M_r}{SL} - rk_b)} - \\frac{rk_a}{T^{0.5} \\cdot V \\cdot \\frac{M_r}{SL} \\cdot (V \\cdot \\frac{M_r}{SL} + rk_b)}
+    p = \\frac{R \\cdot T}{(V \\cdot \\frac{M_r}{SL} - rk_b)} -
+    \\frac{rk_a}{T^{0.5} \\cdot V \\cdot \\frac{M_r}{SL}
+    \\cdot (V \\cdot \\frac{M_r}{SL} + rk_b)}
 
 * :math:`p` = storage pressure [Pa]
 * :math:`SL` = storage level [kg]
@@ -121,11 +123,18 @@ class StorageH2 (Component):
     :param initial_storage_factor: initial storage level as a factor
         of the capacity [-] e.g. 0.5 means half of the capacity
     :type initial_storage_factor: numerical
+    :param bought_h2_cost_per_kg: cost of the initial bought hydrogen [EUR/kg]
+    :type bought_h2_cost_per_kg: numerical
     :param delta_max: maximum chargeable hydrogen in one time step [kg/t] where
         t is the step-size
     :type delta_max: numerical
     :param slw_factor: storage level wanted as a factor of the capacity [-]
     :type slw_factor: numerical
+    :param final_storage_level: final storage level at the end of the simulation [kg]
+    :type final_storage_level: numerical
+    :param bought_h2_cost_total: total cost of the bought H2, only taking the remaining H2
+        into consideration
+    :type bought_h2_cost_total: numerical
     :param vac_in: normal variable artificial costs for charging (in) the
         storage [EUR/kg]
     :type vac_in: numerical
@@ -179,8 +188,11 @@ class StorageH2 (Component):
         self.storage_capacity = 500
         self.life_time = 20
         self.initial_storage_factor = 0.5
+        self.bought_h2_cost_per_kg = 0
         self.delta_max = None
         self.slw_factor = None
+        self.final_storage_level = None
+        self.bought_h2_cost_total = None
 
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         self.vac_in = 0
@@ -286,6 +298,12 @@ class StorageH2 (Component):
                 # Get the storage pressure [bar].
                 self.pressure = self.get_pressure(self.storage_level)
                 self.states['pressure'][sim_params.i_interval] = self.pressure
+
+        if self.states['storage_level'][sim_params.n_intervals - 1] is not None:
+            self.final_storage_level = self.states['storage_level'][sim_params.n_intervals - 1]
+            # Total initial hydrogen cost to fill the storage to initial level [EUR]
+            self.bought_h2_cost_total = self.bought_h2_cost_per_kg \
+                                        * (self.storage_level_init - self.final_storage_level)
 
     def get_mass(self, p, V=None):
         """Calculates the mass of the storage at a certain pressure.

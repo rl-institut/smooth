@@ -1,0 +1,413 @@
+"""
+This example is here to show how the various cost fitting methods can be
+implemented in the model definition. It should be noted that the actual
+cost values chosen here are arbitrary. The fitting method of the cost is
+chosen by the key, and the possible fitting methods are:
+
+Fixed cost (*'fix'*)
+--------------------
+Here, no fitting is done. The value given in the definition is the *cost* value.
+The cost value for CAPEX is taken in EUR while the cost value for OPEX is taken
+in EUR/a.
+
+.. code:: bash
+
+    cost = cost
+
+An example of this could be as follows for a compressor component:
+
+    .. code:: bash
+
+        components.append({
+        'component': 'compressor_h2',
+        'name': 'h2_compressor',
+        # Busses
+        'bus_h2_in': 'bh2_lp',
+        'bus_h2_out': 'bh2_hp',
+        # Parameters
+        'bus_el': 'bel',
+        'm_flow_max': 33.6 * 2,
+        'life_time': 20,
+        # Foreign states
+        'fs_component_name': ['h2_storage', None],
+        'fs_attribute_name': ['pressure', 700],
+        # Financials
+        'capex': {
+            'key': 'fix',
+            'fitting_value': 2000,
+        },
+        'opex': {
+            'key': 'fix',
+            'fitting_value': 200
+        }
+    })
+
+Here the cost of the compressor is independant of any other parameter, at
+2000 EUR for the CAPEX and 200 EUR/a for the OPEX.
+
+Specific cost (*'spec'*)
+----------------------
+The specific cost key means that the cost is dependant on one component
+parameter (e.g. EUR/kW). The value of the *dependant_value* is a string
+of the parameter name (e.g. *'power_max'*). The *fitting_value* is then
+multiplied with the dependant value to obtain the final costs.
+
+.. code:: bash
+
+    cost = fitting_value * component[dependant_value]
+
+An example of this can be seen with the following PV component:
+
+.. code:: bash
+
+    components.append({
+        'component': 'energy_source_from_csv',
+        'name': 'pv_output',
+        'bus_out': 'bel',
+        'csv_filename': 'ts_pv.csv',
+        'csv_separator': ';',
+        'nominal_value': 1000000/23,
+        'column_title': 'PV generation [kWh]',
+        'path': my_path,
+        'capex': {
+            'key': 'spec',
+            'fitting_value': 975.57,
+            'dependant_value': 'nominal_value',
+        },
+        'opex': {
+            'key': 'spec',
+            'fitting_value': 0.02,
+            'dependant_value': 'capex',
+        }
+     })
+
+This implies that the CAPEX of the PV system is 975.57 EUR/nominal value
+where the nominal value is the number of kilowatts, and that the
+OPEX is 2% of the CAPEX per annum.
+
+Exponential cost (*'exp'*)
+------------------------
+The exponential fitting of the cost means that two or three entries can be
+given as the *fitting_value*, and the costs are then calculated in the following
+way:
+
+.. code:: bash
+
+    for two fitting values [fv_1, fv_2]:
+    cost = fv_1 * exp(dependant_value * fv_2)
+
+    for three fitting values [fv_1, fv_2, fv_3]:
+    cost = fv_1 + fv_2 * exp(dependant_value * fv_3)
+
+An example of this is shown with a wind component:
+
+.. code:: bash
+
+    components.append({
+        'component': 'energy_source_from_csv',
+        'name': 'wind_output',
+        'bus_out': 'bel',
+        'csv_filename': 'ts_wind.csv', # ToDo: change timeseries to 1 kW
+        'csv_separator': ';',
+        'nominal_value': 1,
+        'column_title': 'Power output',
+        'path': my_path,
+        'capex': {
+            'key': 'exp',
+            'fitting_value': [750, 0.5],
+            'dependant_value': 'nominal_value',
+        },
+        'opex': {
+            'key': 'spec',
+            'fitting_value': 0.02,
+            'dependant_value': 'capex',
+        }
+    })
+
+This demonstrates that the CAPEX of the wind system costs :math:`750 \\cdot e^{nv \\cdot 0.5}`,
+and that the OPEX costs 2% of the CAPEX per annum, where *nv* is the nominal value.
+
+Polynomial cost (*'poly'*)
+--------------------------
+For the polynomial cost function, an arbitrary number of fitting values are defined
+and the cost is then calculated as follows:
+
+.. code:: bash
+
+    for an arbitrary number of fitting values [fv_1, fv_2, fv_3, ..., fv_n]
+    cost = fv_1 + fv_2 * dependant_value**1 + fv_3 * dependant_value**2 + ... + fv_n * dependant_value**(n-1)
+
+This can be demonstrated with the costs of a storage component:
+
+.. code:: bash
+
+    components.append({
+    'component': 'storage_h2',
+    'name': 'h2_storage',
+    'bus_in': 'bh2_lp',
+    'bus_out': 'bh2_lp',
+    'p_min': 5,
+    'p_max': 450,
+    'storage_capacity': 500,
+    'life_time': 30,
+    'capex': {
+        'key': 'poly',
+        'fitting_value': [604.6, 0.5393],
+        'dependant_value': 'p_max'
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.01,
+        'dependant_value': 'capex'
+    },
+    })
+
+Here, the costs for the storage component are :math:`604.6 \\cdot p_{max}^{0.5393}` for
+the CAPEX (EUR) and the OPEX is 1% of the CAPEX per annum.
+
+Free cost (*'free'*)
+--------------------
+The free cost is similar to the polynomial fitting, but here the exponents can be chosen
+freely:
+
+.. code:: bash
+
+    for an even number of fitting values [fv_1, fv_2, fv_3, ..., fv_n]
+    cost = fv_1 * dependant_value**fv_2 + fv_3 * dependant_value**fv_4 + ... + fv_(n-1) * dependant_value**fv_n
+
+This is also demonstrated with the storage component:
+
+.. code:: bash
+
+    components.append({
+    'component': 'storage_h2',
+    'name': 'h2_storage',
+    'bus_in': 'bh2_lp',
+    'bus_out': 'bh2_lp',
+    'p_min': 5,
+    'p_max': 450,
+    'storage_capacity': 500,
+    'life_time': 30,
+    'capex': {
+        'key': 'free',
+        'fitting_value': [604.6, 0.5393, 0.8, 0.2],
+        'dependant_value': ['p_max', 'storage_capacity']
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.01,
+        'dependant_value': 'capex'
+    },
+    })
+
+This means that the CAPEX for the storage would be
+:math:`604.6 \\cdot p_{max}^{0.5393} + 0.8 \\cdot sc^{0.2}` (EUR)
+and the OPEX would be 1% of the CAPEX per annum.´, where *sc* here is the
+storage capacity.
+
+Addition of two functions
+-------------------------
+It is also possible to add two functions together if the cost equation requires
+this. An example of this can again be seen in a storage component where both the
+specific and polynomial fittings are used:
+
+.. code:: bash
+
+    components.append({
+    'component': 'storage_h2',
+    'name': 'h2_storage',
+    'bus_in': 'bh2_lp',
+    'bus_out': 'bh2_lp',
+    'p_min': 5,
+    'p_max': 450,
+    'storage_capacity': 500,
+    'life_time': 30,
+    'capex': {
+        'key': ['poly', 'spec', 'poly'],
+        'fitting_value': [[604.6, 0.5393], 'cost', ['cost', 1]],
+        'dependant_value': ['p_max', 'storage_capacity', 'bought_h2_cost_total']
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.01,
+        'dependant_value': 'capex'
+    },
+    })
+
+The above example entails that the CAPEX of the storage component here is
+:math:`(604.6 \\cdot p_{max}^{0.5393}) \\cdot storage_{cap} + H_{2,bought}`. In
+stages it can be broken down as follows:
+
+* The first polynomial part is calculated as in the polynomial example.
+* Then the value for this is taken as the new *'cost'* value which is used as
+  the fitting value for the specific part, so this *'cost'* is multiplied by
+  the storage capacity.
+* Now the obtained value from the previous two parts is again used in a
+  polynomial function where the cost is the first fitting value and 1 is
+  the second which is multiplied by the cost of the bought hydrogen, which
+  means the *'cost'* + the cost of the bought hydrogen.
+"""
+
+import os
+
+# Define where Python should look for csv files
+my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
+
+# Create busses list
+busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
+
+# Define components list
+components = list()
+components.append({
+    'component': 'electrolyzer',
+    'name': 'this_ely',
+    'bus_el': 'bel',
+    'bus_h2': 'bh2_lp',
+    'power_max': 100e3,
+    'temp_init': 293.15,
+    'life_time': 20,
+    'capex': {
+        'key': ['free', 'spec'],
+        'fitting_value': [[193, -0.366], 'cost'],
+        'dependant_value': ['power_max', 'power_max']
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.04,
+        'dependant_value': 'capex',
+    }
+})
+
+components.append({
+    'component': 'energy_source_from_csv',
+    'name': 'pv_output',
+    'bus_out': 'bel',
+    'csv_filename': 'ts_pv.csv', # ToDo: change timeseries to 1 kW
+    'csv_separator': ';',
+    'nominal_value': 1000000/23, # ToDo: change to no. of kW
+    'column_title': 'PV generation [kWh]',
+    'path': my_path,
+    'capex': {
+        'key': 'spec',
+        'fitting_value': 975.57,  # NOW 2020
+        'dependant_value': 'nominal_value',
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.02,  # NOW 2020
+        'dependant_value': 'capex',
+    }
+})
+
+components.append({
+    'component': 'energy_source_from_csv',
+    'name': 'wind_output',
+    'bus_out': 'bel',
+    'csv_filename': 'ts_wind.csv', # ToDo: change timeseries to 1 kW
+    'csv_separator': ';',
+    'nominal_value': 1,
+    'column_title': 'Power output',
+    'path': my_path,
+    'capex': {
+        'key': 'exp',
+        'fitting_value': [750, 0.5],
+        'dependant_value': 'nominal_value',
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.02,
+        'dependant_value': 'capex',
+    }
+})
+
+components.append({
+    'component': 'energy_demand_from_csv',
+    'name': 'h2_demand',
+    'bus_in': 'bh2_hp',
+    'csv_filename': 'ts_demand_h2.csv',
+    'nominal_value': 1,
+    'column_title': 'Hydrogen load',
+    'path': my_path
+})
+
+components.append({
+    'component': 'supply',
+    'name': 'from_grid',
+    'bus_out': 'bel',
+    'output_max': 5000000,
+    'variable_costs': 0.00016,
+    'fs_component_name': 'h2_storage',
+    'fs_attribute_name': 'storage_level',
+    'fs_threshold': 200,
+    'fs_low_art_cost': -0.001,
+    'fs_high_art_cost': 50,
+    'dependency_flow_costs': ('from_grid', 'bel'),
+})
+
+components.append({
+    'component': 'sink',
+    'name': 'to_grid',
+    'bus_in': 'bel',
+    'artificial_costs': 10,
+    'dependency_flow_costs': ('bel', 'to_grid'),
+})
+
+components.append({
+    'component': 'storage_h2',
+    'name': 'h2_storage',
+    'bus_in': 'bh2_lp',
+    'bus_out': 'bh2_lp',
+    'p_min': 5,
+    'p_max': 450,
+    'storage_capacity': 500,
+    'life_time': 30,
+    'capex': {
+        'key': ['poly', 'spec', 'poly'],
+        'fitting_value': [[604.6, 0.5393], 'cost', ['cost', 1]],
+        'dependant_value': ['p_max', 'storage_capacity', 'bought_h2_cost_total']
+    },
+    'opex': {
+        'key': 'spec',
+        'fitting_value': 0.01,
+        'dependant_value': 'capex'
+    },
+})
+
+components.append({
+    'component': 'compressor_h2',
+    'name': 'h2_compressor',
+    # Busses
+    'bus_h2_in': 'bh2_lp',
+    'bus_h2_out': 'bh2_hp',
+    # Parameters
+    'bus_el': 'bel',
+    'm_flow_max': 33.6 * 2,
+    'life_time': 20,
+    # Foreign states
+    'fs_component_name': ['h2_storage', None],
+    'fs_attribute_name': ['pressure', 700],
+    # Financials
+    'capex': {
+        'key': 'fix',
+        'fitting_value': 2000,
+    },
+    'opex': {
+        'key': 'fix',
+        'fitting_value': 200
+    }
+})
+
+sim_params = {
+    'start_date': '1/1/2019',
+    'n_intervals': 10,
+    'interval_time': 60,
+    'interest_rate': 0.03,
+    'print_progress': False,
+    'show_debug_flag': False,
+}
+
+mymodel = {
+    'busses': busses,
+    'components': components,
+    'sim_params': sim_params,
+}

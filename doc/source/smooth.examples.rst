@@ -13,6 +13,15 @@ smooth.examples.example\_model module
    :exclude-members: busses
    :show-inheritance:
 
+smooth.examples.example\_model\_costs module
+-------------------------------------
+
+.. automodule:: smooth.examples.example_model_costs
+   :members:
+   :undoc-members:
+   :exclude-members: busses
+   :show-inheritance:
+
 smooth.examples.example\_model\_dict module
 ------------------------------------------------
 
