@@ -8,7 +8,7 @@ import smooth.framework.functions.mpc_functions as mpc
 from copy import deepcopy
 
 
-def run_smooth(model, mpc_params):
+def run_smooth(model):
     # Run the smooth simulation framework.
     # Parameters:
     #  model: smooth model object containing parameters for components, simulation and busses.
@@ -19,26 +19,35 @@ def run_smooth(model, mpc_params):
         names = [c.pop("name") for c in model["components"]]
         model.update({'components': dict(zip(names, model["components"]))})
 
-    # initialisation of mpc variables
-    system_outputs = []
-    initial_inputs = []
-    for this_in in mpc_params['system_inputs']:
-        initial_inputs.extend([this_in['mpc_data']] * mpc_params['control_horizon'])
-    # mpc_iter = 0
-
-    # create bounds and constraints dor the mpc optimization
-    bounds = mpc.create_bounds_mpc(mpc_params['system_inputs'], mpc_params['control_horizon'])
-    if mpc_params['constraints']:
-        constraints = mpc.create_constraints_mpc(mpc_params['constraints'], mpc_params['control_horizon'])
+    # USE MPC ALGORITHM?
+    mpc_params = model.get('mpc_params', {})
+    if 'prediction_horizon' in mpc_params:
+        prediction_horizon = mpc_params['prediction_horizon']
+        # create initial inputs for the mpc optimization
+        initial_inputs = []
+        for this_in in mpc_params['system_inputs']:
+            initial_inputs.extend([this_in['mpc_data']] * mpc_params['prediction_horizon'])
+        # create bounds and constraints for the mpc optimization
+        bounds = mpc.create_bounds_mpc(mpc_params['system_inputs'], mpc_params['prediction_horizon'])
+        if mpc_params['constraints']:
+            constraints = mpc.create_constraints_mpc(mpc_params['constraints'], mpc_params['prediction_horizon'])
+        else:
+            constraints = []
+        # GET SIMULATION PARAMETERS
+        # Create a simulation parameters object with extended date time index
+        model['sim_params']['n_intervals'] = model['sim_params']['n_intervals'] + mpc_params['prediction_horizon']
+        sim_params = sp(model['sim_params'])
+        # deep copy simulation parameters for mpc
+        sim_params_mpc = deepcopy(sim_params)
     else:
-        constraints = []
+        prediction_horizon = 0
+        # GET SIMULATION PARAMETERS
+        sim_params = sp(model['sim_params'])
+        # ensure that all operate_on_mpc attributes are False.
+        for this_comp in model['components']:
+            if 'operate_on_mpc' in model['components'][this_comp]:
+                model['components'][this_comp]['operate_on_mpc'] = False
 
-    # GET SIMULATION PARAMETERS
-    # Create an object with the simulation parameters with extended date time index
-    model['sim_params']['n_intervals'] = model['sim_params']['n_intervals'] + mpc_params['prediction_horizon']
-    sim_params = sp(model['sim_params'])
-    # deep copy simulation parameters for mpc
-    sim_params_mpc = deepcopy(sim_params)
 
     # CREATE COMPONENT OBJECTS
     components = create_component_obj(model, sim_params)
@@ -48,7 +57,7 @@ def run_smooth(model, mpc_params):
     results_dict = None
 
     # ------------------- SIMULATION -------------------
-    for i_interval in range(sim_params.n_intervals - mpc_params['prediction_horizon']):
+    for i_interval in range(sim_params.n_intervals - prediction_horizon):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
         if sim_params.print_progress:
@@ -59,25 +68,17 @@ def run_smooth(model, mpc_params):
         oemof_model = solph.EnergySystem(timeindex=this_time_index,
                                          freq='{}min'.format(sim_params.interval_time))
 
-        # run mpc
-        # call dummy function for test with arbitrary function (e.g. sine) for system inputs
-        # mpc.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
-        # for rolling horizon approach call rolling horizon function only once for every control horizon
-        # if mpc_iter == mpc_params['control_horizon']:
-        #     mpc_iter = 0
-        # if mpc_iter == 0:
-        mpc_params['system_inputs'] = mpc.model_predictive_control(model, components, mpc_params['system_inputs'],
-                                                                    mpc_params['control_horizon'],
-                                                                    mpc_params['prediction_horizon'],
-                                                                    mpc_params['minimize_options'],
-                                                                    bounds, constraints,
-                                                                    initial_inputs, sim_params_mpc, i_interval)
-        mpc.set_system_input_mpc(components, mpc_params['system_inputs'], iteration=0)
-        initial_inputs = []
-        for this_in in mpc_params['system_inputs']:
-            initial_inputs.extend(this_in['mpc_data'][1:])
-            initial_inputs.append(initial_inputs[-1])
-        # mpc_iter = mpc_iter + 1
+        if 'prediction_horizon' in mpc_params:
+            mpc_params['system_inputs'] = mpc.model_predictive_control(model, components, mpc_params['system_inputs'],
+                                                                        mpc_params['prediction_horizon'],
+                                                                        mpc_params['minimize_options'],
+                                                                        bounds, constraints,
+                                                                        initial_inputs, sim_params_mpc, i_interval)
+            mpc.set_system_input_mpc(components, mpc_params['system_inputs'], iteration=0)
+            initial_inputs = []
+            for this_in in mpc_params['system_inputs']:
+                initial_inputs.extend(this_in['mpc_data'][1:])
+                initial_inputs.append(initial_inputs[-1])
 
         # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
         # Create all busses and save them to a dict for later use in the components.
@@ -134,9 +135,6 @@ def run_smooth(model, mpc_params):
         results_dict = processing.parameter_as_dict(model_to_solve)
         df_results = processing.create_dataframe(model_to_solve)
 
-        # track system outputs for mpc
-        # system_outputs = mpc.get_system_output_mpc(results,system_outputs) # wird das noch gebraucht???????
-
         # Loop through every component and call the result handling functions
         for this_comp in components:
             # Update the flows
@@ -151,10 +149,12 @@ def run_smooth(model, mpc_params):
     # Calculate the annuity for each component.
     for this_comp in components:
         this_comp.generate_results()
-        # remove trailing none values:
-        mpc.remove_trailing_nones_mpc(this_comp, sim_params.n_intervals, mpc_params['prediction_horizon'])
-    # cut off the additional entries in sim_params.date_time_index
-    sim_params.date_time_index = sim_params.date_time_index[:sim_params.n_intervals - mpc_params['prediction_horizon']]
-    sim_params.n_intervals = sim_params.n_intervals - mpc_params['prediction_horizon']
+        if 'prediction_horizon' in mpc_params:
+            # remove trailing none values:
+            mpc.remove_trailing_nones_mpc(this_comp, sim_params.n_intervals, mpc_params['prediction_horizon'])
+    if 'prediction_horizon' in mpc_params:
+        # cut off the additional entries in sim_params.date_time_index
+        sim_params.date_time_index = sim_params.date_time_index[:sim_params.n_intervals - mpc_params['prediction_horizon']]
+        sim_params.n_intervals = sim_params.n_intervals - mpc_params['prediction_horizon']
 
     return components, status
