@@ -9,8 +9,8 @@ import numpy as np
 #--------------------MPC FUNCTIONS--------------------------------------------------------------------------------------
 
 def set_system_input_mpc(components,system_inputs,iteration):
-    # rufe die function mit set_system_input_mpc(components,system_inputs,[]) auf,
-    # wenn system_inputs nicht mit Vektoren verwendet wird
+    # call the function with set_system_input_mpc(components,system_inputs,[])
+    # if system_inputs is not used with lists
     if iteration==[]:
         for this_in in system_inputs:
             # Loop through all components of the model dict until the right component is found.
@@ -27,6 +27,7 @@ def set_system_input_mpc(components,system_inputs,iteration):
 
 
 def create_bounds_mpc(system_inputs, prediction_horizon):
+    # Create the bounds as specified in the mpc parameters for all timesteps of the prediction horizon.
     lb = []
     ub = []
     for this_in in system_inputs:
@@ -36,6 +37,7 @@ def create_bounds_mpc(system_inputs, prediction_horizon):
 
 
 def create_constraints_mpc(constraints, prediction_horizon):
+    # Create the constraints as specified in the mpc parameters for all timesteps of the prediction horizon.
     a = np.empty(0)
     for this_coeff in constraints['coeffs']:
         to_add = np.diagflat([this_coeff] * prediction_horizon)
@@ -50,27 +52,24 @@ def create_constraints_mpc(constraints, prediction_horizon):
 def model_predictive_control(model, components, system_inputs, prediction_horizon, minimize_options,
                              bounds, constraints, initial_inputs, sim_params_mpc, i_interval):
     def cost_function_mpc(u_vec):
-        # a. Steuerfolge für Prädiktionshorizont erweitern und
-        # b. Iteration durch system_inputs und nacheinander aufteilen und speichern von u_vec in den einzelnen Inputs
+        # Split the optimizer input and save the timeseries in the corresponding system inputs.
         u_vec = u_vec.tolist()
         iter = 0
         for this_in in system_inputs:
             control_data = u_vec[(iter * prediction_horizon):((iter + 1) * prediction_horizon)]
             iter = iter + 1
             this_in['mpc_data'] = control_data
-        # c. run_model_mpc() aufrufen  Rückgabe: Regelgrößen-Vektoren für Prädiktionshorizont
-        # system_outputs, i_interval_break, costs = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
+        # Call control model and return overall value of the cost function
         costs = run_model_mpc(model, components, sim_params_mpc, i_interval, prediction_horizon, system_inputs)
         return costs
-    # d. Optimierer aufrufen mit cost_function_mpc()
-    # res = minimize(cost_function_mpc, u_vec_0, method='trust-constr', options = {'verbose': 1}, bounds = bounds)
+    # Call the optimizer function with an appropriate method for the system with or without constraints.
     if constraints:
         res = minimize(cost_function_mpc, initial_inputs, method='trust-constr', options=minimize_options,
                        bounds=bounds, constraints=constraints)
     else:
         res = minimize(cost_function_mpc, initial_inputs, method='L-BFGS-B', options = minimize_options,
                        bounds = bounds)
-    # e. system_inputs für den ersten Zeitschritt der optimierten Steuertrajektorie/ für alle Zeitschritte setzen
+    # Split the optimal input and save the timeseries in the corresponding system inputs.
     iter = 0
     for this_in in system_inputs:
         this_in['mpc_data'] = res.x[(prediction_horizon * iter): (prediction_horizon * (iter + 1))]
@@ -84,22 +83,19 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
     # There are no results yet.
     df_results = None
     results_dict = None
-    # reset sim_params.i_interval to start value
+    # Reset sim_params.i_interval to start value.
     sim_params.i_interval = i_interval_start
-    # clone model
+    # Clone model.
     components = deepcopy(components_init)
     for this_comp in components:
         this_comp.sim_params = sim_params
-    # a. system_outputs leer initialisieren
-    system_outputs = []
-    # b. Smooth laufen lassen über alle Prädiktionsschritte (import from run_smooth)
+    # Run the control model for the prediction horizon.
     # ------------------- SIMULATION -------------------
     for i_interval in range(i_interval_start, i_interval_start + prediction_horizon):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
 
-        # i. Stellgrößen setzen (Wert aus Steuerfolge für aktuellen Prädiktionsschritt)
-        # set system_inputs
+        # Set the flows specified as system inputs to the fixed value for this prediction step.
         set_system_input_mpc(components,system_inputs,i_interval-i_interval_start)
 
         # Initialize the oemof energy system for this time step.
@@ -149,14 +145,11 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
                 new_df_results = processing.create_dataframe(model_to_solve)
                 df_debug = get_df_debug(df_results, results_dict, new_df_results)
                 show_debug(df_debug, components)
-            # raise SolverNonOptimalError('solver status: ' + status +
-            #                            " / termination condition: " + termination_condition)
-            print('solver status: ' + status +
+                print('solver status: ' + status +
                  " / termination condition: " + termination_condition)
-            # system_outputs = []
+                print(prediction_horizon - i_interval + i_interval_start)
+            # If the solution is infeasible, the costs depend on how many prediction steps are left unsolved.
             costs = 1e12 * (prediction_horizon - i_interval + i_interval_start)**2
-            print(prediction_horizon - i_interval + i_interval_start)
-            # return system_outputs, i_interval, costs
             return costs
         else:
             # ------------------- HANDLE RESULTS -------------------
@@ -164,10 +157,6 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
             results = processing.results(model_to_solve)
             results_dict = processing.parameter_as_dict(model_to_solve)
             df_results = processing.create_dataframe(model_to_solve)
-
-            # ii. Regelgrößen abgreifen und in Vektor speichern
-            # track system outputs for mpc
-            # system_outputs = get_system_output_mpc(results,system_outputs)
 
             # Loop through every component and call the result handling functions
             for this_comp in components:
@@ -179,19 +168,17 @@ def run_model_mpc(model, components_init, sim_params, i_interval_start, predicti
                 this_comp.update_var_costs(results, sim_params)
                 # Update the costs and artificial costs.
                 this_comp.update_var_emissions(results, sim_params)
-                # add mpc costs after update of flows and states!
+                # Add mpc costs after update of flows and states!
                 costs += this_comp.mpc_cost_function()
 
-    # d. Rückgabe der Vektoren der Regelgröße über Prädiktionshorizont
-    # track system outputs for mpc
-    # return system_outputs, i_interval, costs
-    print(costs)
+    if sim_params.show_debug_flag:
+        print(costs)
     return costs
 
 
 def remove_trailing_nones_mpc(this_comp, n_intervals, prediction_horizon):
-    # the flows, states and results are initialized for n_interval + prediction_horizon which leads to trailing none
-    # values after the simulation has finished --> those trailing none values are removed here:
+    # The flows, states and results are initialized for n_interval + prediction_horizon which leads to trailing none
+    # values after the simulation has finished. Those trailing none values are removed here.
     for this_flow in this_comp.flows:
         this_comp.flows[this_flow] = this_comp.flows[this_flow][:n_intervals - prediction_horizon]
     for this_state in this_comp.states:
