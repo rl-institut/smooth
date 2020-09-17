@@ -195,7 +195,7 @@ This is also demonstrated with the storage component:
         'capex': {
             'key': 'free',
             'fitting_value': [600, 0.5, 0.8, 0.2],
-            'dependant_value': ['p_max', 'storage_capacity']
+            'dependant_value': ['p_max']
         },
         'opex': {
             'key': 'spec',
@@ -226,10 +226,9 @@ specific and polynomial fittings are used:
         'storage_capacity': 500,
         'life_time': 30,
         'capex': {
-            'key': ['poly', 'spec', 'poly'],
-            'fitting_value': [[604.6, 0.5393], 'cost', ['cost', 1]],
-            'dependant_value': ['p_max', 'storage_capacity', 'bought_h2_cost_total']
-        },
+            'key': ['spec', 'poly'],
+            'fitting_value': [600, ['cost', 100]],
+            'dependant_value': ['storage_capacity', 'p_max'],
         'opex': {
             'key': 'spec',
             'fitting_value': 0.01,
@@ -238,17 +237,16 @@ specific and polynomial fittings are used:
     })
 
 The above example entails that the CAPEX of the storage component here is
-:math:`(604.6 \\cdot (p_{max} \\cdot 0.5393)) \\cdot storage_{cap} + H_{2,bought}`. In
+:math:`600 \\cdot (s_{c} + 100 \\cdot + p_{max}`. In
 stages it can be broken down as follows:
 
-* The first polynomial part is calculated as in the polynomial example.
-* Then the value for this is taken as the new *'cost'* value which is used as
-  the fitting value for the specific part, so this *'cost'* is multiplied by
-  the storage capacity.
-* Now the obtained value from the previous two parts is again used in a
-  polynomial function where the cost is the first fitting value and 1 is
-  the second which is multiplied by the cost of the bought hydrogen, which
-  means the *'cost'* + the cost of the bought hydrogen.
+* The first part of the cost is calculated using the specific function
+  (:math:`600 \\cdot (s_{c}`).
+* Then the value for this is taken as the new *'cost'* value which can
+  be then used as a free value for further calculations.
+* The previously calculated *'cost'* value is then used as the first free
+  variable in a polynomial function to obtain
+  :math:`600 \\cdot (s_{c} + 100 \\cdot + p_{max}`.
 """
 
 import os
@@ -365,9 +363,9 @@ components.append({
     'storage_capacity': 500,
     'life_time': 30,
     'capex': {
-        'key': ['poly', 'spec', 'poly'],
-        'fitting_value': [[604.6, 0.5393], 'cost', ['cost', 1]],
-        'dependant_value': ['p_max', 'storage_capacity', 'bought_h2_cost_total']
+        'key': ['spec', 'poly'],
+        'fitting_value': [600, ['cost', 100]],
+        'dependant_value': ['storage_capacity', 'p_max'],
     },
     'opex': {
         'key': 'spec',
@@ -401,7 +399,7 @@ components.append({
         'fitting_value': None,
         'dependant_value': None,
         'cost': 200
-    }
+    },
 })
 
 sim_params = {
