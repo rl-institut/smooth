@@ -40,12 +40,12 @@ added to the list is as follows:
 .. code:: bash
 
     sim_params = {
-    'start_date': '1/1/2019',
-    'n_intervals': 10,
-    'interval_time': 60,
-    'interest_rate': 0.03,
-    'print_progress': False,
-    'show_debug_flag': False,
+        'start_date': '1/1/2019',
+        'n_intervals': 10,
+        'interval_time': 60,
+        'interest_rate': 0.03,
+        'print_progress': False,
+        'show_debug_flag': False,
     }
 
 4. A model is created containing the above three elements
@@ -53,9 +53,9 @@ added to the list is as follows:
 .. code:: bash
 
     mymodel = {
-    'busses': busses,
-    'components': components,
-    'sim_params': sim_params,
+        'busses': busses,
+        'components': components,
+        'sim_params': sim_params
     }
 
 Now this model definition is ready to be used in either a simulation or an
@@ -80,14 +80,16 @@ components.append({
     'temp_init': 293.15,
     'life_time': 20,
     'capex': {
-        'key': ['free', 'spec'],
-        'fitting_value': [[193, -0.366], 'cost'],
-        'dependant_value': ['power_max', 'power_max']
+        'key': 'fix',
+        'fitting_value': None,
+        'dependant_value': None,
+        'cost': 2000
     },
     'opex': {
-        'key': 'spec',
-        'fitting_value': 0.04,
-        'dependant_value': 'capex',
+        'key': 'fix',
+        'fitting_value': None,
+        'dependant_value': None,
+        'cost': 200
     }
 })
 
