@@ -61,7 +61,7 @@ def run_smooth(model):
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
         if sim_params.print_progress:
-            print('Simulating interval {}/{}'.format(i_interval+1, sim_params.n_intervals))
+            print('Simulating interval {}/{}'.format(i_interval+1, sim_params.n_intervals - prediction_horizon))
 
         # Initialize the oemof energy system for this time step.
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
