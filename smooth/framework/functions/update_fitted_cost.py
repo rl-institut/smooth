@@ -211,6 +211,8 @@ def get_poly(component, fitting_dict, index, dependant_value):
     # In a loop, calculate the costs.
     cost = 0
     for i_fv in range(n_fv):
+        if fv[i_fv] == 'cost':
+            fv[i_fv] = fitting_dict['cost']
         cost += fv[i_fv] * dependant_value ** i_fv
 
     # Return the costs.
