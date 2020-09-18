@@ -3,15 +3,15 @@
 [![Build Status](https://travis-ci.com/rl-institut/smooth.svg?branch=dev)](https://travis-ci.com/rl-institut/smooth)
 
 ## Features
-The python simulation framework smooth allows modelling energy systems and optimizing their behaviour.
+The Python simulation framework smooth allows modelling energy systems and optimizing their behaviour.
 The key features of smooth are:
 
 * Detailed modelling of components
     * Non-linear component behaviour
     * State-dependant component behaviour
-    * Tracking arbitrary states of component
+    * Tracking arbitrary states of components
 * Stepwise simulation without using perfect foresight
-* Parameter optimization possible in combination with genetic algorithm
+* Parameter optimization in combination with genetic algorithms
 
 ## Usage of oemof
 While the components and the algorithm executing the simulation are part of SMOOTH, each component
@@ -76,7 +76,7 @@ functions to print results, plot results and to save or load results. The follow
 ### Base Parameters
 Each component inherits from the base component (component.py). This way, each component gets the following attributes:
 * component: Type of the component [string]
-* name: Name of this component (must be unique) [sting]
+* name: Name of this component (must be unique) [string]
 * life_time: Life time of the component (only required if CAPEX are given) [a]
 * sim_params: Simulation parameters (like interval time) [object]
 * results: Here result values are saved like variable costs and annuities [dict]
@@ -192,19 +192,7 @@ life time (lt) of the component and the interest rate (ir). The equation is show
 
 ## Optimization
 
-In smooth, there is a build in support for optimization component parameters with a genetic algorithm, the Python
-package [*deap*](https://deap.readthedocs.io/en/master/) is used for that. The following gives an overview on how to set
-up a smooth optimization run.
+Smooth has built-in support for component parameter optimization with genetic algorithms.
 
 ### Optimization Parameters
-
-
-
-
-
-
-
-
-
-
 

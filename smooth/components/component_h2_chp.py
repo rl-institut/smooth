@@ -3,8 +3,8 @@ import oemof.solph as solph
 import pyomo.environ as po
 
 
-class FuelCellChp(Component):
-    """ A combined heat and power plant with a fuel cell, using H2 to generate
+class H2Chp(Component):
+    """ A combined heat and power plant with a h2 chp, using H2 to generate
     electricity and heat. """
 
     def __init__(self, params):
@@ -14,7 +14,7 @@ class FuelCellChp(Component):
 
         # ------------------- PARAMETERS -------------------
         # PARAMETERS TO CHANGE BY THE USER
-        self.name = 'Fuel cell CHP default name'
+        self.name = 'H2 CHP default name'
 
         # Busses (H2 in, electrical out, thermal out).
         self.bus_h2 = None
@@ -31,20 +31,52 @@ class FuelCellChp(Component):
         # Heating value of hydrogen [kWh/kg].
         self.heating_value = 33.33
 
-        # The CHP an electrical efficiency and a thermal efficiency, both over
-        # the load point, according to: Scholta, J. et.al. Small Scale PEM Fuel
-        # Cells in Combined Heat/Power Co-generation. RCUB Afrodita.
-        # http://afrodita.rcub.bg.ac.rs/~todorom/tutorials/rad24.html
+        # The H2 CHP electrical efficiency and a thermal efficiency
+        # source https://www.2-g.com/de/wasserstoff-bhkw/
 
-        # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
-        self.bp_load_electric = [0.0, 0.0481, 0.0694, 0.0931, 0.1272, 0.1616, 0.2444, 0.5912, 1.0]
-        # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
-        self.bp_eff_electric = [0.0, 0.1996, 0.3028, 0.4272, 0.5034, 0.5381, 0.5438, 0.4875, 0.3695]
+        if self.power_max <= 115e3:
+            # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
+            self.bp_load_electric = [0.0, 1.0]
+            # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
+            self.bp_eff_electric = [0.377, 0.377]
 
-        # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
-        self.bp_load_thermal = [0.0, 0.0517, 0.1589, 0.2482, 1.0]
-        # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
-        self.bp_eff_thermal = [0.0, 0.0915, 0.2188, 0.2795, 0.5238]
+            # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
+            self.bp_load_thermal = [0.0, 1.0]
+            # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
+            self.bp_eff_thermal = [0.423, 0.423]
+
+        elif 115e3 < self.power_max <= 170e3:
+            # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
+            self.bp_load_electric = [0.0, 1.0]
+            # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
+            self.bp_eff_electric = [0.39, 0.39]
+
+            # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
+            self.bp_load_thermal = [0.0, 1.0]
+            # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
+            self.bp_eff_thermal = [0.419, 0.419]
+
+        elif 170e3 < self.power_max <= 240e3:
+            # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
+            self.bp_load_electric = [0.0, 1.0]
+            # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
+            self.bp_eff_electric = [0.402, 0.402]
+
+            # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
+            self.bp_load_thermal = [0.0, 1.0]
+            # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
+            self.bp_eff_thermal = [0.419, 0.419]
+
+        elif 240e3 < self.power_max:
+            # Electrical efficiency load break points (e.g. 0.05 --> 5 %) [-]
+            self.bp_load_electric = [0.0, 1.0]
+            # Electrical efficiency break points (e.g. 0.05 --> 5 %) [-]
+            self.bp_eff_electric = [0.405, 0.405]
+
+            # Thermal efficiency load break points (e.g. 0.05 --> 5 %) [-].
+            self.bp_load_thermal = [0.0, 1.0]
+            # Thermal efficiency break points (e.g. 0.05 --> 5 %) [-].
+            self.bp_eff_thermal = [0.417, 0.417]
 
         # Now calculate the absolute values for electricity [Wh] and thermal
         # energy [Wh] and H2 consumption [kg].
@@ -54,6 +86,7 @@ class FuelCellChp(Component):
         self.h2_input_max = self.power_max / (
             self.heating_value * self.bp_eff_electric[-1]) * \
             self.sim_params.interval_time / 60 / 1000
+
         # Now convert the load points according to the max. hydrogen input per time step [kg].
         self.bp_h2_consumed_electric = [
             this_bp * self.h2_input_max for this_bp in self.bp_load_electric]
@@ -114,7 +147,7 @@ class FuelCellChp(Component):
         flow_thermal = solph.Flow(nominal_value=self.bp_h2_consumed_electric_half[-1])
 
         # First create the electrical oemof component.
-        fuel_cell_chp_electric = solph.custom.PiecewiseLinearTransformer(
+        h2_chp_electric = solph.custom.PiecewiseLinearTransformer(
             label=self.name+'_electric',
             inputs={busses[self.bus_h2]: flow_electric},
             outputs={busses[self.bus_el]: solph.Flow()},
@@ -123,7 +156,7 @@ class FuelCellChp(Component):
             pw_repn='CC')
 
         # Then create the thermal oemof component.
-        fuel_cell_chp_thermal = solph.custom.PiecewiseLinearTransformer(
+        h2_chp_thermal = solph.custom.PiecewiseLinearTransformer(
             label=self.name+'_thermal',
             inputs={busses[self.bus_h2]: flow_thermal},
             outputs={busses[self.bus_th]: solph.Flow()},
@@ -132,10 +165,10 @@ class FuelCellChp(Component):
             pw_repn='CC')
 
         # Add the two components to the model.
-        model.add(fuel_cell_chp_electric, fuel_cell_chp_thermal)
+        model.add(h2_chp_electric, h2_chp_thermal)
 
-        self.model_el = fuel_cell_chp_electric
-        self.model_th = fuel_cell_chp_thermal
+        self.model_el = h2_chp_electric
+        self.model_th = h2_chp_thermal
 
         """
         # Get the input H2 flows of both oemof components that need to be set equal.
