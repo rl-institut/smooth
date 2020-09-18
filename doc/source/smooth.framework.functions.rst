@@ -4,6 +4,22 @@ smooth.framework.functions package
 Submodules
 ----------
 
+smooth.framework.functions.calculate\_external\_costs module
+------------------------------------------------------------
+
+.. automodule:: smooth.framework.functions.calculate_external_costs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+smooth.framework.functions.debug module
+---------------------------------------
+
+.. automodule:: smooth.framework.functions.debug
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 smooth.framework.functions.functions module
 -------------------------------------------
 
