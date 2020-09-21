@@ -21,6 +21,12 @@ In order to build a component, you must do the following:
 
 #. If the states of the component need updating after each time step, specifiy these in the :func:`update_states` function. 
 
+Artificial costs
+----------------
+The oemof framework 
+
+
+
 Submodules
 ----------
 

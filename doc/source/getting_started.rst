@@ -79,7 +79,7 @@ The SMOOTH module consists of four sections: components, examples, framework and
 
 Components
 ==========
-The :ref:`smooth.components package` section contains all of the existing components of an energy
+The :ref:`smooth.components package` contains all of the existing components of an energy
 system that have already been built in SMOOTH, along with any related functions. Input parameters
 that are defined by the user in the model definition, or default values that are specified within
 the component, are used to calculate and determine the behaviour of the component for each timestep.  

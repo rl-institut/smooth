@@ -1,6 +1,6 @@
 """
 The generic component class is the mother class for all of the components. The parameters and
-functions defined here can be applied to each of the specific components.
+functions defined here are inherited by each of the specific components.
 """
 
 from oemof.outputlib import views
@@ -12,7 +12,8 @@ class Component:
     """
     :param component: component type
     :type component: str
-    :param name: specific name of the component (must be different to other component names in the system)
+    :param name: specific name of the component (must be different to other
+        component names in the system)
     :type name: str
     :param life_time: lifetime of the component [a]
     :type life_time: numerical
@@ -24,7 +25,8 @@ class Component:
     :type states: dict
     :param variable_costs: variable costs of the component [EUR/*]
     :type variable_costs: numeric
-    :param artificial_costs: artificial costs of the component [EUR/*] (Note: these costs are not included in the final financial analysis)
+    :param artificial_costs: artificial costs of the component [EUR/*] (Note: these
+        costs are not included in the final financial analysis)
     :type artificial_costs: numeric
     :param dependency_flow_costs: flow that the costs are dependent on
     :type dependency_flow_costs: tuple
