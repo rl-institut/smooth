@@ -209,3 +209,9 @@ class StorageH2 (Component):
             self.rk_a / (T**0.5 * V * self.Mr / m * (V * self.Mr / m + self.rk_b))
         # Return pressure in bar [bar].
         return p / 1e5
+
+    def mpc_cost_function(self):
+        if self.storage_level_wanted:
+            return (self.storage_level - self.storage_level_wanted)**2
+        else:
+            return 0
