@@ -23,9 +23,56 @@ In order to build a component, you must do the following:
 
 Artificial costs
 ----------------
-The oemof framework 
+The oemof framework always solves the system by minimizing the costs. In order to be able to control the system behaviour in a certain way,
+artificial costs as a concept is introduced. These costs are defined in the components and are used in the oemof model (and therefore
+have an effect on the cost minimization). The higher (more positive) artificial costs are implemented for less desired system options, and
+the lower (more negative) artificial costs are implemented to incentivise the system to choose the given system option where possible. 
+It should be noted that due to these costs being not real costs and their purpose is only to control system behaviour, they are not considered
+in the financial evaluation at the end of the simulation. 
 
+Foreign states
+--------------
+Some component behaviour is dependant on so called foreign states - namely a state or attribute of another component (e.g. the 
+artificial costs of the electricity grid can be dependant on a storage state of charge in order to fill the storage with grid 
+electricity when the storage is below a certain threshold). While the effect of the foreign states is determined in the component itself, 
+the mechanics on how to define the foreign states is the same for each component. Foreign states are always defined by the attributes:
 
+* *fs_component_name*: string (or list of strings for multiple foreign states) of the foreign component
+* *fs_attribute_name*: string (or list of strings for multiple foreign states) of the attribute name of the component
+
+If a fixed value should be used as a foreign state, here *fs_component_name* has to be set to None and *fs_attribute_name* has to be
+set to the numerical value.
+
+Financials
+----------
+The costs and revenues are tracked for each component individually. There are three types of costs that are taken into 
+consideration in the energy system, namely capital expenditures (CAPEX), operational expenditures (OPEX) and variable
+costs. The CAPEX costs are fixed initial investment costs (EUR), the OPEX costs are the yearly operational and
+maintenance costs (EUR/a) and the variable costs are those that are dependant on the use of the component in the 
+system, such as the cost of buying/selling electricity from/to the grid (EUR/*).
+
+The ﬁnancial analysis is based on annuities of the system. The CAPEX cost of a component for one year is calculated 
+by taking into consideration both the lifetime of the given component and the interest rate, and the OPEX costs remains 
+the same because they are already as annuities. The variable cost annuities for the components are calculated by 
+converting the summed variable costs over the simulation time to the summed variable costs over a one year period. 
+If the simulation time is a year, the variable cost annuities are simply the summed variable costs for a year. The
+below equations demonstrate how the CAPEX and variable costs are calculated. For more information on the financial
+analysis and the possible fitting methods for the costs, refer to the update_annuities and fitted_cost modules in 
+the :ref:`smooth.framework.functions package`.
+
+.. math::
+	CAPEX_{annuity} = CAPEX \cdot \frac{I \cdot (1 + I)^L}{(1 + I)^L -1} 
+
+.. math::	
+	VC_{annuity} = \sum VC \cdot \frac{365}{S}
+	
+* :math:`CAPEX_{annuity}` = CAPEX annuity [EUR/a]
+* :math:`CAPEX` = total CAPEX [EUR]
+* :math:`I` = interest rate [-]
+* :math:`L` = component life time [a]
+* :math:`VC_{annuity}` = annual variable costs [EUR/a]
+* :math:`VC` = total variable costs [EUR]
+* :math:`S` = number of simulation days [days]
 
 Submodules
 ----------
