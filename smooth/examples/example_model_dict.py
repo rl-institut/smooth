@@ -9,35 +9,35 @@ An example of a component created as a dictionary entry is displayed below:
 .. code:: bash
 
     components = {
-    "this_ely": {
-        "component": "electrolyzer",
-        "bus_el": "bel",
-        "bus_h2": "bh2_lp",
-        "power_max": 100000.0,
-        "temp_init": 293.15,
-        "life_time": 20,
-        "capex": {
-            "key": [
-                "free",
-                "spec"
-            ],
-            "fitting_value": [
-                [
-                    193,
-                    -0.366
+        "this_ely": {
+            "component": "electrolyzer",
+            "bus_el": "bel",
+            "bus_h2": "bh2_lp",
+            "power_max": 100000.0,
+            "temp_init": 293.15,
+            "life_time": 20,
+            "capex": {
+                "key": [
+                    "free",
+                    "spec"
                 ],
-                "cost"
-            ],
-            "dependant_value": [
-                "power_max",
-                "power_max"
-            ]
-        },
-        "opex": {
-            "key": "spec",
-            "fitting_value": 0.04,
-            "dependant_value": "capex"
-        }
+                "fitting_value": [
+                    [
+                        193,
+                        -0.366
+                    ],
+                    "cost"
+                ],
+                "dependant_value": [
+                    "power_max",
+                    "power_max"
+                ]
+            },
+            "opex": {
+                "key": "spec",
+                "fitting_value": 0.04,
+                "dependant_value": "capex"
+            }
     }
 
 """

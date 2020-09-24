@@ -9,33 +9,33 @@ emissions. For example, the electrolyzer component is now defined as follows:
 .. code:: bash
 
     components.append({
-    'component': 'electrolyzer',
-    'name': 'this_ely',
-    # Busses
-    'bus_el': 'bel',
-    'bus_h2': 'bh2_lp',
-    # Parameters
-    'power_max': 100e3,
-    'temp_init': 293.15,
-    'life_time': 20,
-    # Foreign states
-    # Financials
-    'capex': {
-        'key': ['free', 'spec'],
-        'fitting_value': [[193, -0.366], 'cost'],
-        'dependant_value': ['power_max', 'power_max']
-    },
-    'opex': {
-        'key': 'spec',
-        'fitting_value': 0.04,
-        'dependant_value': 'capex',
-    },
-    # Emissions
-    'fix_emissions': {
-        'key': ['free', 'spec'],
-        'fitting_value': [[193, -0.366], 'cost'],
-        'dependant_value': ['power_max', 'power_max']
-    },
+        'component': 'electrolyzer',
+        'name': 'this_ely',
+        # Busses
+        'bus_el': 'bel',
+        'bus_h2': 'bh2_lp',
+        # Parameters
+        'power_max': 100e3,
+        'temp_init': 293.15,
+        'life_time': 20,
+        # Foreign states
+        # Financials
+        'capex': {
+            'key': ['free', 'spec'],
+            'fitting_value': [[193, -0.366], 'cost'],
+            'dependant_value': ['power_max', 'power_max']
+        },
+        'opex': {
+            'key': 'spec',
+            'fitting_value': 0.04,
+            'dependant_value': 'capex',
+        },
+        # Emissions
+        'fix_emissions': {
+            'key': ['free', 'spec'],
+            'fitting_value': [[193, -0.366], 'cost'],
+            'dependant_value': ['power_max', 'power_max']
+        },
     })
 """
 import os

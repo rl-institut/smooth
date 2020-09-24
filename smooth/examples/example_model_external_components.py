@@ -11,24 +11,24 @@ in a list e.g.:
     external_components = list()
 
     external_components.append({
-    'external_component': 'h2_dispenser',
-    'name': 'test',
-    'life_time': 20,
-    # Financials
-    'capex': {
-        'key': 'spec',
-        'fitting_value': 107000,
-        'dependant_value': 'number_of_units'
-    },
-    'opex': {
-        'key': 'spec',
-        'fitting_value': 0.05,
-        'dependant_value': 'capex'
-    },
-    'csv_filename': 'ts_demand_h2.csv',
-    'nominal_value': 1,
-    'column_title': 'Hydrogen load',
-    'path': my_path
+        'external_component': 'h2_dispenser',
+        'name': 'test',
+        'life_time': 20,
+        # Financials
+        'capex': {
+            'key': 'spec',
+            'fitting_value': 107000,
+            'dependant_value': 'number_of_units'
+        },
+        'opex': {
+            'key': 'spec',
+            'fitting_value': 0.05,
+            'dependant_value': 'capex'
+        },
+        'csv_filename': 'ts_demand_h2.csv',
+        'nominal_value': 1,
+        'column_title': 'Hydrogen load',
+        'path': my_path
     })
 
 And now the model includes the external components too:
@@ -36,10 +36,10 @@ And now the model includes the external components too:
 .. code:: bash
 
     mymodel = {
-    'busses': busses,
-    'components': components,
-    'sim_params': sim_params,
-    'external_components': external_components
+        'busses': busses,
+        'components': components,
+        'sim_params': sim_params,
+        'external_components': external_components
     }
 """
 import os

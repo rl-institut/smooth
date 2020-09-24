@@ -30,7 +30,7 @@ the system to maintain the wanted storage level.
 
 Maximum chargeable/dischargeable energy
 ---------------------------------------
-The maximum chargeable and dischargeable energy [Wh] per timestep is dependent on
+The maximum chargeable and dischargeable energy [Wh] per timestep is dependant on
 the C-rate and the state of charge of the battery. Because of the charging losses
 defined by charging efficiency, the nominal value of the input flow must be higher
 than what is actually entering the battery in order to ensure that the battery can
@@ -41,6 +41,14 @@ the battery will then receive the right amount.
 .. math::
     E_{in,max} = \\frac{min(c_{r,charge} \\cdot C \\cdot \\frac{t}{60}, C - SOC \\cdot C)}{\\mu_{charge}} \n
     E_{out,max} = min(c_{r,discharge} \\cdot C \\cdot \\frac{t}{60}, SOC \\cdot C)
+
+* :math:`E_{in,max}` = maximum chargeable energy [Wh]
+* :math:`c_{r,charge}` = C-Rate [-/h]
+* :math:`C` = storage capacity [Wh]
+* :math:`SOC` = state of charge [Wh]
+* :math:`\\mu_{charge}` = charging efficiency [-]
+* :math:`E_{out,max}` = maximum dischargeable energy [Wh]
+* :math:`c_{r,discharge}` = C-Rate [-/h]
 """
 
 import oemof.solph as solph
@@ -59,9 +67,9 @@ class Battery(Component):
     :type battery_capacity: numerical
     :param soc_init: initial state of charge [-]
     :type soc_init: numerical
-    :param efficiency_charge: efficiency charge [-]
+    :param efficiency_charge: charging efficiency [-]
     :type efficiency_charge: numerical
-    :param efficiency_discharge: efficiency discharge [-]
+    :param efficiency_discharge: discharging efficiency [-]
     :type efficiency_discharge: numerical
     :param loss_rate: loss rate [%/day]
     :type loss_rate: numerical

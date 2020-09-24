@@ -46,15 +46,16 @@ An example of this could be as follows for a compressor component:
             }
          })
 
-Here the cost of the compressor is independant of any other parameter, at
-2000 EUR for the CAPEX and 200 EUR/a for the OPEX.
+Here the cost of the compressor is independant of any other parameter
+(*fitting_value/dependant_value* = None), at 2000 EUR for the CAPEX
+and 200 EUR/a for the OPEX.
 
 Specific cost (*'spec'*)
 ----------------------
 The specific cost key means that the cost is dependant on one component
-parameter (e.g. EUR/kW). The value of the *dependant_value* is a string
-of the parameter name (e.g. *'power_max'*). The *fitting_value* is then
-multiplied with the dependant value to obtain the final costs.
+parameter (e.g. EUR/kW). The value of the *dependant_value* is the parameter
+name in the form of a string (e.g. *'power_max'*). The *fitting_value* is
+then multiplied with the dependant value to obtain the final costs.
 
 .. code:: bash
 
@@ -71,7 +72,7 @@ An example of this can be seen with the following PV component:
         'csv_filename': 'ts_pv_1_kW.csv',
         'csv_separator': ';',
         'nominal_value': 100,
-        'column_title': 'PV generation [kWh]',
+        'column_title': 'Power output',
         'path': my_path,
         'capex': {
             'key': 'spec',
@@ -85,8 +86,8 @@ An example of this can be seen with the following PV component:
         }
     })
 
-This implies that the CAPEX of the PV system is 975.57 EUR/nominal value
-where the nominal value is the number of kilowatts, and that the
+This implies that the CAPEX of the PV system is 975.57 EUR/*nominal_value*
+where the *nominal_value* is the number of kilowatts, and that the
 OPEX is 2% of the CAPEX per annum.
 
 Exponential cost (*'exp'*)
@@ -114,7 +115,7 @@ An example of this is shown with a wind component:
         'csv_filename': 'ts_wind_1_kW.csv',
         'csv_separator': ';',
         'nominal_value': 100,
-        'column_title': 'Power output',
+        'column_title': 'Power output in kW for 1 kW turbine',
         'path': my_path,
         'capex': {
             'key': 'exp',
@@ -128,8 +129,8 @@ An example of this is shown with a wind component:
         }
     })
 
-This demonstrates that the CAPEX of the wind system costs :math:`750 \\cdot e^{nv \\cdot 0.5}`,
-and that the OPEX costs 2% of the CAPEX per annum, where *nv* is the nominal value.
+This demonstrates that the CAPEX of the wind system costs :math:`750 \\cdot e^{\\frac{nv}{2}}`
+EUR, and that the OPEX costs 2% of the CAPEX per annum, where *nv* is the *nominal_value*.
 
 Polynomial cost (*'poly'*)
 --------------------------
@@ -237,16 +238,16 @@ specific and polynomial fittings are used:
     })
 
 The above example entails that the CAPEX of the storage component here is
-:math:`600 \\cdot (s_{c} + 100 \\cdot + p_{max}`. In
+:math:`600 \\cdot s_{c} + 100 \\cdot p_{max}`. In
 stages it can be broken down as follows:
 
 * The first part of the cost is calculated using the specific function
-  (:math:`600 \\cdot (s_{c}`).
+  (:math:`600 \\cdot s_{c}`).
 * Then the value for this is taken as the new *'cost'* value which can
   be then used as a free value for further calculations.
 * The previously calculated *'cost'* value is then used as the first free
   variable in a polynomial function to obtain
-  :math:`600 \\cdot (s_{c} + 100 \\cdot + p_{max}`.
+  :math:`600 \\cdot s_{c} + 100 \\cdot p_{max}`.
 """
 
 import os
@@ -286,7 +287,7 @@ components.append({
     'csv_filename': 'ts_pv_1_kW.csv',
     'csv_separator': ';',
     'nominal_value': 100,
-    'column_title': 'PV generation [kWh]',
+    'column_title': 'Power output',
     'path': my_path,
     'capex': {
         'key': 'spec',
@@ -307,7 +308,7 @@ components.append({
     'csv_filename': 'ts_wind_1_kW.csv',
     'csv_separator': ';',
     'nominal_value': 100,
-    'column_title': 'Power output',
+    'column_title': 'Power output in kW for 1 kW turbine',
     'path': my_path,
     'capex': {
         'key': 'exp',
