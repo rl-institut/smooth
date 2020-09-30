@@ -24,6 +24,8 @@ author = 'Reiner Lemoine Institute'
 # The full version, including alpha/beta/rc tags
 release = '0.2.0'
 
+# specify the master file, otherwise the build at read the docs fails
+master_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
 
