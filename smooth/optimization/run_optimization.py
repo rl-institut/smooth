@@ -1,4 +1,4 @@
-"""This is the core of the genetic algorith (GA) used for optimization.
+"""This is the core of the genetic algorithm (GA) used for optimization.
 It uses the `NSGA-II <https://www.sciencedirect.com/science/article/pii/S1877705811022466>`_
 algorithm for multi-objective optimization of smooth components.
 

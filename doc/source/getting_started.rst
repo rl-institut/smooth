@@ -74,7 +74,8 @@ Click on the above links to see how the simulation works.
 
 Optimization
 ============
-
+The genetic algorithm used for the optimization in SMOOTH is defined in the 
+:ref:`smooth.optimization package`, along with instructions on how to use it.
 
 Got further questions on using SMOOTH?
 ======================================

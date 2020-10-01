@@ -82,6 +82,11 @@ The first item returned is a list of all components, each updated with
 **************
 Implementation
 **************
+The concept of :func:`run_smooth` is demonstrated in the below diagram:
+.. image:: path/filename.png
+  :width: 400
+  :alt: Alternative text
+
 :func:`run_smooth` has three distinct phases:
 initialization, simulation and post processing.
 

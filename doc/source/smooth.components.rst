@@ -253,3 +253,13 @@ H2 Dispenser
    :undoc-members:
    :show-inheritance:
 
+Submodules
+----------
+
+Module contents
+---------------
+
+.. automodule:: smooth.components
+   :members:
+   :undoc-members:
+   :show-inheritance:

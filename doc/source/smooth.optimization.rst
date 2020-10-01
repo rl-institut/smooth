@@ -1,5 +1,5 @@
-.. _smooth.optimization package
-===============================
+smooth.optimization package
+===========================
 
 Subpackages
 -----------
