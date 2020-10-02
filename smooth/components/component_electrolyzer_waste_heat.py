@@ -75,7 +75,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         # Create a function that will give out the thermal energy values for the electric
         # energy values at the breakpoints.
         # Check the index of this ely_energy entry.
-        this_index = self.supporting_points["energy_halved"].index(ely_energy)
+        this_index = self.supporting_points["energy_halved_thermal"].index(ely_energy)
         # Return the according hydrogen production value [kg].
         return self.supporting_points["thermal_energy"][this_index]
 
@@ -106,7 +106,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
                 )
             },
             outputs={busses[self.bus_th]: solph.Flow()},
-            in_breakpoints=self.supporting_points["energy_halved"],
+            in_breakpoints=self.supporting_points["energy_halved_thermal"],
             conversion_function=self.conversion_fun_thermal,
             pw_repn="CC",
         )
@@ -153,6 +153,13 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         self.supporting_points["energy_halved"] = [
             this_bp / 2 for this_bp in bp_ely_energy
         ]
+        # Remove zeros from thermal energy supporting points.
+        self.supporting_points["energy_halved_thermal"] = self.supporting_points["energy_halved"]
+        for i in range(n_supporting_point):
+            if self.supporting_points["thermal_energy"][i] == 0:
+                temp = self.supporting_points["thermal_energy"].pop(i)
+                temp = self.supporting_points["energy_halved_thermal"].pop(i)
+
 
     def get_waste_heat(self, energy_used, h2_produced, new_ely_temp):
         # source: Dieguez et al., 'Thermal Performance of a commercial alkaline
