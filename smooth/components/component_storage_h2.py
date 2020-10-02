@@ -212,6 +212,6 @@ class StorageH2 (Component):
 
     def mpc_cost_function(self):
         if self.storage_level_wanted:
-            return (self.storage_level - self.storage_level_wanted)**2
+            return 0.01 * (self.storage_level - self.storage_level_wanted) ** 2
         else:
             return 0
