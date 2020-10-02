@@ -149,17 +149,19 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         self.supporting_points["temperature"] = bp_ely_temp
         self.supporting_points["h2_produced"] = bp_ely_h2
         self.supporting_points["energy"] = bp_ely_energy
-        self.supporting_points["thermal_energy"] = bp_ely_thermal
+        # self.supporting_points["thermal_energy"] = bp_ely_thermal
         self.supporting_points["energy_halved"] = [
             this_bp / 2 for this_bp in bp_ely_energy
         ]
         # Remove zeros from thermal energy supporting points.
-        self.supporting_points["energy_halved_thermal"] = self.supporting_points["energy_halved"]
-        for i in range(n_supporting_point):
-            if self.supporting_points["thermal_energy"][i] == 0:
-                temp = self.supporting_points["thermal_energy"].pop(i)
-                temp = self.supporting_points["energy_halved_thermal"].pop(i)
-
+        self.supporting_points["thermal_energy"] = []
+        self.supporting_points["energy_halved_thermal"] = []
+        idx = 0
+        for this_bp in bp_ely_thermal:
+            if this_bp > 0:
+                self.supporting_points["thermal_energy"].append(this_bp)
+                self.supporting_points["energy_halved_thermal"].append(self.supporting_points["energy_halved"][idx])
+        idx += 1
 
     def get_waste_heat(self, energy_used, h2_produced, new_ely_temp):
         # source: Dieguez et al., 'Thermal Performance of a commercial alkaline
