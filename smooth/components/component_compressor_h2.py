@@ -59,12 +59,15 @@ class CompressorH2(Component):
         self.Mr_H2 = 2.016 * 1e-3
         self.R_H2 = self.R / self.Mr_H2
 
+        self.current_vac = self.get_costs_and_art_costs()
+
     def create_oemof_model(self, busses, _):
         compressor = solph.Transformer(
             label=self.name,
             inputs={
                 busses[self.bus_h2_in]: solph.Flow(
-                    nominal_value=self.m_flow_max * self.sim_params.interval_time / 60),
+                    nominal_value=self.m_flow_max * self.sim_params.interval_time / 60,
+                    variable_cost=self.current_vac),
                 busses[self.bus_el]: solph.Flow()},
             outputs={busses[self.bus_h2_out]: solph.Flow()},
             conversion_factors={
