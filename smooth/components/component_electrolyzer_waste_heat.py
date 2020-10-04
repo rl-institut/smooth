@@ -75,7 +75,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         # Create a function that will give out the thermal energy values for the electric
         # energy values at the breakpoints.
         # Check the index of this ely_energy entry.
-        this_index = self.supporting_points["energy_halved_thermal"].index(ely_energy)
+        this_index = self.supporting_points["energy_halved"].index(ely_energy)
         # Return the according hydrogen production value [kg].
         return self.supporting_points["thermal_energy"][this_index]
 
@@ -106,7 +106,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
                 )
             },
             outputs={busses[self.bus_th]: solph.Flow()},
-            in_breakpoints=self.supporting_points["energy_halved_thermal"],
+            in_breakpoints=self.supporting_points["energy_halved"],
             conversion_function=self.conversion_fun_thermal,
             pw_repn="CC",
         )
@@ -148,7 +148,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
                 if bp_ely_thermal:
                     bp_ely_thermal.append(bp_ely_thermal[-1]+1e-2)
                 else:
-                    bp_ely_thermal.append(1e-2)
+                    bp_ely_thermal.append(0)
             else:
                 bp_ely_thermal.append(this_waste_heat)
 
@@ -181,7 +181,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         [sensible_heat, latent_heat] = self.sensible_and_latent_heats(
             h2_produced, new_ely_temp
         )  # [kWh]
-        if new_ely_temp >= (0.999 * self.temp_max):
+        if new_ely_temp >= (0.98 * self.temp_max):
             waste_heat = internal_heat_generation - heat_losses + sensible_heat
         else:
             waste_heat = 0
