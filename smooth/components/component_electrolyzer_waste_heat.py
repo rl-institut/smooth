@@ -155,7 +155,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         self.supporting_points["temperature"] = bp_ely_temp
         self.supporting_points["h2_produced"] = bp_ely_h2
         self.supporting_points["energy"] = bp_ely_energy
-        # self.supporting_points["thermal_energy"] = bp_ely_thermal
+        self.supporting_points["thermal_energy"] = bp_ely_thermal
         self.supporting_points["energy_halved"] = [
             this_bp / 2 for this_bp in bp_ely_energy
         ]
