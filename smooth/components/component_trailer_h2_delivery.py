@@ -49,65 +49,71 @@ class TrailerH2Delivery(Component):
         # implement low artificial costs (to encourage system to fill it)
         # Check level of all non-central storage component and use the one with the highest amount of h2:
         # if it is below specified threshold, the trailer cannot take any hydrogen from it
+
+        # In the model definition, the foreign states must be defined in the following order:
+        # 1) all origin storage levels [kg]
+        # 2) all origin minimum storage levels [kg]
+        # 3) all origin capacities [kg]
+        # 4) destination storage level [kg]
+        # 5) destination scapacity [kg]
+        # The order for each of these in terms of production sites must also be the same e.g.
+        # the first entry relates to the first site, the second entry relates
+        # to the second site etc.
         if self.fs_component_name is not None:
-            # Obtains the origin storage level [kg]
-            fs_origin_storage_level_kg_1 = self.get_foreign_state_value(components, index=0)
-            # Obtains the origin min storage level [kg]
-            fs_origin_min_storage_level_1 = self.get_foreign_state_value(components, index=1)
-            # Obtains the origin capacity [kg]
-            fs_origin_capacity_1 = self.get_foreign_state_value(components, index=2)
+            # n is the number of production sites that the trailer is connected to
+            n = int((len(self.fs_component_name) - 2) / 3)
+            # Creates an index list for the number of foreign states considered
+            index_list = list(range(0, len(self.fs_component_name)))
+            # List containing the origin storage levels [kg]
+            fs_origin_storage_levels = []
+            # List containing the origin minimum storage levels [kg]
+            fs_origin_min_storage_levels = []
+            # List containing the origin capacities [kg]
+            fs_origin_capacities = []
+            # List containing the origin available masses [kg]
+            fs_origin_available_masses = []
 
-            # Obtains the origin storage level [kg]
-            fs_origin_storage_level_kg_2 = self.get_foreign_state_value(components, index=3)
-            # Obtains the origin min storage level [kg]
-            fs_origin_min_storage_level_2 = self.get_foreign_state_value(components, index=4)
-            # Obtains the origin capacity [kg]
-            fs_origin_capacity_2 = self.get_foreign_state_value(components, index=5)
+            # Obtains a list of the origin storage levels for n sites
+            for i in index_list[0:n]:
+                this_origin_storage_level = self.get_foreign_state_value(components, index=i)
+                fs_origin_storage_levels.append(this_origin_storage_level)
 
-            # Obtains the origin storage level [kg]
-            fs_origin_storage_level_kg_3 = self.get_foreign_state_value(components, index=6)
-            # Obtains the origin storage capacity [kg]
-            fs_origin_min_storage_level_3 = self.get_foreign_state_value(components, index=7)
-            # Obtains the origin capacity [kg]
-            fs_origin_capacity_3 = self.get_foreign_state_value(components, index=8)
+            # Obtains a list of the origin minimum storage levels for n sites
+            for i in index_list[n:2*n]:
+                this_min_storage_level = self.get_foreign_state_value(components, index=i)
+                fs_origin_min_storage_levels.append(this_min_storage_level)
 
-            # Obtains the origin storage level [kg]
-            fs_origin_storage_level_kg_4 = self.get_foreign_state_value(components, index=9)
-            # Obtains the origin min storage level [kg]
-            fs_origin_min_storage_level_4 = self.get_foreign_state_value(components, index=10)
-            # Obtains the origin capacity [kg]
-            fs_origin_capacity_4 = self.get_foreign_state_value(components, index=11)
+            # Obtains a list of the origin capacity levels for n sites
+            for i in index_list[2*n:3*n]:
+                this_capacity = self.get_foreign_state_value(components, index=i)
+                fs_origin_capacities.append(this_capacity)
 
-            # Obtains the available mass that can be taken from the origin storage [kg] It can't be taken more than
-            # half of the capacity into account
-            fs_origin_available_kg_1 = min((fs_origin_storage_level_kg_1 - fs_origin_min_storage_level_1),
-                                           fs_origin_capacity_1/2)
-            fs_origin_available_kg_2 = min((fs_origin_storage_level_kg_2 - fs_origin_min_storage_level_2),
-                                           fs_origin_capacity_2/2)
-            fs_origin_available_kg_3 = min((fs_origin_storage_level_kg_3 - fs_origin_min_storage_level_3),
-                                           fs_origin_capacity_3/2)
-            fs_origin_available_kg_4 = min((fs_origin_storage_level_kg_4 - fs_origin_min_storage_level_4),
-                                           fs_origin_capacity_4/2)
+            # Obtains a list for the available masses that can be taken from the origin storage [kg].
+            # It cannot take more than half of the capacity into account ToDo: ask Laura why this is again
+            for i in range(int(n)):
+                this_available_kg = min((fs_origin_storage_levels[i] - fs_origin_min_storage_levels[i]),
+                                        fs_origin_capacities[i] / 2)
+                fs_origin_available_masses.append(this_available_kg)
 
             # Get the availability mass of hydrogen of the fullest origin storage
-            self.fs_origin_available_kg = max(fs_origin_available_kg_1, fs_origin_available_kg_2,
-                                              fs_origin_available_kg_3, fs_origin_available_kg_4)
-
+            self.fs_origin_available_kg = max(fs_origin_available_masses)
             # Obtains the destination storage level [kg]
-            fs_destination_storage_level_kg = self.get_foreign_state_value(components, index=12)
+            fs_destination_storage_level = \
+                self.get_foreign_state_value(components, index=index_list[-2])
             # Obtains the destination storage capacity [kg]
-            fs_destination_storage_capacity = self.get_foreign_state_value(components, index=13)
-
+            fs_destination_capacity = \
+                self.get_foreign_state_value(components, index=index_list[-1])
             # Obtains the available mass that can be delivered to the destination storage [kg]
             fs_destination_available_storage = \
-                fs_destination_storage_capacity - fs_destination_storage_level_kg
+                fs_destination_capacity - fs_destination_storage_level
 
             # Checks if the destination storage level is below the threshold:
             # if yes, delivery possible
-            # todo: implement multiple storage delivery in one time step from different wind parks - low prio
+            # todo: implement multiple storage delivery in one time step from different wind
+            #  parks - low priority
 
-            if fs_destination_storage_level_kg \
-                    < self.fs_destination_storage_threshold * fs_destination_storage_capacity:
+            if fs_destination_storage_level \
+                    < self.fs_destination_storage_threshold * fs_destination_capacity:
 
                 # If the available mass [kg] in the destination storage and the amount of
                 # available hydrogen [kg] in the origin storage exceed the trailer capacity,
