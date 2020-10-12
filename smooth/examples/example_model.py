@@ -95,7 +95,7 @@ components.append({
 
 components.append({
     'component': 'energy_source_from_csv',
-    'name': 'pv_output',
+    'name': 'this_ely',
     'bus_out': 'bel',
     'csv_filename': 'ts_pv.csv',
     'csv_separator': ';',
