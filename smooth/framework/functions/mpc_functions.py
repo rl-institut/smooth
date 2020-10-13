@@ -21,12 +21,16 @@ def run_mpc_dummy(this_model,components,system_outputs,iteration,sim_params):
     # system_inputs['power_electrolyzer']['mpc_data'] = [0.6]*time_end
     # system_inputs['mflow_h2_storage']['mpc_data'] = sine_list_input_mpc(0,0.01,time_end) # 0.50
     sequence_ely = pickle_input_mpc('this_ely',1)
-    sequence_ely = [x/190000 for x in sequence_ely]
+    sequence_ely = [x/100000*2 for x in sequence_ely]
     sequence_storage = pickle_input_mpc('h2_storage_lp',1)
     sequence_storage = [x/(60/9) for x in sequence_storage]
+    sequence_biogas = pickle_input_mpc('chp_thermal',1)
+    sequence_biogas = [x/(59.1564)*2 for x in sequence_biogas]
     system_inputs['power_electrolyzer']['mpc_data'] = sequence_ely
-    system_inputs['mflow_h2_storage']['mpc_data'] = sequence_storage
+    # system_inputs['mflow_h2_storage']['mpc_data'] = sequence_storage
+    system_inputs['mflow_biogas']['mpc_data'] = sequence_biogas
     set_system_input_mpc(components,system_inputs,iteration)
+    # set_system_input_mpc(components,system_inputs,iteration-96)
     return
 
 def set_system_input_mpc(components,system_inputs,iteration):
@@ -97,7 +101,14 @@ def define_system_inputs_mpc():
         'lower_bound': [0],
         'upper_bound': [1],
     }
-    system_inputs = {'power_electrolyzer': electrolyzer, 'mflow_h2_storage': h2_storage}
+    mflow_biogas = {
+        'comp_name': 'chp',
+        'mpc_data': 0,
+        'lower_bound': [0],
+        'upper_bound': [1],
+    }
+    system_inputs = {'power_electrolyzer': electrolyzer, 'mflow_biogas': mflow_biogas}
+    # system_inputs = {'power_electrolyzer': electrolyzer, 'mflow_h2_storage': h2_storage, 'mflow_biogas': mflow_biogas}
     # system_inputs = {'power_electrolyzer': electrolyzer}
     return system_inputs
 
@@ -143,7 +154,9 @@ def pickle_input_mpc(comp_name, flow_switch):
     # comp_name is the name of the component containing the desired flow
     # flow_switch can only be 0 or 1, 0: outflow, 1: inflow
     results = load_results(
-        'C:/Users/ulrike.herrmann/PycharmProjects/271_Ulrike/MPC/2020-06-26_11-30-38_linearized_model_day1.pickle')
+        'C:/271_Ulrike/MPC/test_results/2020-10-12_12-10-04_mpc_test_linearization_extended_day1.pickle')
+    # results = load_results(
+    #     'C:/271_Ulrike/MPC/test_results/2020-10-12_12-11-15_mpc_test_linearization_extended_day5.pickle')
     data = views.node(results, comp_name)
     df = data['sequences']
     for i_result in df:

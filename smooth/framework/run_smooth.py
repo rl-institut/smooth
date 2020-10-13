@@ -59,18 +59,23 @@ def run_smooth(model):
 
         # run mpc
         # call dummy function for test with arbitrary function (e.g. sine) for system inputs
-        # mpc.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
+        if i_interval >= 0: # 96:
+            for this_comp in components:
+                if this_comp.name is not 'h2_compressor_mp' and this_comp.name is not 'h2_storage_lp':
+                    if hasattr(this_comp, 'operate_on_mpc'):
+                        setattr(this_comp, 'operate_on_mpc', True)
+            mpc.run_mpc_dummy(model,components,system_outputs,i_interval,sim_params)
         # for rolling horizon approach call rolling horizon function only once for every control horizon
-        if mpc_iter == control_horizon:
-            mpc_iter = 0
-        if mpc_iter == 0:
-            system_inputs = mpc.rolling_horizon(model, components, control_horizon, prediction_horizon,
-                                                initial_inputs, sim_params_mpc, i_interval)
-        mpc.set_system_input_mpc(components, system_inputs, mpc_iter)
-        initial_inputs = []
-        for this_in in system_inputs:
-            initial_inputs.append(system_inputs[this_in]['mpc_data'][control_horizon - 1])
-        mpc_iter = mpc_iter + 1
+        # if mpc_iter == control_horizon:
+        #     mpc_iter = 0
+        # if mpc_iter == 0:
+        #     system_inputs = mpc.rolling_horizon(model, components, control_horizon, prediction_horizon,
+        #                                         initial_inputs, sim_params_mpc, i_interval)
+        # mpc.set_system_input_mpc(components, system_inputs, mpc_iter)
+        # initial_inputs = []
+        # for this_in in system_inputs:
+        #     initial_inputs.append(system_inputs[this_in]['mpc_data'][control_horizon - 1])
+        # mpc_iter = mpc_iter + 1
 
         # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
         # Create all busses and save them to a dict for later use in the components.
@@ -128,7 +133,7 @@ def run_smooth(model):
         df_results = processing.create_dataframe(model_to_solve)
 
         # track system outputs for mpc
-        system_outputs = mpc.get_system_output_mpc(results,system_outputs)
+        # system_outputs = mpc.get_system_output_mpc(results,system_outputs)
 
         # Loop through every component and call the result handling functions
         for this_comp in components:
@@ -150,4 +155,4 @@ def run_smooth(model):
     sim_params.date_time_index = sim_params.date_time_index[:sim_params.n_intervals - prediction_horizon]
     sim_params.n_intervals = sim_params.n_intervals - prediction_horizon
 
-    return components, status, system_outputs
+    return components, status
