@@ -18,6 +18,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         """ PARAMETERS """
         # Define the additional thermal bus
         self.bus_th = None
+        self.operate_on_mpc = False
 
         """ UPDATE PARAMETER DEFAULT VALUES """
         self.set_parameters(param_bus_th)
@@ -83,13 +84,28 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         # Get the non-linear behaviour.
         self.update_nonlinear_behaviour()
 
+        # when operating on mpc flows are fixed
+        if self.operate_on_mpc:
+            flow_in = solph.Flow(
+                actual_value=self.mpc_data,
+                fixed=True,
+                nominal_value=self.energy_max / 2)  # maybe more readable: self.h2_input_max/2
+            flow_in_thermal = solph.Flow(
+                actual_value=self.mpc_data,
+                fixed=True,
+                nominal_value=self.energy_max / 2)
+        # otherwise flows are solved by oemof
+        else:
+            flow_in = solph.Flow(
+                nominal_value=self.energy_max / 2,
+                variable_costs=0)
+            flow_in_thermal = solph.Flow(nominal_value=self.energy_max / 2)
+
         # First create the hydrogen producing oemof component
         electrolyzer = solph.custom.PiecewiseLinearTransformer(
             label=self.name,
             inputs={
-                busses[self.bus_el]: solph.Flow(
-                    nominal_value=self.energy_max / 2, variable_costs=0
-                )
+                busses[self.bus_el]: flow_in
             },
             outputs={busses[self.bus_h2]: solph.Flow()},
             in_breakpoints=self.supporting_points["energy_halved"],
@@ -101,9 +117,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         electrolyzer_thermal = solph.custom.PiecewiseLinearTransformer(
             label=self.name + "_thermal",
             inputs={
-                busses[self.bus_el]: solph.Flow(
-                    nominal_value=self.energy_max / 2, variable_costs=0
-                )
+                busses[self.bus_el]: flow_in_thermal
             },
             outputs={busses[self.bus_th]: solph.Flow()},
             in_breakpoints=self.supporting_points["energy_halved"],
