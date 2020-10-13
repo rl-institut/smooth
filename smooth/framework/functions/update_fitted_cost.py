@@ -27,6 +27,16 @@ def update_financials(component, financials):
     if not financials:
         return
 
+    # Check if 'variable' capex are beeing used, if so decide which capex is valid
+    if financials['key'] == 'variable':
+        for i in range(len(financials)-2):
+            if (getattr(component, financials['var_capex_dependency'])
+                >= financials[i]['low_threshold']) & \
+                (getattr(component, financials['var_capex_dependency'])
+                 < financials[i]['high_threshold']):
+                financials = financials[i]
+                break
+
     # If the keys are not given as a list, they are transformed to one so they can be iterated.
     if type(financials['key']) is not list:
         financials['key'] = [financials['key']]
