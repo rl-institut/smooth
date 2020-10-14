@@ -29,13 +29,19 @@ def update_financials(component, financials):
 
     # Check if 'variable' capex are beeing used, if so decide which capex is valid
     if financials['key'] == 'variable':
+        i = 0
         for i in range(len(financials)-2):
             if (getattr(component, financials['var_capex_dependency'])
                 >= financials[i]['low_threshold']) & \
                 (getattr(component, financials['var_capex_dependency'])
                  < financials[i]['high_threshold']):
                 financials = financials[i]
+                i = len(financials)
                 break
+        assert i == len(financials), \
+            'No suitable Capex found for component ' + component.name + ' with ' + \
+            financials['var_capex_dependency'] + ' = ' \
+            + str(getattr(component, financials['var_capex_dependency']))
 
     # If the keys are not given as a list, they are transformed to one so they can be iterated.
     if type(financials['key']) is not list:
@@ -70,7 +76,7 @@ def update_emissions(component, emissions):
     If multiple keys are defined, the calculations are done sequentially in order.
 
     :param component: object of this component
-    :type component: object
+    :type component:  component: :class:`~smooth.components.component.Component`
     :param emissions: emission object of this component
     :type emissions: fix_emissions or op_emissions dict
     """
@@ -78,6 +84,22 @@ def update_emissions(component, emissions):
     # Check if this emission dictionary is empty. If so, nothing has to be calculated.
     if not emissions:
         return
+
+    # Check if 'variable' capex are beeing used, if so decide which capex is valid
+    if emissions['key'] == 'variable':
+        i = 0
+        for i in range(len(emissions)-2):
+            if (getattr(component, emissions['var_capex_dependency'])
+                >= emissions[i]['low_threshold']) & \
+                (getattr(component, emissions['var_capex_dependency'])
+                 < emissions[i]['high_threshold']):
+                emissions = emissions[i]
+                i = len(emissions)
+                break
+        assert i == len(emissions), \
+            'No suitable fix_emissions found for component ' + component.name + ' with ' + \
+            emissions['var_capex_dependency'] + ' = ' \
+            + str(getattr(component, emissions['var_capex_dependency']))
 
     # If the keys are not given as a list, they are transformed to one so they can be iterated.
     if type(emissions['key']) is not list:
@@ -104,8 +126,8 @@ def update_cost(component, fitting_dict, index, dependant_value, name):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :param name: human readable representation of attribute to be updated,
         e.g. "CAPEX/OPEX" or "emissions"
     :type name: string
@@ -137,8 +159,8 @@ def get_spec(component, fitting_dict, index, dependant_value):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :return: calculated costs using a fitting value
     :rtype: number
     """
@@ -172,8 +194,8 @@ def get_exp(component, fitting_dict, index, dependant_value):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :return: calculated costs using exponential fitting
     :rtype: number
     """
@@ -207,8 +229,8 @@ def get_poly(component, fitting_dict, index, dependant_value):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :return: calculated costs using polynomial fitting
     :rtype: number
     """
@@ -245,8 +267,8 @@ def get_free(component, fitting_dict, index, dependant_value):
     :type fitting_dict: dict
     :param index: current position in fitting_dict
     :type index: integer
-    :param dependent_value: dependent attribute value of object
-    :type dependent_value: number
+    :param dependant_value: dependent attribute value of object
+    :type dependant_value: number
     :return: calculated costs using "free" fitting
     :rtype: number
     :raises ValueError: if number of fitting values is odd
