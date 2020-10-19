@@ -7,12 +7,8 @@ tool serves to minimise costs and maximise the sustainability of dynamic energy 
 of SMOOTH are:
 
 * The real world energy system is reduced to its relevant components
-* Detailed modelling of components including:
-
-  * Non-linear component behaviour
-  * State-dependant component behaviour
-  * Tracking arbitrary states of component 
-
+* Detailed modelling of components including non-linear component behaviour, state-dependant component behaviour
+  and tracking arbitrary states of the components 
 * Stepwise simulation without using perfect foresight
 * Parameter optimization possible in combination with a genetic algorithm
 
@@ -69,7 +65,26 @@ Framework
 =========
 The :ref:`smooth.framework package` consists of the main function that runs the SMOOTH simulation
 framework (the :func:`run_smooth` function) as well as other functions that are necessary for 
-updating and evaluating the simulation results (in the :ref:`smooth.framework.functions package`). 
+updating and evaluating the simulation results (in the :ref:`smooth.framework.functions package`).
+An outline and brief description of the available functions in the framework is presented below:
+
+* :func:`~smooth.framework.run_smooth`: the main function which enables the simulation in SMOOTH, 
+  and must be called by the user.
+* :func:`~smooth.framework.functions.calculate_external_costs`: calculates costs for components 
+  in the system which are not part of the optimization but their costs should be taken into 
+  consideration. This function can be called in the same file as where the :func:`run_smooth` is
+  called. 
+* :func:`~smooth.framework.functions.debug.get_df_debug`: generates debugging information from
+  the results, and is called in the :func:`smooth.framework.run_smooth` if the user sets the 
+  **show_debug_flag** as True in the simulation parameters.
+* :func:`~smooth.framework.functions.debug.show_debug`**: prints and plots the debugging
+  information and saves it to a file. Also called if **show_debug_flag** is set to True.
+* :func:`~smooth.framework.functions.load_results`: loads the saved results of either a 
+  simulation or optimization. Can be called by the user in a file where the results are 
+  evaluated.
+* :func:`~smooth.framework.functions.plot_interactive_results`: plots interactive results of a
+  SMOOTH run, which can be called after the simulation/optimization results are obtained.
+  
 Click on the above links to see how the simulation works. 
 
 Optimization
