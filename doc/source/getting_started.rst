@@ -72,20 +72,33 @@ An outline and brief description of the available functions in the framework is 
   and must be called by the user.
 * :func:`~smooth.framework.functions.calculate_external_costs`: calculates costs for components 
   in the system which are not part of the optimization but their costs should be taken into 
-  consideration. This function can be called in the same file as where the :func:`run_smooth` is
+  consideration. This function can be called in the same file as where the run_smooth function is
   called. 
-* :func:`~smooth.framework.functions.debug.get_df_debug`: generates debugging information from
-  the results, and is called in the :func:`smooth.framework.run_smooth` if the user sets the 
-  **show_debug_flag** as True in the simulation parameters.
-* :func:`~smooth.framework.functions.debug.show_debug`**: prints and plots the debugging
-  information and saves it to a file. Also called if **show_debug_flag** is set to True.
+* :func:`~smooth.framework.functions.debug`: generates debugging information from
+  the results, and prints, plots and saves them. It is called in the run_smooth function if the 
+  user sets the *show_debug_flag* parameter as True in the simulation parameters.
 * :func:`~smooth.framework.functions.load_results`: loads the saved results of either a 
   simulation or optimization. Can be called by the user in a file where the results are 
   evaluated.
 * :func:`~smooth.framework.functions.plot_interactive_results`: plots interactive results of a
   SMOOTH run, which can be called after the simulation/optimization results are obtained.
-  
-Click on the above links to see how the simulation works. 
+* :func:`~smooth.framework.functions.plot_results`: plots results of a SMOOTH run, which can 
+  be called after the simulation/optimization results are obtained.
+* :func:`~smooth.framework.functions.print_results`: prints the financial results of a 
+  SMOOTH run, which can be called after the simulation/optimization results are obtained.
+* :func:`~smooth.framework.functions.save_important_parameters`: saves the most important
+  parameters from the optimization results in a CSV file, automatically generates pie plots
+  of certain results and saves all of the flows in a dataframe. Can be called in a file
+  where the results are evaluated.
+* :func:`~smooth.framework.functions.save_results`: saves the results of either a SMOOTH
+  run or an optimization, which can be called after the results are obtained.
+* :func:`~smooth.framework.functions.update_annuities`: calculates and updates the financial
+  and emissions annuities for the components used in the system. This is called in the 
+  generic Component class to be used by all components.
+* :func:`~smooth.framework.functions.update_fitted_costs`: calculates the fixed financial
+  and emission costs where they are dependant on certain values and specific fitting 
+  methods are used (defined by the user). This is also called in the generic Component
+  class to be used by all components.
 
 Optimization
 ============

@@ -4,7 +4,7 @@ smooth.examples package
 Submodules
 ----------
 
-smooth.examples.example\_model module
+Example Model
 -------------------------------------
 
 .. automodule:: smooth.examples.example_model
@@ -13,7 +13,7 @@ smooth.examples.example\_model module
    :exclude-members: busses
    :show-inheritance:
 
-smooth.examples.example\_model\_costs module
+Example Model (costs)
 -------------------------------------
 
 .. automodule:: smooth.examples.example_model_costs
@@ -22,7 +22,7 @@ smooth.examples.example\_model\_costs module
    :exclude-members: busses
    :show-inheritance:
 
-smooth.examples.example\_model\_dict module
+Example Model (dict)
 ------------------------------------------------
 
 .. automodule:: smooth.examples.example_model_dict
@@ -31,7 +31,7 @@ smooth.examples.example\_model\_dict module
    :exclude-members: busses
    :show-inheritance:
    
-smooth.examples.example\_model\_emissions module
+Example Model (emissions)
 ------------------------------------------------
 
 .. automodule:: smooth.examples.example_model_emissions
@@ -40,7 +40,7 @@ smooth.examples.example\_model\_emissions module
    :exclude-members: busses, my_path
    :show-inheritance:
    
-smooth.examples.example\_model\_external_components module
+Example Model (external components)
 ------------------------------------------------
 
 .. automodule:: smooth.examples.example_model_external_components
@@ -49,7 +49,7 @@ smooth.examples.example\_model\_external_components module
    :exclude-members: busses
    :show-inheritance:
 
-smooth.examples.example\_plotting\_dicts module
+Example Model (plotting dicts)
 ------------------------------------------------
 
 .. automodule:: smooth.examples.example_plotting_dicts
@@ -57,7 +57,7 @@ smooth.examples.example\_plotting\_dicts module
    :undoc-members:
    :show-inheritance:
    
-smooth.examples.run\_optimization\_example module
+Run Optimization Example
 -------------------------------------------------
 
 .. automodule:: smooth.examples.run_optimization_example
@@ -66,7 +66,7 @@ smooth.examples.run\_optimization\_example module
    :exclude-members: main
    :show-inheritance:
 
-smooth.examples.run\_smooth\_example module
+Run Smooth Example
 -------------------------------------------
 
 .. automodule:: smooth.examples.run_smooth_example
