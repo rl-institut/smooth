@@ -57,7 +57,7 @@ the same because they are already as annuities. The variable cost annuities for 
 converting the summed variable costs over the simulation time to the summed variable costs over a one year period. 
 If the simulation time is a year, the variable cost annuities are simply the summed variable costs for a year. The
 below equations demonstrate how the CAPEX and variable costs are calculated. For more information on the financial
-analysis and the possible fitting methods for the costs, refer to the update_annuities and fitted_cost modules in 
+analysis and the possible fitting methods for the costs, refer to the update_annuities and update_fitted_cost modules in 
 the :ref:`smooth.framework.functions package`.
 
 .. math::

@@ -37,7 +37,6 @@ from .component import Component
 
 class Supply (Component):
     """
-    ToDo: in this component and others, change Wh etc. to either W or W * t where t is time step
     :param name: unique name given to the supply component
     :type name: str
     :param output_max: maximum output per timestep of commodity e.g. for the electricity grid [Wh],
@@ -61,7 +60,7 @@ class Supply (Component):
     """
 
     def __init__(self, params):
-
+        # ToDo: in this component and others, change Wh etc. to either W or W * t where t is time step
         # Call the init function of the mother class.
         Component.__init__(self)
 

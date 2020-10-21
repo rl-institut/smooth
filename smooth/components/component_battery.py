@@ -101,8 +101,10 @@ class Battery(Component):
     :type set_parameters(params): function
     :param soc: state of charge [-]
     :type soc: numerical
-    :param e_in_max: max. chargeable or dischargeable energy [Wh]
+    :param e_in_max: max. chargeable energy [Wh]
     :type e_in_max: numerical
+    :param e_out_max: max. dischargeable energy [Wh]
+    :type e_out_max: numerical
     :param loss_rate: adjusted loss rate to chosen timestep [%/timestep]
     :type loss_rate: numerical
     :param current_vac: current artificial costs for input and output [EUR/Wh]

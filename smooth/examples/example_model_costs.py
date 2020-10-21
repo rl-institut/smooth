@@ -74,14 +74,15 @@ An example of this can be seen with the following PV component:
         'nominal_value': 100,
         'column_title': 'Power output',
         'path': my_path,
+        'life_time': 20,
         'capex': {
             'key': 'spec',
-            'fitting_value': 975.57,  # NOW 2020
+            'fitting_value': 975.57,
             'dependant_value': 'nominal_value',
         },
         'opex': {
             'key': 'spec',
-            'fitting_value': 0.02,  # NOW 2020
+            'fitting_value': 0.02,
             'dependant_value': 'capex',
         }
     })
@@ -114,9 +115,10 @@ An example of this is shown with a wind component:
         'bus_out': 'bel',
         'csv_filename': 'ts_wind_1_kW.csv',
         'csv_separator': ';',
-        'nominal_value': 100,
+        'nominal_value': 10,
         'column_title': 'Power output in kW for 1 kW turbine',
         'path': my_path,
+        'life_time': 20,
         'capex': {
             'key': 'exp',
             'fitting_value': [750, 0.5],
@@ -196,7 +198,7 @@ This is also demonstrated with the storage component:
         'capex': {
             'key': 'free',
             'fitting_value': [600, 0.5, 0.8, 0.2],
-            'dependant_value': ['p_max']
+            'dependant_value': 'p_max'
         },
         'opex': {
             'key': 'spec',
@@ -230,6 +232,7 @@ specific and polynomial fittings are used:
             'key': ['spec', 'poly'],
             'fitting_value': [600, ['cost', 100]],
             'dependant_value': ['storage_capacity', 'p_max'],
+        },
         'opex': {
             'key': 'spec',
             'fitting_value': 0.01,
@@ -248,6 +251,62 @@ stages it can be broken down as follows:
 * The previously calculated *'cost'* value is then used as the first free
   variable in a polynomial function to obtain
   :math:`600 \\cdot s_{c} + 100 \\cdot p_{max}`.
+
+Economy of scale
+----------------
+There is also the option to include the economy of scale in the costs, and it
+can be defined as follows:
+
+.. code:: bash
+
+    components.append({
+        'component': 'supply',
+        'name': 'from_grid',
+        'bus_out': 'bel',
+        'output_max': 5000000,
+        'variable_costs': 0.00016,
+        'fs_component_name': 'h2_storage',
+        'fs_attribute_name': 'storage_level',
+        'fs_threshold': 200,
+        'fs_low_art_cost': -0.001,
+        'fs_high_art_cost': 50,
+        'dependency_flow_costs': ('from_grid', 'bel'),
+        'life_time': 50,
+        'capex': {
+            'key': 'variable',
+            'var_capex_dependency': 'output_max',
+            0: {
+                'low_threshold': 0,
+                'high_threshold': 3000000,
+                'key': 'spec',
+                'fitting_value': 0.2,
+                'dependant_value': 'output_max',
+            },
+            1: {
+                'low_threshold': 3000000,
+                'high_threshold': float('inf'),
+                'key': 'spec',
+                'fitting_value': 0.1,
+                'dependant_value': 'output_max',
+            },
+        },
+    })
+
+This shows the varying fixed costs of the electricity supply from the grid,
+depending on the size of the grid. If the 'variable' key is defined for the
+CAPEX, the 'var_capex_dependancy' parameter must also be defined which states
+which variable the changing costs are dependant on.
+
+A set of n dictionaries is implemented within the capex dictionary, where
+n is the number of different costs considered and the dictionaries are
+named 0, 1,..., n. Each of these sub-dictionaries is defined the same as
+other capex dictionaries, but with the inclusion of a low and high
+threshold. The above example states that:
+
+* If the chosen maximum output power from the grid is less than 3 MW, the
+  CAPEX is 20 ct./W.
+* If the chosen maximum output power from the grid is 3 MW or larger, the
+  CAPEX is 10 ct./W.
 """
 
 import os
@@ -289,14 +348,15 @@ components.append({
     'nominal_value': 100,
     'column_title': 'Power output',
     'path': my_path,
+    'life_time': 20,
     'capex': {
         'key': 'spec',
-        'fitting_value': 975.57,  # NOW 2020
+        'fitting_value': 975.57,
         'dependant_value': 'nominal_value',
     },
     'opex': {
         'key': 'spec',
-        'fitting_value': 0.02,  # NOW 2020
+        'fitting_value': 0.02,
         'dependant_value': 'capex',
     }
 })
@@ -307,9 +367,10 @@ components.append({
     'bus_out': 'bel',
     'csv_filename': 'ts_wind_1_kW.csv',
     'csv_separator': ';',
-    'nominal_value': 100,
+    'nominal_value': 10,
     'column_title': 'Power output in kW for 1 kW turbine',
     'path': my_path,
+    'life_time': 10,
     'capex': {
         'key': 'exp',
         'fitting_value': [750, 0.5],
@@ -344,6 +405,25 @@ components.append({
     'fs_low_art_cost': -0.001,
     'fs_high_art_cost': 50,
     'dependency_flow_costs': ('from_grid', 'bel'),
+    'life_time': 50,
+    'capex': {
+        'key': 'variable',
+        'var_capex_dependency': 'output_max',
+        0: {
+            'low_threshold': 0,
+            'high_threshold': 3000000,
+            'key': 'spec',
+            'fitting_value': 0.2,
+            'dependant_value': 'output_max',
+        },
+        1: {
+            'low_threshold': 3000000,
+            'high_threshold': float('inf'),
+            'key': 'spec',
+            'fitting_value': 0.1,
+            'dependant_value': 'output_max',
+        },
+    },
 })
 
 components.append({
