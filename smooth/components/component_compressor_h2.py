@@ -84,8 +84,6 @@ electrical energy required to compress 1 kg of hydrogen:
 """
 
 
-
-
 import oemof.solph as solph
 from .component import Component
 from .component_functions.all_component_functions import calculate_compressibility_factor
@@ -247,6 +245,3 @@ class CompressorH2(Component):
 
         self.states['specific_compression_work'][sim_params.i_interval] \
             = self.spec_compression_energy
-
-
-

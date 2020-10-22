@@ -136,7 +136,7 @@ class PemElectrolyzer(Component):
         # Life time [a].
         self.life_time = 10
 
-        #ToDo: check if pressure/temperature of electrolyzer should be included
+        # ToDo: check if pressure/temperature of electrolyzer should be included
 
         # Update the input parameters by the user.
         self.set_parameters(params)
@@ -187,7 +187,7 @@ class PemElectrolyzer(Component):
         for i_bp in range(len(self.bp_load_waste_heat)):
             # Calculate the waste heat energy produced at this break point [Wh]
             this_waste_heat_energy = self.bp_elec_consumed_waste_heat[i_bp] \
-                                     * self.bp_eff_waste_heat[i_bp]
+                * self.bp_eff_waste_heat[i_bp]
             self.bp_waste_heat_energy.append(this_waste_heat_energy)
 
         # While we will create two oemof components, one for the e

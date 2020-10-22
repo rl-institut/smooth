@@ -260,7 +260,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         # The external surface area of the electrolysis stack is calculated assuming that it is
         # cylindrical
         self.area_stack = (
-                2 * self.area_cell / 10000 + 3.14 * self.diameter_cell * self.height_stack
+            2 * self.area_cell / 10000 + 3.14 * self.diameter_cell * self.height_stack
         )  # [m^2]
         # The overall surface area exposed by the gas separators and the pipe communicating
         # them is assumed to be in a ratio of 1 : 0.42 with the area of the stack (taken from
@@ -368,7 +368,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         for i_supporting_point in range(n_supporting_point + 1):
             # Calculate the energy for this breakpoint [Wh].
             this_energy = (
-                    i_supporting_point / n_supporting_point * self.energy_max
+                i_supporting_point / n_supporting_point * self.energy_max
             )
             bp_ely_energy.append(this_energy)
             # Calculate the hydrogen produced [kg] and resulting temperature [K] with the
@@ -379,8 +379,8 @@ class ElectrolyzerWasteHeat(Electrolyzer):
             # Calculate the waste heat [Wh] with the energy, hydrogen produced and resulting
             # temperature of this breakpoint at the current temperature.
             this_waste_heat = (
-                    self.get_waste_heat(this_energy / 1000, this_mass, this_temp)
-                    * 1000
+                self.get_waste_heat(this_energy / 1000, this_mass, this_temp)
+                * 1000
             )  # [Wh]
             bp_ely_thermal.append(this_waste_heat)
 
@@ -409,19 +409,19 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         # water electrolyzer: Experimental study and mathematical modeling',
         # Int. J. Hydrogen Energy, 2008 energy_used [kWh] --> internal_heat_generation [kWh]
         internal_heat_generation = (
-                energy_used - h2_produced * self.upp_heat_val * 1e6 / 3600 / 1000
+            energy_used - h2_produced * self.upp_heat_val * 1e6 / 3600 / 1000
         )  # [kWh]
         # heat losses:
         dT = new_ely_temp - self.temp_min  # [K]
         # equation from Dieguez et al:
         heat_transfer_coefficient = (
-                1.32 * (dT / self.diameter_cell) ** 0.25
+            1.32 * (dT / self.diameter_cell) ** 0.25
         )  # [W/(m^2*K)]
 
         heat_losses = (
-                heat_transfer_coefficient
-                * (self.area_stack + self.area_separator)
-                * dT * self.interval_time / 60 / 1000)  # [kWh]
+            heat_transfer_coefficient
+            * (self.area_stack + self.area_separator)
+            * dT * self.interval_time / 60 / 1000)  # [kWh]
         [sensible_heat, latent_heat] = self.sensible_and_latent_heats(
             h2_produced, new_ely_temp
         )  # [kWh]
@@ -451,10 +451,10 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         # as the sensible heat required to warm the deionized water from room temperature
         # to the stack operating temperature
         sensible_heat = (
-                                mass_H2O * self.c_p_H2O * (self.temp_min - new_ely_temp)
-                                - mass_H2 * self.c_p_H2 * (new_ely_temp - self.temp_min)
-                                - mass_O2 * self.c_p_O2 * (new_ely_temp - self.temp_min)
-                        ) / 3.6e6  # [kWh], 1J = 1/3.6e6 kWh
+            mass_H2O * self.c_p_H2O * (self.temp_min - new_ely_temp)
+            - mass_H2 * self.c_p_H2 * (new_ely_temp - self.temp_min)
+            - mass_O2 * self.c_p_O2 * (new_ely_temp - self.temp_min)
+        ) / 3.6e6  # [kWh], 1J = 1/3.6e6 kWh
         # latent heat is neglected since mass_H2O_vapor is neglected
         latent_heat = 0
         return [sensible_heat, latent_heat]

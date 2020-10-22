@@ -43,6 +43,7 @@ class ElectricHeater(Component):
     :param set_parameters(params): updates parameter default values (see generic Component class)
     :type set_parameters(params): function
     """
+
     def __init__(self, params):
         # Call the init function of th mother class.
         Component.__init__(self)

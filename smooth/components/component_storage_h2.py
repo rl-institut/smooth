@@ -173,6 +173,7 @@ class StorageH2 (Component):
     :param current_vac: current artificial costs for input and output [EUR/kg]
     :type current_vac: list
     """
+
     def __init__(self, params):
         """Constructor method
         """
@@ -303,7 +304,7 @@ class StorageH2 (Component):
             self.final_storage_level = self.states['storage_level'][sim_params.n_intervals - 1]
             # Total initial hydrogen cost to fill the storage to initial level [EUR]
             self.bought_h2_cost_total = self.bought_h2_cost_per_kg \
-                                        * (self.storage_level_init - self.final_storage_level)
+                * (self.storage_level_init - self.final_storage_level)
 
     def get_mass(self, p, V=None):
         """Calculates the mass of the storage at a certain pressure.

@@ -190,7 +190,6 @@ class Component:
         :return: New values for the updated variable and artificial costs stored in results['variable_costs'] and results['art_costs'] respectively
         """
 
-
         # First create an empty cost and art. cost array for this component, if
         # it hasn't been created before.
         if 'variable_costs' not in self.results:

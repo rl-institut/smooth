@@ -12,7 +12,7 @@ busses = ['bel', 'bh2_1', 'bh2_2', 'bth']
 """ Define components """
 components = list()
 
-## H2-STORAGE
+# H2-STORAGE
 components.append({
     'component': 'storage_h2',
     'name': 'h2_storage',
@@ -24,7 +24,7 @@ components.append({
     'life_time': 20,
     'initial_storage_factor': 0.5,
     # 'slw_factor': 0.5,
-    #'vac_in': -100,
+    # 'vac_in': -100,
     'dependency_flow_costs': ('bh2_l', 'h2_storage'),
     'capex': {
         'key': ['spec', 'poly'],

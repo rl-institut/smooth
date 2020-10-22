@@ -67,5 +67,5 @@ class Gate(Component):
             inputs={busses[self.bus_in]: solph.Flow(variable_costs=self.artificial_costs,
                                                     nominal_value=self.max_input)},
             outputs={busses[self.bus_out]: solph.Flow()}
-          )
+        )
         return gate
