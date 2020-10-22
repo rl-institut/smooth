@@ -35,10 +35,26 @@ class EnergySourceFromCsv (Component):
                                         self.csv_separator, self.column_title)
 
     def create_oemof_model(self, busses, _):
-        energy_source_from_csv = solph.Source(
-            label=self.name,
-            outputs={busses[self.bus_out]: solph.Flow(
+        # define flow_out
+        if self.sim_params.mpc_flag:
+            sequence = []
+            for i in range(self.sim_params.i_interval,
+                           self.sim_params.i_interval + self.sim_params.mpc_control_horizon):
+                sequence.extend(self.data.iloc[i].values)
+            flow_out = solph.Flow(
+                # actual_value=self.data.iloc[self.sim_params.i_interval:
+                #                             (self.sim_params.i_interval +
+                #                              self.sim_params.mpc_control_horizon)].values.tolist(),
+                actual_value = sequence,
+                nominal_value=self.nominal_value,
+                fixed=True)
+        else:
+            flow_out = solph.Flow(
                 actual_value=self.data.iloc[self.sim_params.i_interval],
                 nominal_value=self.nominal_value,
-                fixed=True)})
+                fixed=True)
+        # create oemof model
+        energy_source_from_csv = solph.Source(
+            label=self.name,
+            outputs={busses[self.bus_out]: flow_out})
         return energy_source_from_csv

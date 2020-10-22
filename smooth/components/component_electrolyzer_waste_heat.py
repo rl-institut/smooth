@@ -62,6 +62,11 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         self.model_h2 = None
         self.model_th = None
 
+        # ------------------- COSTS -------------------
+        # Define the costs for the thermal energy (negative means earning money)
+        # [EUR/Wh]
+        self.energy_costs = self.get_costs_and_art_costs()
+
     def conversion_fun_ely(self, ely_energy):
         # Create a function that will give out the mass values for the electric energy
         # values at the breakpoints.
@@ -105,7 +110,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
                     nominal_value=self.energy_max / 2, variable_costs=0
                 )
             },
-            outputs={busses[self.bus_th]: solph.Flow()},
+            outputs={busses[self.bus_th]: solph.Flow(variable_cost=self.energy_costs)},
             in_breakpoints=self.supporting_points["energy_halved"],
             conversion_function=self.conversion_fun_thermal,
             pw_repn="CC",

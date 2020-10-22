@@ -122,6 +122,7 @@ from smooth.framework.simulation_parameters import SimulationParameters as sp
 from smooth.framework.functions.debug import get_df_debug, show_debug
 from smooth.framework.exceptions import SolverNonOptimalError
 from smooth.framework.functions.functions import create_component_obj
+import pandas as pd
 
 
 def run_smooth(model):
@@ -153,15 +154,23 @@ def run_smooth(model):
 
     # ------------------- SIMULATION -------------------
     for i_interval in range(sim_params.n_intervals):
+        # if i_interval == 96:
+        #     sim_params.mpc_flag = True
         # Save the interval index of this run to the sim_params to make it usable later on.
         sim_params.i_interval = i_interval
         if sim_params.print_progress:
             print('Simulating interval {}/{}'.format(i_interval+1, sim_params.n_intervals))
 
-        # Initialize the oemof energy system for this time step.
+        # Initialize the oemof energy system for this time step or for the control horizon in mpc-case
         this_time_index = sim_params.date_time_index[i_interval: (i_interval + 1)]
-        oemof_model = solph.EnergySystem(timeindex=this_time_index,
-                                         freq='{}min'.format(sim_params.interval_time))
+        if sim_params.mpc_flag:
+            date_time_index = pd.date_range(
+                this_time_index[0], periods=sim_params.mpc_control_horizon,
+                freq='{}min'.format(sim_params.interval_time))
+            oemof_model = solph.EnergySystem(timeindex=date_time_index)
+        else:
+            oemof_model = solph.EnergySystem(timeindex=this_time_index,
+                                            freq='{}min'.format(sim_params.interval_time))
 
         # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
         # Create all busses and save them to a dict for later use in the components.
@@ -218,7 +227,6 @@ def run_smooth(model):
         if sim_params.show_debug_flag:
             results_dict = processing.parameter_as_dict(model_to_solve)
             df_results = processing.create_dataframe(model_to_solve)
-
         # Loop through every component and call the result handling functions
         for this_comp in components:
             # Update the flows
@@ -229,7 +237,8 @@ def run_smooth(model):
             this_comp.update_var_costs(results, sim_params)
             # Update the costs and artificial costs.
             this_comp.update_var_emissions(results, sim_params)
-
+    # if sim_params.mpc_flag:
+    #     return results, results_dict, df_results
     # Calculate the annuity for each component.
     for this_comp in components:
         this_comp.generate_results()

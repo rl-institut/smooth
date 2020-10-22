@@ -29,6 +29,10 @@ class SimulationParameters:
         self.interest_rate = 0.03
         self.print_progress = False
         self.show_debug_flag = True
+        # Decide if linearized mpc algorithm should be used
+        self.mpc_flag = False
+        # if the linearized mpc is used, the control horizon needs to be defined
+        self.mpc_control_horizon = 24
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)

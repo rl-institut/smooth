@@ -113,6 +113,11 @@ class GasEngineChpBiogas(Component):
         self.model_el = None
         self.model_th = None
 
+        # ------------------- COSTS -------------------
+        # Define the costs for the thermal energy (negative means earning money)
+        # [EUR/Wh]
+        self.energy_costs = self.get_costs_and_art_costs()
+
     def get_electrical_energy_by_ch4(self, ch4_consumption):
         # Check the index of this load point.
         this_index = self.bp_ch4_consumed_electric_half.index(ch4_consumption)
@@ -149,7 +154,7 @@ class GasEngineChpBiogas(Component):
         gas_engine_chp_biogas_thermal = solph.custom.PiecewiseLinearTransformer(
             label=self.name+'_thermal',
             inputs={busses[self.bus_ch4]: flow_thermal},
-            outputs={busses[self.bus_th]: solph.Flow()},
+            outputs={busses[self.bus_th]: solph.Flow(variable_costs=self.energy_costs)},
             in_breakpoints=self.bp_ch4_consumed_thermal_half,
             conversion_function=self.get_thermal_energy_by_ch4,
             pw_repn='CC')

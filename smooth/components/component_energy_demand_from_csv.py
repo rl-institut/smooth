@@ -34,10 +34,23 @@ class EnergyDemandFromCsv(Component):
                                         self.csv_separator, self.column_title)
 
     def create_oemof_model(self, busses, _):
-        energy_demand_from_csv = solph.Sink(
-            label=self.name,
-            inputs={busses[self.bus_in]: solph.Flow(
+        # define flow_in
+        if self.sim_params.mpc_flag:
+            sequence = []
+            for i in range(self.sim_params.i_interval,
+                           self.sim_params.i_interval + self.sim_params.mpc_control_horizon):
+                sequence.extend(self.data.iloc[i].values)
+            flow_in = solph.Flow(
+                actual_value=sequence,
+                nominal_value=self.nominal_value,
+                fixed=True)
+        else:
+            flow_in = solph.Flow(
                 actual_value=self.data.iloc[self.sim_params.i_interval],
                 nominal_value=self.nominal_value,
-                fixed=True)})
+                fixed=True)
+        # create oemof model
+        energy_demand_from_csv = solph.Sink(
+            label=self.name,
+            inputs={busses[self.bus_in]: flow_in})
         return energy_demand_from_csv
