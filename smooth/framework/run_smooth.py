@@ -170,7 +170,7 @@ def run_smooth(model):
             oemof_model = solph.EnergySystem(timeindex=date_time_index)
         else:
             oemof_model = solph.EnergySystem(timeindex=this_time_index,
-                                            freq='{}min'.format(sim_params.interval_time))
+                                             freq='{}min'.format(sim_params.interval_time))
 
         # ------------------- CREATE THE OEMOF MODEL FOR THIS INTERVAL -------------------
         # Create all busses and save them to a dict for later use in the components.
