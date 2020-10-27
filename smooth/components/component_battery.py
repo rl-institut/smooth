@@ -112,7 +112,9 @@ class Battery(Component):
 
         self.p_in_max = min(
             self.c_rate_charge * self.battery_capacity,
-            (self.battery_capacity - self.soc * self.battery_capacity) /
+            (self.battery_capacity -
+             self.soc * self.battery_capacity +
+             self.loss_rate * self.soc * self.battery_capacity) /
             (self.sim_params.interval_time/60)
             ) / self.efficiency_charge
         self.p_out_max = min(
