@@ -222,7 +222,7 @@ def run_smooth(model):
         # Loop through every component and call the result handling functions
         for this_comp in components:
             # Update the flows
-            this_comp.update_flows(results)#, sim_params)
+            this_comp.update_flows(results)
             # Update the states.
             this_comp.update_states(results)
             # Update the costs and artificial costs.
