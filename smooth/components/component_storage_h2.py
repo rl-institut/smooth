@@ -108,7 +108,7 @@ class StorageH2 (Component):
             balanced=False)
         return storage
 
-    def update_states(self, results, sim_params):
+    def update_states(self, results):
         data_storage = views.node(results, self.name)
         df_storage = data_storage['sequences']
 
@@ -117,14 +117,14 @@ class StorageH2 (Component):
             if i_result[1] == 'capacity':
                 if 'storage_level' not in self.states:
                     # Initialize an array that tracks the state stored mass.
-                    self.states['storage_level'] = [None] * sim_params.n_intervals
-                    self.states['pressure'] = [None] * sim_params.n_intervals
+                    self.states['storage_level'] = [None] * self.sim_params.n_intervals
+                    self.states['pressure'] = [None] * self.sim_params.n_intervals
                 # Check if this result is the storage capacity.
                 self.storage_level = df_storage[i_result][0]
-                self.states['storage_level'][sim_params.i_interval] = self.storage_level
+                self.states['storage_level'][self.sim_params.i_interval] = self.storage_level
                 # Get the storage pressure [bar].
                 self.pressure = self.get_pressure(self.storage_level)
-                self.states['pressure'][sim_params.i_interval] = self.pressure
+                self.states['pressure'][self.sim_params.i_interval] = self.pressure
 
     def get_mass(self, p, V=None):
         # Calculate the mass of the storage at a certain pressure.

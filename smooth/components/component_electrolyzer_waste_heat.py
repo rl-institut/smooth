@@ -218,9 +218,9 @@ class ElectrolyzerWasteHeat(Electrolyzer):
                 po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
                 )
 
-    def update_flows(self, results, sim_params):
+    def update_flows(self, results):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
-        Electrolyzer.update_flows(self, results, sim_params, self.name)
+        Electrolyzer.update_flows(self, results, self.name)
         Electrolyzer.update_flows(
-            self, results, sim_params, self.name + "_thermal"
+            self, results, self.sim_params, self.name + "_thermal"
         )

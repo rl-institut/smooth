@@ -66,7 +66,7 @@ class Component:
 
     # ------------------- UPDATE THE FLOWS FOR EACH COMPONENT -------------------
 
-    def update_flows(self, results, sim_params, comp_name=None):
+    def update_flows(self, results, comp_name=None):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
         if not hasattr(self, 'flows'):
             self.flows = {}
@@ -85,9 +85,9 @@ class Component:
                 # Check if there already is an array to store the flow
                 # information, if not, create one.
                 if this_flow_name not in self.flows:
-                    self.flows[this_flow_name] = [None] * sim_params.n_intervals
+                    self.flows[this_flow_name] = [None] * self.sim_params.n_intervals
                 # Saving this flow value to the results file
-                self.flows[this_flow_name][sim_params.i_interval] = this_df[i_result][0]
+                self.flows[this_flow_name][self.sim_params.i_interval] = this_df[i_result][0]
 
     # ------------------- PREPARE CREATING THE OEMOF MODEL -------------------
 
@@ -98,7 +98,7 @@ class Component:
 
     # ------ UPDATE STATES (PLACEHOLDER FOR COMPONENTS WITHOUT STATES) ------
 
-    def update_states(self, results, sim_params):
+    def update_states(self, results):
         # If a component has states, this update_states function is overwritten in that component
         pass
 
@@ -108,11 +108,11 @@ class Component:
 
     # ------------------- UPDATE THE COSTS -------------------
 
-    def update_var_costs(self, results, sim_params):
+    def update_var_costs(self, results):
         # Track the costs and artificial costs of a component for each time step.
         # Parameters:
         #  results: oemof result object for this time step.
-        #  sim_params: simulation parameters defined by the user.
+        #  self.sim_params: simulation parameters defined by the user.
 
         # First create an empty cost and art. cost array for this component, if
         # it hasn't been created before.
@@ -120,38 +120,38 @@ class Component:
             # If this function is not overwritten in the component, then costs
             # and art. costs are not part of the component and therefore
             # set to 0.
-            self.results['variable_costs'] = [0] * sim_params.n_intervals
-            self.results['art_costs'] = [0] * sim_params.n_intervals
+            self.results['variable_costs'] = [0] * self.sim_params.n_intervals
+            self.results['art_costs'] = [0] * self.sim_params.n_intervals
 
         # Update the costs for this time step [EUR].
         if self.variable_costs is not None:
-            this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
-            self.results['variable_costs'][sim_params.i_interval] = this_dependency_value * \
+            this_dependency_value = self.flows[self.dependency_flow_costs][self.sim_params.i_interval]
+            self.results['variable_costs'][self.sim_params.i_interval] = this_dependency_value * \
                 self.variable_costs
         # Update the artificial costs for this time step [EUR].
         if self.artificial_costs is not None:
-            this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
-            self.results['art_costs'][sim_params.i_interval] = this_dependency_value * \
+            this_dependency_value = self.flows[self.dependency_flow_costs][self.sim_params.i_interval]
+            self.results['art_costs'][self.sim_params.i_interval] = this_dependency_value * \
                 self.artificial_costs
 
-    def update_var_emissions(self, results, sim_params):
+    def update_var_emissions(self, results):
         # Track the emissions of a component for each time step.
         # Parameters:
         #  results: oemof result object for this time step.
-        #  sim_params: simulation parameters defined by the user.
+        #  self.sim_params: simulation parameters defined by the user.
 
         # First create an empty emission array for this component, if it hasn't been created before.
         if 'variable_emissions' not in self.results:
             # If this function is not overwritten in the component, then
             # emissions are not part of the component and therefore set to 0.
-            self.results['variable_emissions'] = [0] * sim_params.n_intervals
+            self.results['variable_emissions'] = [0] * self.sim_params.n_intervals
 
         # Update the emissions for this time step [kg]. Before, verify if a
         # flow name is given as emission dependency.
         if self.variable_emissions is not None:
             this_dependency_value = \
-                self.flows[self.dependency_flow_emissions][sim_params.i_interval]
-            self.results['variable_emissions'][sim_params.i_interval] = \
+                self.flows[self.dependency_flow_emissions][self.sim_params.i_interval]
+            self.results['variable_emissions'][self.sim_params.i_interval] = \
                 this_dependency_value * self.variable_emissions
 
     # ------ ADD COSTS AND ARTIFICIAL COSTS TO A PARAMETER IF THEY ARE NOT NONE ------

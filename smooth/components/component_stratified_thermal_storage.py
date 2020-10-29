@@ -151,7 +151,7 @@ class StratifiedThermalStorage (Component):
             balanced=False)
         return thermal_storage
 
-    def update_states(self, results, sim_params):
+    def update_states(self, results):
         data_storage = views.node(results, self.name)
         df_storage = data_storage['sequences']
 
@@ -160,10 +160,10 @@ class StratifiedThermalStorage (Component):
             if i_result[1] == 'capacity':
                 if 'storage_level' not in self.states:
                     # Initialize an array that tracks the state stored mass.
-                    self.states['storage_level'] = [None] * sim_params.n_intervals
+                    self.states['storage_level'] = [None] * self.sim_params.n_intervals
                 # Check if this result is the storage capacity.
                 self.storage_level = df_storage[i_result][0]
-                self.states['storage_level'][sim_params.i_interval] = self.storage_level
+                self.states['storage_level'][self.sim_params.i_interval] = self.storage_level
 
     def get_volume(self, s_c, h_c, de, t_h, t_c):
         volume = s_c * 3600 / (h_c * de * (t_h - t_c))
@@ -179,7 +179,7 @@ class StratifiedThermalStorage (Component):
         u_value = 1 / denominator
         return u_value
 
-    def calculate_losses(self, sim_params, u_val, d, de, h_c, t_c, t_h, t_env, time_increment=1):
+    def calculate_losses(self, self.sim_params, u_val, d, de, h_c, t_c, t_h, t_env, time_increment=1):
         loss_rate = (
             4 * u_val * 1 / (d * de * h_c) * time_increment
             * 3600  # Ws to Wh
@@ -188,7 +188,7 @@ class StratifiedThermalStorage (Component):
         # check to see if t_env is a single value or a timeseries
         if isinstance(t_env, int) is True or isinstance(t_env, float) is True:
             # if t_env is a single value, convert into a list
-            t_env = [t_env] * sim_params.n_intervals
+            t_env = [t_env] * self.sim_params.n_intervals
 
         fixed_losses_relative = [4 * u_val * (t_c - this_t_env)
                                  * 1 / ((d * de * h_c) * (t_h - t_c))

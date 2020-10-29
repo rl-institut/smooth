@@ -67,11 +67,11 @@ class TrailerH2Delivery(Component):
         # The current artificial cost value [EUR/kg].
         self.current_ac = 0
 
-    def update_var_costs(self, results, sim_params):
+    def update_var_costs(self, results):
         # Track the costs and artificial costs of a component for each time step.
         # Parameters:
         #  results: oemof result object for this time step.
-        #  sim_params: simulation parameters defined by the user.
+        #  self.sim_params: simulation parameters defined by the user.
         # In this component, the variable costs are calculated differently to the other components,
         # to only apply if the trailer is used based on the distance travelled by the trailer.
 
@@ -80,26 +80,26 @@ class TrailerH2Delivery(Component):
         if 'variable_costs' not in self.results:
             # If this function is not overwritten in the component, then costs and art. costs are
             # not part of the component and therefore set to 0.
-            self.results['variable_costs'] = [0] * sim_params.n_intervals
-            self.results['art_costs'] = [0] * sim_params.n_intervals
+            self.results['variable_costs'] = [0] * self.sim_params.n_intervals
+            self.results['art_costs'] = [0] * self.sim_params.n_intervals
             # A list is created for the flow switch values
-            self.flow_switch = [0] * sim_params.n_intervals
+            self.flow_switch = [0] * self.sim_params.n_intervals
 
         if self.variable_costs is not None:
-            this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
+            this_dependency_value = self.flows[self.dependency_flow_costs][self.sim_params.i_interval]
             if this_dependency_value > 0:
                 flow_switch_value = 1
             else:
                 flow_switch_value = 0
-            self.flow_switch[sim_params.i_interval] = flow_switch_value
-            self.results['variable_costs'][sim_params.i_interval] = \
+            self.flow_switch[self.sim_params.i_interval] = flow_switch_value
+            self.results['variable_costs'][self.sim_params.i_interval] = \
                 flow_switch_value * self.round_trip_distance * self.variable_costs
 
             # Update the artificial costs for this time step [EUR].
             if self.artificial_costs is not None:
                 this_dependency_value = \
-                    self.flows[self.dependency_flow_costs][sim_params.i_interval]
-                self.results['art_costs'][sim_params.i_interval] = \
+                    self.flows[self.dependency_flow_costs][self.sim_params.i_interval]
+                self.results['art_costs'][self.sim_params.i_interval] = \
                     this_dependency_value * self.artificial_costs
 
     def prepare_simulation(self, components):
@@ -170,13 +170,13 @@ class TrailerH2Delivery(Component):
                                                     )})
         return trailer
 
-    def update_states(self, results, sim_params):
+    def update_states(self, results):
         data_trailer = views.node(results, self.name)
         df_trailer = data_trailer['sequences']
 
         for i_result in df_trailer:
             if 'is_delivery_possible' not in self.states:
-                self.states['is_delivery_possible'] = [None] * sim_params.n_intervals
+                self.states['is_delivery_possible'] = [None] * self.sim_params.n_intervals
 
             if i_result[0][1] == self.name and i_result[1] == 'flow':
                 # The amount of hydrogen entering the trailer is recorded
@@ -191,4 +191,4 @@ class TrailerH2Delivery(Component):
                 else:
                     self.delivery_possible = 1
 
-                self.states['is_delivery_possible'][sim_params.i_interval] = self.delivery_possible
+                self.states['is_delivery_possible'][self.sim_params.i_interval] = self.delivery_possible

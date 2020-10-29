@@ -168,7 +168,7 @@ class PemElectrolyzer(Component):
                 po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
                 )
 
-    def update_flows(self, results, sim_params):
+    def update_flows(self, results):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
-        Component.update_flows(self, results, sim_params, self.name + '_h2_prod')
-        Component.update_flows(self, results, sim_params, self.name + '_waste_heat')
+        Component.update_flows(self, results, self.name + '_h2_prod')
+        Component.update_flows(self, results, self.name + '_waste_heat')

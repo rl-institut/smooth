@@ -170,7 +170,7 @@ class FuelCellChp(Component):
                 po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
                 )
 
-    def update_flows(self, results, sim_params):
+    def update_flows(self, results):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
-        Component.update_flows(self, results, sim_params, self.name + '_electric')
-        Component.update_flows(self, results, sim_params, self.name + '_thermal')
+        Component.update_flows(self, results, self.name + '_electric')
+        Component.update_flows(self, results, self.name + '_thermal')
