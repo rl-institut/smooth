@@ -111,7 +111,6 @@ class StratifiedThermalStorage (Component):
         # parameters and the environmental temperature timeseries
         [self.loss_rate, self.fixed_losses_relative, self.fixed_losses_absolute] \
             = self.calculate_losses(
-            self.sim_params,
             self.u_value,
             self.diameter,
             self.density,
@@ -179,7 +178,7 @@ class StratifiedThermalStorage (Component):
         u_value = 1 / denominator
         return u_value
 
-    def calculate_losses(self, self.sim_params, u_val, d, de, h_c, t_c, t_h, t_env, time_increment=1):
+    def calculate_losses(self, u_val, d, de, h_c, t_c, t_h, t_env, time_increment=1):
         loss_rate = (
             4 * u_val * 1 / (d * de * h_c) * time_increment
             * 3600  # Ws to Wh
