@@ -35,7 +35,8 @@ class EnergyDemandFromCsv(Component):
      :type name: str
      :param nominal_value: value that the timeseries should be multipled by, default is 1
      :type nominal_value: numerical
-     :param csv_filename: csv filename containing the desired demand timeseries e.g. 'my_demand_filename.csv'
+     :param csv_filename: csv filename containing the desired demand timeseries
+        e.g. 'my_demand_filename.csv'
      :type csv_filenmae: str
      :param csv_separator: separator of the csv file e.g. ',' or ';', default is ','
      :type csv_separator: str

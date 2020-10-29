@@ -142,7 +142,8 @@ and the cost is then calculated as follows:
 .. code:: bash
 
     for an arbitrary number of fitting values [fv_1, fv_2, fv_3, ..., fv_n]
-    cost = fv_1 + fv_2 * dependant_value**1 + fv_3 * dependant_value**2 + ... + fv_n * dependant_value**(n-1)
+    cost = fv_1 + fv_2 * dependant_value**1 + fv_3 * dependant_value**2 + ...
+           + fv_n * dependant_value**(n-1)
 
 This can be demonstrated with the costs of a storage component:
 
@@ -180,7 +181,8 @@ freely:
 .. code:: bash
 
     for an even number of fitting values [fv_1, fv_2, fv_3, ..., fv_n]
-    cost = fv_1 * dependant_value**fv_2 + fv_3 * dependant_value**fv_4 + ... + fv_(n-1) * dependant_value**fv_n
+    cost = fv_1 * dependant_value**fv_2 + fv_3 * dependant_value**fv_4 + ...
+           + fv_(n-1) * dependant_value**fv_n
 
 This is also demonstrated with the storage component:
 

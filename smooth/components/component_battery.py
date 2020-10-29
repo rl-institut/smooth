@@ -39,7 +39,8 @@ parameter (in :func:`~smooth.components.component_battery.Battery.create_oemof_m
 the battery will then receive the right amount.
 
 .. math::
-    E_{in,max} = \\frac{min(c_{r,charge} \\cdot C \\cdot \\frac{t}{60}, C - SOC \\cdot C)}{\\mu_{charge}} \n
+    E_{in,max} = \\frac{min(c_{r,charge} \\cdot C \\cdot \\frac{t}{60},
+    C - SOC \\cdot C)}{\\mu_{charge}} \n
     E_{out,max} = min(c_{r,discharge} \\cdot C \\cdot \\frac{t}{60}, SOC \\cdot C)
 
 * :math:`E_{in,max}` = maximum chargeable energy [Wh]

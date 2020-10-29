@@ -35,7 +35,8 @@ multiplying the mass percentage with the LHV of methane, which is
 demonstrated below:
 
 .. math::
-    LHV_{Bg} = \\frac{CH_{4_{share}} \\cdot M_{CH_{4}}}{CH_{4_{share}} \\cdot M_{CH_{4}} + CO_{2_{share}} \\cdot M_{CO_{2}}} \\cdot LHV_{CH_{4}} \n
+    LHV_{Bg} = \\frac{CH_{4_{share}} \\cdot M_{CH_{4}}}{CH_{4_{share}} \\cdot
+    M_{CH_{4}} + CO_{2_{share}} \\cdot M_{CO_{2}}} \\cdot LHV_{CH_{4}} \n
 
 * :math:`LHV_{Bg}` = heating value of biogas [kWh/kg]
 * :math:`CH_{4_{share}` = proportion of methane in biogas [-]
