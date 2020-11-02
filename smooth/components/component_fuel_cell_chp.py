@@ -38,7 +38,7 @@ each load point, first the maximum hydrogen input is calculated:
 
 * :math:`H_{2,max}` = maximum hydrogen input per timestep [kg]
 * :math:`P_{max}` = maximum electrical output power [W]
-* :math:`\mu_{elec_{max}}` = electrical efficiency at full load [-]
+* :math:`\\mu_{elec_{max}}` = electrical efficiency at full load [-]
 
 Then the load break points for both the electrical and thermal components
  are converted into how much hydrogen is consumed at each load break point

@@ -30,7 +30,8 @@ The maximum amount of hydrogen that can be produced in one time step is
 determined by the following equation:
 
 .. math::
-    H_{2,max} = \\frac{J_{max} \\cdot A_{cell} \\cdot t \\cdot 60 \\cdot z_{cell}}{(2 \\cdot F) \\cdot \\frac{M_{H_{2}}}{1000}}
+    H_{2,max} = \\frac{J_{max} \\cdot A_{cell} \\cdot t \\cdot 60
+     \\cdot z_{cell}}{(2 \\cdot F) \\cdot \\frac{M_{H_{2}}}{1000}}
 
 * :math:`H_{2,max}` = maximum hydrogen produced in one time step [kg]
 * :math:`J_{max}` = maximum current density [A/cm^2]
@@ -51,7 +52,8 @@ First, the current density at each breakpoint is calculated (see get_electricity
 function). Using this value, the hydrogen mass produced is calculated:
 
 .. math::
-    H_{2} = \\frac{I \\cdot A_{cell} \\cdot t \\cdot 60 \\cdot z_{cell}}{(2 \\cdot F) \\cdot \\frac{M_{H_{2}}}{1000}}
+    H_{2} = \\frac{I \\cdot A_{cell} \\cdot t \\cdot 60 \\cdot
+    z_{cell}}{(2 \\cdot F) \\cdot \\frac{M_{H_{2}}}{1000}}
 
 * :math:`H_2` = hydrogen produced in one time step [kg]
 * :math:`I` = current [A]
@@ -66,7 +68,8 @@ current density. Here, linear interpolation is used:
     T_{aim} = T_{min} + (T_{max} - T_{min}) \\cdot \\frac{J}{J_{T_{max}}} \n
     T_{new} = T_{aim} + (T_{old} - T_{aim}) \\cdot e^{-t \\frac{60}{2310}}
 
-* :math:`T_{aim}` = temperature to which the electrolyser is heating up, depending on current density [K]
+* :math:`T_{aim}` = temperature to which the electrolyser is heating up,
+  depending on current density [K]
 * :math:`T_{min}` = minimum temperature of electrolyzer [K]
 * :math:`T_{max}` = maximum temperature of electrolyzer [K]
 * :math:`J` = current density [A/cm²]

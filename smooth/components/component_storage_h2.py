@@ -60,12 +60,14 @@ volume is given:
 
 Then using the initial value, the iterative process begins:
 .. math::
-    V_{spec,i+1} = \\frac{R \\cdot T}{p + \\frac{rk_{a}}{T^{0.5} \\cdot V_{spec,i} \\cdot (V_{spec,i} + rk_{b})}} + rk_{b}
+    V_{spec,i+1} = \\frac{R \\cdot T}{p + \\frac{rk_{a}}{T^{0.5}
+    \\cdot V_{spec,i} \\cdot (V_{spec,i} + rk_{b})}} + rk_{b}
 
 * :math:`V_{spec,i+1}` = ith + 1 specific volume [m³/mol]
 * :math:`R` = gas constant [J/(K*mol)]
 * :math:`T` = storage temperature [K]
-* :math:`p` = storage pressure [Pa] (:math:`p_{min}` for calculating the mass and :math:`p_{max}` for the storage)
+* :math:`p` = storage pressure [Pa] (:math:`p_{min}` for calculating the mass
+  and :math:`p_{max}` for the storage)
 * :math:`rk_{a}` = Redlich Kwong equation of state parameter a
 * :math:`V_{spec,i}` = ith specific volume [m³/mol]
 * :math:`rk_{b}` = Redlich Kwong equation of state parameter b

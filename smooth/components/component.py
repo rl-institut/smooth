@@ -109,7 +109,8 @@ class Component:
         :type results: object
         :param sim_params: The simulation parameters for the energy system (defined by user)
         :type sim_params: object
-        :param comp_name: The name of the component - while components can generate more than one oemof model, they sometimes need to give a custom name, defaults to None
+        :param comp_name: The name of the component - while components can generate more
+        than one oemof model, they sometimes need to give a custom name, defaults to None
         :type comp_name: str, optional
         :return: updated flow values for each flow in the 'flows' dict
         """
@@ -173,7 +174,8 @@ class Component:
         :type busses: list
         :param model_to_solve: ToDo: look this up in oemof
         :type model_to_solve:
-        :return: If used as a placeholder, nothing will be returned. Else, refer to specific component that uses the update_constraints function for further detail.
+        :return: If used as a placeholder, nothing will be returned. Else, refer
+        to specific component that uses the update_constraints function for further detail.
         """
         pass
 
@@ -187,7 +189,8 @@ class Component:
         :type results: object
         :param sim_params: The simulation parameters for the energy system (defined by user)
         :type sim_params: object
-        :return: New values for the updated variable and artificial costs stored in results['variable_costs'] and results['art_costs'] respectively
+        :return: New values for the updated variable and artificial costs stored in
+        results['variable_costs'] and results['art_costs'] respectively
         """
 
         # First create an empty cost and art. cost array for this component, if
@@ -256,7 +259,8 @@ class Component:
 
         :param components: List containing each component object
         :type components: object
-        :param index: Index of the foreign state (should be None if there is only one foreign state) [-]
+        :param index: Index of the foreign state (should be None if there
+        is only one foreign state) [-]
         :type index: int, optional
         :return: Foreign state value
         """

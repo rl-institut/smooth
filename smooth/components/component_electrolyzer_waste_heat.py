@@ -97,7 +97,8 @@ difference between the surface of the electrolyzer and the ambient temperature [
 The equation is as follows:
 
 .. math::
-    Q_L = A_{sep} \\cdot h \\cdot (T_{sep} - T_{amb}) + A_{stack} \\cdot h \\cdot (T_{stack} - T_{amb})
+    Q_L = A_{sep} \\cdot h \\cdot (T_{sep} - T_{amb}) + A_{stack} \\cdot h
+    \\cdot (T_{stack} - T_{amb})
 
 * :math:`A_{sep}` = total surface area of the gas separators
 * :math:`T_{sep}` = separator surface temperature
@@ -134,7 +135,8 @@ The mass of :math:`H_2O` is then determined as follows:
 Thus, the sensible heat is calculated using mass and specific heat:
 
 .. math::
-    S = \\frac{m_{H_{2}O} \\cdot c_{p,H_{2}O} \\cdot -\\Delta T - m_{H_{2}} \\cdot c_{p,H_{2}} \\cdot \\Delta T + m_{O_{2}} \\cdot c_{p,O_{2}} \\cdot \\Delta T}{3.6e6}
+    S = \\frac{m_{H_{2}O} \\cdot c_{p,H_{2}O} \\cdot -\\Delta T - m_{H_{2}} \\cdot
+     c_{p,H_{2}} \\cdot \\Delta T + m_{O_{2}} \\cdot c_{p,O_{2}} \\cdot \\Delta T}{3.6e6}
 
 * :math:`c_{p,H_{2}O}` = specific heat of water
 * :math:`\\Delta T` = the temperature change between the ambient and electrolyzer temperature

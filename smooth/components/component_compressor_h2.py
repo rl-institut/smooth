@@ -67,7 +67,8 @@ as follows:
 Thus the specific compression work is finally calculated:
 
 .. math::
-    c_{w_{1}} = \\frac{1}{\\mu} \\cdot R_{H_{2}} \\cdot T_{in} \\cdot \\frac{n}{n-1} \\cdot p_{ratio} ^ {(\\frac{n-1}{n} -1)} \\cdot \\frac{Z_{real}}{1000}
+    c_{w_{1}} = \\frac{1}{\\mu} \\cdot R_{H_{2}} \\cdot T_{in} \\cdot \\frac{n}{n-1}
+    \\cdot p_{ratio} ^ {(\\frac{n-1}{n} -1)} \\cdot \\frac{Z_{real}}{1000}
 
 * :math:`c_{w_{1}}` = specific compression work [kJ/kg]
 * :math:`\\mu` = compression efficiency

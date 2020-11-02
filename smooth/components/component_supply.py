@@ -60,7 +60,8 @@ class Supply (Component):
     """
 
     def __init__(self, params):
-        # ToDo: in this component and others, change Wh etc. to either W or W * t where t is time step
+        # ToDo: in this component and others, change Wh etc. to either W or
+        #  W * t where t is time step
         # Call the init function of the mother class.
         Component.__init__(self)
 
