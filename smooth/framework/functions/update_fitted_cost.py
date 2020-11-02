@@ -1,13 +1,14 @@
 import math
+from smooth.framework.functions.functions import choose_valid_dict
 
 
 def update_financials(component, financials):
-    """ Calculate OPEX or CAPEX for this component.
+    """ Calculate "OPEX" or "CAPEX" for this component.
 
-    This function is calculating a fix CAPEX and OPEX value for components
-    where CAPEX and OPEX are dependant on certain values. The following list
-    shows possible fitting methods. The fitting method is chosen by the CAPEX
-    and OPEX key:
+    This function is calculating a fix "CAPEX" and "OPEX" value for components
+    where "CAPEX" and "OPEX" are dependant on certain values. The following list
+    shows possible fitting methods. The fitting method is chosen by the "CAPEX"
+    and "OPEX" key:
 
     * "fix"      --> already the fix value, nothing has to be done
     * "spec"     --> cost value needs to be multiplied with the dependant value
@@ -16,6 +17,11 @@ def update_financials(component, financials):
     * "free"     --> polynomial cost fitting with free choosable exponents
 
     If multiple keys are defined, the calculations are done sequentially in order.
+
+     * "variable" --> definition of multiple "CAPEX" or "OPEX" structures:
+    If the cost structure changes over the size of a specific value of the component, for example because of the
+    effects of economics of scale, the special key "variable" can be used to define multiple "CAPEX" or "OPEX" dicts for
+    different ranges of this value
 
     :param component: object of this component
     :type component: :class:`~smooth.components.component.Component`
@@ -29,19 +35,7 @@ def update_financials(component, financials):
 
     # Check if 'variable' capex are beeing used, if so decide which capex is valid
     if financials['key'] == 'variable':
-        i = 0
-        for i in range(len(financials)-2):
-            if (getattr(component, financials['var_capex_dependency'])
-                >= financials[i]['low_threshold']) & \
-                (getattr(component, financials['var_capex_dependency'])
-                 < financials[i]['high_threshold']):
-                financials = financials[i]
-                i = len(financials)
-                break
-        assert i == len(financials), \
-            'No suitable Capex found for component ' + component.name + ' with ' + \
-            financials['var_capex_dependency'] + ' = ' \
-            + str(getattr(component, financials['var_capex_dependency']))
+        financials = choose_valid_dict(component, financials)
 
     # If the keys are not given as a list, they are transformed to one so they can be iterated.
     if type(financials['key']) is not list:
@@ -75,6 +69,11 @@ def update_emissions(component, emissions):
 
     If multiple keys are defined, the calculations are done sequentially in order.
 
+     * "variable" --> definition of multiple "fix_emissions" or "op_emissions" structures:
+    If the emission structure changes over the size of a specific value of the component, for example because of the
+    effects of economics of scale, the special key "variable" can be used to define multiple "fix_emissions" or
+    "op_emissions" dicts for different ranges of this value
+
     :param component: object of this component
     :type component:  component: :class:`~smooth.components.component.Component`
     :param emissions: emission object of this component
@@ -87,19 +86,7 @@ def update_emissions(component, emissions):
 
     # Check if 'variable' capex are beeing used, if so decide which capex is valid
     if emissions['key'] == 'variable':
-        i = 0
-        for i in range(len(emissions)-2):
-            if (getattr(component, emissions['var_capex_dependency'])
-                >= emissions[i]['low_threshold']) & \
-                (getattr(component, emissions['var_capex_dependency'])
-                 < emissions[i]['high_threshold']):
-                emissions = emissions[i]
-                i = len(emissions)
-                break
-        assert i == len(emissions), \
-            'No suitable fix_emissions found for component ' + component.name + ' with ' + \
-            emissions['var_capex_dependency'] + ' = ' \
-            + str(getattr(component, emissions['var_capex_dependency']))
+        emissions = choose_valid_dict(component, emissions)
 
     # If the keys are not given as a list, they are transformed to one so they can be iterated.
     if type(emissions['key']) is not list:
@@ -316,6 +303,9 @@ def get_dependant_value(component, fitting_dict, index, fixedCost):
 
     if fitting_dict['dependant_value'][index] == fixedCost:
         # If the capex are chosen as the dependant value, the capex costs are meant.
+        # Check if 'variable' capex are beeing used, if so decide which capex is valid
+        if dependant_value['key'] == 'variable':
+            dependant_value = choose_valid_dict(component, dependant_value)
         dependant_value = dependant_value['cost']
 
     return dependant_value
