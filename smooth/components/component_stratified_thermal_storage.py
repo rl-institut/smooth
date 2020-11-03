@@ -128,10 +128,8 @@ class StratifiedThermalStorage (Component):
         if self.storage_level_wanted is not None and self.storage_level < self.storage_level_wanted:
             # If a wanted storage level is set and the storage level fell below
             # that wanted level, the low VAC apply.
-            # vac_in = self.vac_low_in
-            # vac_out = self.vac_low_out
-            vac_in = -0.5e-6 * (self.storage_level_wanted - self.storage_level) ** 2
-            vac_out = 0.5e-6 * (self.storage_level_wanted - self.storage_level) ** 2
+            vac_in = self.vac_low_in
+            vac_out = self.vac_low_out
 
         self.current_vac = [vac_in, vac_out]
 
