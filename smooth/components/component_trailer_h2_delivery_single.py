@@ -46,7 +46,8 @@ class TrailerH2DeliverySingle(Component):
     def prepare_simulation(self, components):
         # Check level of destination storage component: if it is below specified threshold,
         # implement low artificial costs (to encourage system to fill it)
-        # Check level of all non-central storage component and use the one with the highest amount of h2:
+        # Check level of all non-central storage component and use the one with the
+        # highest amount of h2:
         # if it is below specified threshold, the trailer cannot take any hydrogen from it
         if self.fs_component_name is not None:
             # Obtains the origin storage level [kg]
@@ -57,7 +58,8 @@ class TrailerH2DeliverySingle(Component):
             fs_origin_capacity_1 = self.get_foreign_state_value(components, index=2)
 
             # Obtains the available mass that can be taken from the origin storage [kg]
-            fs_origin_available_kg_1 = min((fs_origin_storage_level_kg_1 - fs_origin_min_storage_level_1),
+            fs_origin_available_kg_1 = min((fs_origin_storage_level_kg_1 -
+                                            fs_origin_min_storage_level_1),
                                            fs_origin_capacity_1/2)
 
             # Get the availability mass of hydrogen of the fullest origin storage
@@ -74,7 +76,8 @@ class TrailerH2DeliverySingle(Component):
 
             # Checks if the destination storage level is below the threshold:
             # if yes, delivery possible
-            # todo: implement multiple storage delivery in one time step from different wind parks - low prio
+            # todo: implement multiple storage delivery in one time step from
+            #  different wind parks - low prio
 
             if fs_destination_storage_level_kg \
                     < self.fs_destination_storage_threshold * fs_destination_storage_capacity:
