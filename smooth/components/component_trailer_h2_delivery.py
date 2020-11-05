@@ -1,6 +1,5 @@
 import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
 
 
 class TrailerH2Delivery(Component):

@@ -1,6 +1,5 @@
 import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
 
 
 class TrailerH2DeliverySingle(Component):
@@ -109,4 +108,3 @@ class TrailerH2DeliverySingle(Component):
             outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_ac)},
             inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.hydrogen_needed)})
         return trailer
-
