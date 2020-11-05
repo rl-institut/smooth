@@ -82,7 +82,7 @@ class PemElectrolyzer(Component):
         for i_bp in range(len(self.bp_load_waste_heat)):
             # Calculate the waste heat energy produced at this break point [Wh]
             this_waste_heat_energy = self.bp_elec_consumed_waste_heat[i_bp] \
-                                     * self.bp_eff_waste_heat[i_bp]
+                * self.bp_eff_waste_heat[i_bp]
             self.bp_waste_heat_energy.append(this_waste_heat_energy)
 
         # While we will create two oemof components, one for the e
@@ -163,8 +163,10 @@ class PemElectrolyzer(Component):
             expr += - model.flow[busses[self.bus_el], self.model_h2, t]
             return (expr == 0)
 
-        model_to_solve.electrolyzer_flow_ratio_fix = \
-            po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
+        setattr(model_to_solve,
+                'electrolyzer_flow_ratio_fix_{}'.format(self.name.replace(' ', '')),
+                po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
+                )
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.

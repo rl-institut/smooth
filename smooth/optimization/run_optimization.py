@@ -201,6 +201,7 @@ class AttributeVariation:
     :type num_steps: int
     :raises: AssertionError when any non-optional parameter is missing or *val_step* is negative
     """
+
     def __init__(self, iterable=(), **kwargs):
         self.val_step = None
         self.__dict__.update(iterable, **kwargs)
@@ -233,6 +234,7 @@ class Individual:
         """Class to iterate over gene values.
 
         """
+
         def __init__(self, individual):
             self._idx = 0
             self.individual = individual
@@ -502,6 +504,7 @@ class PlottingProcess(mp.Process):
     :var points: plotted results or None
     :var annot: current annotation or None
     """
+
     def __init__(self):
         self.exit_flag = mp.Event()
         self.exit_flag.clear()

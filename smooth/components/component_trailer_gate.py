@@ -73,13 +73,13 @@ class TrailerGate(Component):
             origin_available_storage_level = self.get_foreign_state_value(components, index=0)
             available_storage_level_used = self.get_foreign_state_value(components, index=1) - \
                                            self.get_foreign_state_value(components, index=2)
-            half_capacity = self.get_foreign_state_value(components, index=3)/2
+            half_capacity = self.get_foreign_state_value(components, index=3) / 2
             fs_destination_storage_level_kg = self.get_foreign_state_value(components, index=4)
             fs_destination_storage_capacity = self.get_foreign_state_value(components, index=5)
             fs_destination_storage_threshold = self.get_foreign_state_value(components, index=6)
-            if origin_available_storage_level == min(available_storage_level_used, half_capacity) and \
-               fs_destination_storage_level_kg < fs_destination_storage_threshold * fs_destination_storage_capacity:
-
+            if origin_available_storage_level == min(available_storage_level_used, half_capacity) \
+                    and fs_destination_storage_level_kg < \
+                    fs_destination_storage_threshold * fs_destination_storage_capacity:
                 self.max_input = 1000e6
             else:
                 self.max_input = 0

@@ -84,6 +84,17 @@ def calc_annuity(component, target):
         cap_denominator = ((1 + interest_rate) ** component.life_time) - 1
         capital_recovery_factor = cap_nominator / cap_denominator
         # Calculate the annuity of the target in [target]/a.
+
+        # Check if 'variable' capex are beeing used, if so decide which capex is valid
+        if target['key'] == 'variable':
+            for i in range(len(target) - 2):
+                if (getattr(component, target['var_capex_dependency'])
+                    >= target[i]['low_threshold']) & \
+                        (getattr(component, target['var_capex_dependency'])
+                         < target[i]['high_threshold']):
+                    target = target[i]
+                    break
+
         target_annuity = target['cost'] * capital_recovery_factor
 
     return target_annuity
@@ -107,6 +118,15 @@ def calc_annual_emissions(component, target):
         # no lifetime in component: no annuity (avoid div0)
         target_annuity = 0
     else:
+
+        if target['key'] == 'variable':
+            for i in range(len(target) - 2):
+                if (getattr(component, target['var_capex_dependency'])
+                    >= target[i]['low_threshold']) & \
+                        (getattr(component, target['var_capex_dependency'])
+                         < target[i]['high_threshold']):
+                    target = target[i]
+                    break
         # Calculate the annuity of the target in [target]/a.
         target_annuity = target['cost'] / component.life_time
 

@@ -6,6 +6,15 @@ setup(
     version='0.2.0',
     packages=find_packages(),
     package_data={'smooth.examples': ['example_timeseries/*.csv']},
-    license='GNU AFFERO GENERAL PUBLIC LICENSE - Version 3, 19 November 2007',
+    license='Dual-License MIT/Apache-2.0',
     long_description=open('README.md').read(),
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3 :: Only',
+    ],
 )

@@ -1,6 +1,5 @@
 import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
 
 
 class TrailerH2Delivery(Component):
@@ -47,7 +46,8 @@ class TrailerH2Delivery(Component):
     def prepare_simulation(self, components):
         # Check level of destination storage component: if it is below specified threshold,
         # implement low artificial costs (to encourage system to fill it)
-        # Check level of all non-central storage component and use the one with the highest amount of h2:
+        # Check level of all non-central storage component and use the one with the
+        # highest amount of h2:
         # if it is below specified threshold, the trailer cannot take any hydrogen from it
 
         # In the model definition, the foreign states must be defined in the following order:
@@ -60,6 +60,7 @@ class TrailerH2Delivery(Component):
         # the first entry relates to the first site, the second entry relates
         # to the second site etc.
         if self.fs_component_name is not None:
+
             # n is the number of production sites that the trailer is connected to
             n = int((len(self.fs_component_name) - 2) / 3)
             # Creates an index list for the number of foreign states considered
@@ -109,6 +110,7 @@ class TrailerH2Delivery(Component):
 
             # Checks if the destination storage level is below the threshold:
             # if yes, delivery possible
+
             # todo: implement multiple storage delivery in one time step from different wind
             #  parks - low priority
 
