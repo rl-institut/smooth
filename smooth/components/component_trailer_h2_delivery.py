@@ -89,10 +89,12 @@ class TrailerH2Delivery(Component):
                 this_capacity = self.get_foreign_state_value(components, index=i)
                 fs_origin_capacities.append(this_capacity)
 
-            # Obtains a list for the available masses that can be taken from the origin storage [kg].
-            # It cannot take more than half of the capacity into account ToDo: ask Laura why this is again
+            # Obtains a list for the available masses that can be taken from the
+            # origin storage [kg].
+            # It cannot take more than half of the capacity into account
             for i in range(int(n)):
-                this_available_kg = min((fs_origin_storage_levels[i] - fs_origin_min_storage_levels[i]),
+                this_available_kg = min((fs_origin_storage_levels[i]
+                                         - fs_origin_min_storage_levels[i]),
                                         fs_origin_capacities[i] / 2)
                 fs_origin_available_masses.append(this_available_kg)
 
