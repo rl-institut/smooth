@@ -3,7 +3,7 @@ from .component import Component
 from oemof.outputlib import views
 
 
-class TrailerH2DeliverySingle(Component):
+class TrailerH2DeliverySingleCascade(Component):
     """Component created for a hydrogen trailer delivery"""
 
     def __init__(self, params):
@@ -32,7 +32,8 @@ class TrailerH2DeliverySingle(Component):
         # Define the threshold value for the artificial costs.
         # The threshold for the destination storage to encourage/discourage the use of the trailer
         # (percentage of capacity) [-]
-        self.fs_destination_storage_threshold = None
+        self.fs_destination_storage_threshold_1 = None
+        self.fs_destination_storage_threshold_2 = None
         # The amount of hydrogen needed [kg]
         self.hydrogen_needed = 0
         # The amount of hydrogen delivered to first destination [kg]
@@ -86,18 +87,20 @@ class TrailerH2DeliverySingle(Component):
             fs_destination_available_storage_2 = \
                 fs_destination_storage_capacity_2 - fs_destination_storage_level_kg_2
 
+            # check threshold of first storage
             if fs_destination_storage_level_kg_1 \
                     < self.fs_destination_storage_threshold_1 * fs_destination_storage_capacity_1:
-
+                # check threshold of second storage
                 if fs_destination_storage_level_kg_2 \
                         < self.fs_destination_storage_threshold_2 * fs_destination_storage_capacity_2:
                     available_storage_tot = \
                         fs_destination_available_storage_1 + fs_destination_available_storage_2
 
+                    # calculate the amount of hydrogen which gets delivered
                     if available_storage_tot >= self.trailer_capacity \
                             and self.fs_origin_available_kg >= self.trailer_capacity:
                         self.hydrogen_needed = self.trailer_capacity
-
+                        # calculate the amount of hydrogen which gets delivered to storage one and two
                         if fs_destination_available_storage_1 >= self.trailer_capacity:
                             self.output_h2_1 = self.trailer_capacity
                             self.output_h2_2 = 0
@@ -109,6 +112,7 @@ class TrailerH2DeliverySingle(Component):
                     elif available_storage_tot \
                             > self.trailer_capacity > self.fs_origin_available_kg:
                         self.hydrogen_needed = self.fs_origin_available_kg
+                        # calculate the amount of hydrogen which gets delivered to storage one and two
                         if self.fs_origin_available_kg <= fs_destination_available_storage_1:
                             self.output_h2_1 = self.fs_origin_available_kg
                             self.output_h2_2 = 0
@@ -137,8 +141,8 @@ class TrailerH2DeliverySingle(Component):
                         self.output_h2_1 = self.fs_origin_available_kg
 
                     else:
-                        self.hydrogen_needed = self.available_storage
-                        self.output_h2_1 = self.available_storage
+                        self.hydrogen_needed = available_storage
+                        self.output_h2_1 = available_storage
 
             else:
                 self.hydrogen_needed = 0
