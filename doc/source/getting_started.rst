@@ -7,7 +7,7 @@ tool serves to minimise costs and maximise the sustainability of dynamic energy 
 of SMOOTH are:
 
 * The real world energy system is reduced to its relevant components
-* Detailed modelling of components including non-linear component behaviour, state-dependant component behaviour
+* Detailed modelling of components including non-linear component behaviour, state-dependent component behaviour
   and tracking arbitrary states of the components 
 * Stepwise simulation without using perfect foresight
 * Parameter optimization possible in combination with a genetic algorithm
