@@ -29,6 +29,9 @@ class TrailerH2DeliverySingleCascade(Component):
         # Trailer capacity (at maximum pressure) [kg]
         self.trailer_capacity = 900
 
+        self.output_percentage_1 = 0
+        self.output_percentage_2 = 0
+
         # Define the threshold value for the artificial costs.
         # The threshold for the destination storage to encourage/discourage the use of the trailer
         # (percentage of capacity) [-]
@@ -57,19 +60,15 @@ class TrailerH2DeliverySingleCascade(Component):
         # if it is below specified threshold, the trailer cannot take any hydrogen from it
         if self.fs_component_name is not None:
             # Obtains the origin storage level [kg]
-            fs_origin_storage_level_kg_1 = self.get_foreign_state_value(components, index=0)
+            fs_origin_storage_level_kg = self.get_foreign_state_value(components, index=0)
             # Obtains the origin min storage level [kg]
-            fs_origin_min_storage_level_1 = self.get_foreign_state_value(components, index=1)
+            fs_origin_min_storage_level = self.get_foreign_state_value(components, index=1)
             # Obtains the origin capacity [kg]
-            fs_origin_capacity_1 = self.get_foreign_state_value(components, index=2)
+            fs_origin_capacity = self.get_foreign_state_value(components, index=2)
 
             # Obtains the available mass that can be taken from the origin storage [kg]
-            fs_origin_available_kg_1 = min((fs_origin_storage_level_kg_1 - fs_origin_min_storage_level_1),
-                                           fs_origin_capacity_1 / 2)
-
-            # Get the availability mass of hydrogen of the fullest origin storage
-            self.fs_origin_available_kg = fs_origin_available_kg_1
-
+            self.fs_origin_available_kg = min((fs_origin_storage_level_kg - fs_origin_min_storage_level),
+                                           fs_origin_capacity/2)
             # Obtains the first destination storage level [kg]
             fs_destination_storage_level_kg_1 = self.get_foreign_state_value(components, index=3)
             # Obtains the first destination storage capacity [kg]
@@ -149,11 +148,25 @@ class TrailerH2DeliverySingleCascade(Component):
 
         self.current_ac = self.get_costs_and_art_costs()
 
+        if self.hydrogen_needed == 0:
+            self.output_percentage_1 = 0
+            self.output_percentage_2 = 0
+
+        else:
+            self.output_percentage_1 = self.output_h2_1 / self.hydrogen_needed
+            self.output_percentage_2 = self.output_h2_2 / self.hydrogen_needed
+
     def create_oemof_model(self, busses, _):
-        trailer = solph.Transformer(
+        trailer_cascade = solph.Transformer(
             label=self.name,
-            outputs={busses[self.bus_out_1]: solph.Flow(variable_costs=self.current_ac,
-                                                        nominal_value=self.output_h2_1),
-                     busses[self.bus_out_2]: solph.Flow(nominal_value=self.output_h2_2)},
-            inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.hydrogen_needed)})
-        return trailer
+            outputs={busses[self.bus_out_1]: solph.Flow(variable_costs=self.current_ac),
+                     busses[self.bus_out_2]: solph.Flow()},
+            conversion_factors={busses[self.bus_out_1]: self.output_percentage_1,
+                                 busses[self.bus_out_2]: self.output_percentage_2},
+            in_breakpoints={busses[self.bus_out_1]: self.output_h2_1,
+                            busses[self.bus_out_2]: self.output_h2_2},
+            inputs={busses[self.bus_in]: solph.Flow()},
+            pw_repn="CC",
+        )
+        return trailer_cascade
+
