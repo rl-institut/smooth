@@ -15,8 +15,7 @@ class TrailerH2DeliverySingleCascade(Component):
         self.name = 'Trailer_default_name'
 
         self.bus_in = None
-        self.bus_out_1 = None
-        self.bus_out_2 = None
+        self.bus_out = None
 
         # ToDo: Calculate pressure of hydrogen in trailer
         # ToDo: At the moment only the variable costs per distance travelled are taken into
@@ -145,13 +144,12 @@ class TrailerH2DeliverySingleCascade(Component):
 
         self.current_ac = self.get_costs_and_art_costs()
 
-
-
     def create_oemof_model(self, busses, _):
         trailer_cascade = solph.Transformer(
             label=self.name,
-            outputs={busses[self.bus_out_1]: solph.Flow(variable_costs=self.current_ac),
-                     busses[self.bus_out_2]: solph.Flow()},
+            outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_ac)},
             inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.hydrogen_needed)})
         return trailer_cascade
+
+
 
