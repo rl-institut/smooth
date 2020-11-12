@@ -29,9 +29,6 @@ class TrailerH2DeliverySingleCascade(Component):
         # Trailer capacity (at maximum pressure) [kg]
         self.trailer_capacity = 900
 
-        self.output_percentage_1 = 0
-        self.output_percentage_2 = 0
-
         # Define the threshold value for the artificial costs.
         # The threshold for the destination storage to encourage/discourage the use of the trailer
         # (percentage of capacity) [-]
@@ -148,25 +145,13 @@ class TrailerH2DeliverySingleCascade(Component):
 
         self.current_ac = self.get_costs_and_art_costs()
 
-        if self.hydrogen_needed == 0:
-            self.output_percentage_1 = 0
-            self.output_percentage_2 = 0
 
-        else:
-            self.output_percentage_1 = self.output_h2_1 / self.hydrogen_needed
-            self.output_percentage_2 = self.output_h2_2 / self.hydrogen_needed
 
     def create_oemof_model(self, busses, _):
         trailer_cascade = solph.Transformer(
             label=self.name,
             outputs={busses[self.bus_out_1]: solph.Flow(variable_costs=self.current_ac),
                      busses[self.bus_out_2]: solph.Flow()},
-            conversion_factors={busses[self.bus_out_1]: self.output_percentage_1,
-                                 busses[self.bus_out_2]: self.output_percentage_2},
-            in_breakpoints={busses[self.bus_out_1]: self.output_h2_1,
-                            busses[self.bus_out_2]: self.output_h2_2},
-            inputs={busses[self.bus_in]: solph.Flow()},
-            pw_repn="CC",
-        )
+            inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.hydrogen_needed)})
         return trailer_cascade
 
