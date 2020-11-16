@@ -7,7 +7,7 @@ class VarGrid(Supply):
         Gridlevels [1,2,3,4,5,6] describe the grid connection, if left unmodified these are:
         [1] house connection, [2] lov voltage grid, [3] lov voltage local network station
         [4] medium voltage grid, [5] medium voltage transformer station, [6] High Voltage.
-        These can be associated with different output_max and capex for each level.
+        These can be associated with different output_max, variable costs, capex and opex for each level.
 
     :param self.name: unique name of the component
     :type self.name: str
@@ -44,35 +44,29 @@ class VarGrid(Supply):
         self.grid_l6_output_max = 100 * 1e6
 
         # Capex for each grid level (e.g grid connection costs)
-        self.capex_l1 = {
-            'key': ['poly'],
-            'fitting_value': [[700, 0.018]],
-            'dependant_value': ['output_max']}
+        self.capex_l1 = {'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
+        self.capex_l2 = {'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
+        self.capex_l3 = {'key': ['poly'], 'fitting_value': [[120000, 0.02]], 'dependant_value': ['output_max']}
+        self.capex_l4 = {'key': ['poly'], 'fitting_value': [[500000, 0.02]], 'dependant_value': ['output_max']}
+        self.capex_l5 = {'key': ['poly'], 'fitting_value': [[1000000, 0.01]], 'dependant_value': ['output_max']}
+        self.capex_l6 = {'key': ['poly'], 'fitting_value': [[10000000, 0.01]], 'dependant_value': ['output_max']}
 
-        self.capex_l2 = {
-            'key': ['poly'],
-            'fitting_value': [[700, 0.018]],
-            'dependant_value': ['output_max']}
+        # Capex for each grid level (e.g grid connection costs)
+        self.opex_l1 = {'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
+        self.opex_l2 = {'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
+        self.opex_l3 = {'key': ['poly'], 'fitting_value': [[120000, 0.02]], 'dependant_value': ['output_max']}
+        self.opex_l4 = {'key': ['poly'], 'fitting_value': [[500000, 0.02]], 'dependant_value': ['output_max']}
+        self.opex_l5 = {'key': ['poly'], 'fitting_value': [[1000000, 0.01]], 'dependant_value': ['output_max']}
+        self.opex_l6 = {'key': ['poly'], 'fitting_value': [[10000000, 0.01]], 'dependant_value': ['output_max']}
 
-        self.capex_l3 = {
-            'key': ['poly'],
-            'fitting_value': [[120000, 0.02]],
-            'dependant_value': ['output_max']}
-
-        self.capex_l4 = {
-            'key': ['poly'],
-            'fitting_value': [[500000, 0.02]],
-            'dependant_value': ['output_max']}
-
-        self.capex_l5 = {
-            'key': ['poly'],
-            'fitting_value': [[1000000, 0.01]],
-            'dependant_value': ['output_max']}
-
-        self.capex_l6 = {
-            'key': ['poly'],
-            'fitting_value': [[10000000, 0.01]],
-            'dependant_value': ['output_max']}
+        # Variable costs in each grid level
+        # e.g. for the electricity grid [€/kW]
+        self.variable_costs_l1 = 0.14 + 0.029
+        self.variable_costs_l2 = 0.14 + 0.029
+        self.variable_costs_l3 = 0.14 + 0.022
+        self.variable_costs_l4 = 0.14 + 0.019
+        self.variable_costs_l5 = 0.14 + 0.011
+        self.variable_costs_l6 = 0.14 + 0.008
 
         # Extract params unique in child class (VarGrid) from params and call
         # mother class (Supply) init with the general supply params
@@ -89,18 +83,30 @@ class VarGrid(Supply):
         if self.grid_level == 1:
             self.output_max = self.grid_l1_output_max
             self.capex = self.capex_l1
+            self.opex = self.opex_l1
+            self.variable_costs = self.variable_costs_l1
         elif self.grid_level == 2:
             self.output_max = self.grid_l2_output_max
             self.capex = self.capex_l2
+            self.opex = self.opex_l2
+            self.variable_costs = self.variable_costs_l2
         elif self.grid_level == 3:
             self.output_max = self.grid_l3_output_max
             self.capex = self.capex_l3
+            self.opex = self.opex_l3
+            self.variable_costs = self.variable_costs_l3
         elif self.grid_level == 4:
             self.output_max = self.grid_l4_output_max
             self.capex = self.capex_l4
+            self.opex = self.opex_l4
+            self.variable_costs = self.variable_costs_l4
         elif self.grid_level == 5:
             self.output_max = self.grid_l5_output_max
             self.capex = self.capex_l5
+            self.opex = self.opex_l5
+            self.variable_costs = self.variable_costs_l5
         elif self.grid_level == 6:
             self.output_max = self.grid_l6_output_max
             self.capex = self.capex_l6
+            self.opex = self.opex_l6
+            self.variable_costs = self.variable_costs_l6

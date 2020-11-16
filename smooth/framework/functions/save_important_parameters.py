@@ -39,7 +39,9 @@ def save_important_parameters(optimization_results, result_index, result_filenam
         component_elec_use_names = []
         sum_flows = []
 
-        for component in optimization_results[result_index].smooth_result:
+        for component in optimization_results:
+
+        #for component in optimization_results[result_index].smooth_result:
             name = component.name
             # looks through all components to find the maximum power attributes
             if hasattr(component, 'power_max'):
@@ -158,6 +160,14 @@ def save_important_parameters(optimization_results, result_index, result_filenam
     plt.title('Prozentualer Anteil an dem gesamten Stromverbrauch')
     plt.tight_layout()
     plt.savefig(str(result_filename) + '_electricity_use_breakdown.png', bbox_inches='tight')
+    plt.show()
+
+    ely_el = optimization_results[5].flows[('bel', 'ely')]
+    ely_el = [s / 1000 for s in ely_el]
+    ely_el = sorted(ely_el, reverse=True)
+    plt.plot(ely_el)
+    plt.xlabel('Stunden des Jahres')
+    plt.ylabel('Leistung in kW')
     plt.show()
 
     return flow_sums_dataframe
