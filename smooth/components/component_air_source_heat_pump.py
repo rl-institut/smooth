@@ -19,6 +19,13 @@ thermal component, in particular using the cmpr_hp_chiller function to
 pre-calculate the coefficient of performance. For further information
 on how this function works, visit oemof thermal's readthedocs site [1].
 
+.. figure:: /images/air_source_heat_pump.png
+    :width: 60 %
+    :alt: air_source_heat_pump.png
+    :align: center
+
+    Fig.1: Simple diagram of an air source heat pump.
+
 References
 ----------
 [1] oemof thermal (2019). Compression Heat Pumps and Chillers, Read the Docs:

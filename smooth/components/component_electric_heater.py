@@ -14,6 +14,13 @@ Concept
 A simple oemof Transformer component is used to convert the electricity bus into
 a thermal bus, with a constant efficiency of 98% applied [1].
 
+.. figure:: /images/electrical_heater.png
+    :width: 60 %
+    :alt: electrical_heater.png
+    :align: center
+
+    Fig.1: Simple diagram of an electric heater.
+
 References
 ----------
 [1] Meyers, S. et.al. (2016). Competitive Assessment between Solar Thermal and

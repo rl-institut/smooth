@@ -18,6 +18,13 @@ thermal bus output. The behaviour of the fuel cell CHP component is non-linear,
 which is demonstrated through the use of oemof's Piecewise Linear Transformer
 component.
 
+.. figure:: /images/fuel_cell_chp.png
+    :width: 60 %
+    :alt: fuel_cell_chp.png
+    :align: center
+
+    Fig.1: Simple diagram of a fuel cell CHP.
+
 Efficiency
 ----------
 The efficiency curves for both electrical and thermal energy output according
@@ -41,7 +48,7 @@ each load point, first the maximum hydrogen input is calculated:
 * :math:`\\mu_{elec_{max}}` = electrical efficiency at full load [-]
 
 Then the load break points for both the electrical and thermal components
- are converted into how much hydrogen is consumed at each load break point
+are converted into how much hydrogen is consumed at each load break point
 according to the maximum hydrogen input per time step:
 
 .. math::

@@ -17,6 +17,13 @@ in order to maintain a one way flow from the production site to the destination
 site. The amount of hydrogen that can be transported in a given time step
 is determined, and this value restricts the flow in the component.
 
+.. figure:: /images/trailer_h2_delivery.png
+    :width: 60 %
+    :alt: trailer_h2_delivery.png
+    :align: center
+
+    Fig.1: Simple diagram of a hydrogen delivery trailer
+
 Trailer activity
 ----------------
 Thresholds are set for both the origin and destination storages. The component

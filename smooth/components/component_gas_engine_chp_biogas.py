@@ -20,7 +20,12 @@ component is chosen to represent the nonlinear efficiencies of the biogas
 CHP. The method used in this component is similar to the fuel cell CHP
 component.
 
-INCLUDE FIGURE?
+.. figure:: /images/gas_engine_chp_biogas.png
+    :width: 60 %
+    :alt: gas_engine_chp_biogas.png
+    :align: center
+
+    Fig.1: Simple diagram of a biogas gas engine CHP.
 
 Biogas composition
 ------------------

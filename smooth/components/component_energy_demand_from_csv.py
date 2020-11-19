@@ -11,6 +11,7 @@ the simulations/optimizations.
 *******
 Concept
 *******
+
 The generic energy demand component has one input (the bus is specified by the
 user), and it requires a demand time series in the form of a CSV file. Optionally,
 this time series can be created by oemof's demandlib package [1]. This module

@@ -17,6 +17,13 @@ The battery component has an electricity bus input and output, where factors
 such as the charging and discharging efficiency, the loss rate, the C-rates
 and the depth of discharge define the electricity flows.
 
+.. figure:: /images/battery.png
+    :width: 60 %
+    :alt: battery.png
+    :align: center
+
+    Fig.1: Simple diagram of a battery storage.
+
 Wanted storage level
 --------------------
 Within this component, there is the possibility to choose a wanted

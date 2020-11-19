@@ -20,6 +20,13 @@ output, which will sometimes be different from each other if another
 component in the system requires that the hydrogen has come directly from
 the storage, for instance.
 
+.. figure:: /images/h2_storage.png
+    :width: 60 %
+    :alt: h2_storage.png
+    :align: center
+
+    Fig.1: Simple diagram of a hydrogen storage.
+
 Initial storage level
 ---------------------
 The initial storage level is determined by the user through stating the
