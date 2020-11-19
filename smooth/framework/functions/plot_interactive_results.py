@@ -4,14 +4,14 @@ from bokeh.palettes import Spectral11
 import pandas as pd
 from bokeh.io import export_png
 from smooth.framework.functions.functions import extract_flow_per_bus
-from smooth.examples.example_plotting_dicts import comp_dict, bus_dict, y_dict
+from smooth.examples.example_plotting_dicts import comp_dict_german, bus_dict_german, y_dict_german
 
 
 def plot_interactive_smooth_results(
         smooth_result,
-        comp_label_dict=comp_dict,
-        bus_dict=bus_dict,
-        y_dict=y_dict):
+        comp_label_dict=comp_dict_german,
+        bus_dict=bus_dict_german,
+        y_dict=y_dict_german):
     # Plots the results of a smooth run - the distinction between this function
     # and the 'plot_results' function is:
     #    1) all figures are displayed at once,
