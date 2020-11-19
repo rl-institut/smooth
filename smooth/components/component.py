@@ -125,12 +125,14 @@ class Component:
 
         # Update the costs for this time step [EUR].
         if self.variable_costs is not None:
-            this_dependency_value = self.flows[self.dependency_flow_costs][self.sim_params.i_interval]
+            this_dependency_value = self.flows[self.dependency_flow_costs][
+                self.sim_params.i_interval]
             self.results['variable_costs'][self.sim_params.i_interval] = this_dependency_value * \
                 self.variable_costs
         # Update the artificial costs for this time step [EUR].
         if self.artificial_costs is not None:
-            this_dependency_value = self.flows[self.dependency_flow_costs][self.sim_params.i_interval]
+            this_dependency_value = self.flows[self.dependency_flow_costs][
+                self.sim_params.i_interval]
             self.results['art_costs'][self.sim_params.i_interval] = this_dependency_value * \
                 self.artificial_costs
 

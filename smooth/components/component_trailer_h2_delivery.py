@@ -86,7 +86,8 @@ class TrailerH2Delivery(Component):
             self.flow_switch = [0] * self.sim_params.n_intervals
 
         if self.variable_costs is not None:
-            this_dependency_value = self.flows[self.dependency_flow_costs][self.sim_params.i_interval]
+            this_dependency_value = self.flows[self.dependency_flow_costs][
+                self.sim_params.i_interval]
             if this_dependency_value > 0:
                 flow_switch_value = 1
             else:
@@ -191,4 +192,5 @@ class TrailerH2Delivery(Component):
                 else:
                     self.delivery_possible = 1
 
-                self.states['is_delivery_possible'][self.sim_params.i_interval] = self.delivery_possible
+                self.states['is_delivery_possible'][
+                    self.sim_params.i_interval] = self.delivery_possible
