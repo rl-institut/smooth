@@ -1,3 +1,6 @@
+from smooth.framework.functions.functions import choose_valid_dict
+
+
 def update_annuities(component):
     """Compute the annual CAPEX, variable costs and emissions.
 
@@ -15,6 +18,9 @@ def update_annuities(component):
     if not component.opex:
         opex = 0
     else:
+        # Check if 'variable' opex are beeing used, if so decide which opex is valid
+        if component.opex['key'] == 'variable':
+            component.opex = choose_valid_dict(component, component.opex)
         opex = component.opex['cost']
 
     # Calculate the annual emissions for the installation in kg/a.
@@ -25,6 +31,9 @@ def update_annuities(component):
     if not component.op_emissions:
         op_emissions = 0
     else:
+        # Check if 'variable' op_emissions are beeing used, if so decide which op_emissions are valid
+        if component.op_emissions['key'] == 'variable':
+            component.op_emissions = choose_valid_dict(component, component.op_emissions)
         op_emissions = component.op_emissions['cost']
 
     # Then calculate the annuity of the variable costs. This is only needed if
@@ -84,6 +93,10 @@ def calc_annuity(component, target):
         cap_denominator = ((1 + interest_rate) ** component.life_time) - 1
         capital_recovery_factor = cap_nominator / cap_denominator
         # Calculate the annuity of the target in [target]/a.
+
+        # Check if 'variable' capex are beeing used, if so decide which capex is valid
+        if target['key'] == 'variable':
+            target = choose_valid_dict(component, target)
         target_annuity = target['cost'] * capital_recovery_factor
 
     return target_annuity
@@ -107,6 +120,9 @@ def calc_annual_emissions(component, target):
         # no lifetime in component: no annuity (avoid div0)
         target_annuity = 0
     else:
+
+        if target['key'] == 'variable':
+            target = choose_valid_dict(component, target)
         # Calculate the annuity of the target in [target]/a.
         target_annuity = target['cost'] / component.life_time
 
