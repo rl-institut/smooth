@@ -1,12 +1,83 @@
+"""
+This module represents a hydrogen trailer delivery from a single
+production site.
+
+*****
+Scope
+*****
+Hydrogen trailers can be crucial in an energy system as a means of transporting
+hydrogen from the production site to the destination site (e.g. a refuelling
+station).
+
+*******
+Concept
+*******
+Similarly to the hydrogen trailer component with multiple production sites, the
+single hydrogen trailer component is a transformer component with a hydrogen
+bus input and a hydrogen bus output, which should be distinct from each other in
+order to maintain a one way flow from the production site to the destination site.
+The only difference between this component and the hydrogen trailer component is
+that here, there is only one option for the origin storage and this is
+predetermined. This component should be used in parallel with the trailer gate
+component. The amount of hydrogen that can be transported in a given time step
+is determined, and this value restricts the flow in the component.
+
+.. figure:: /images/trailer_h2_delivery.png
+    :width: 60 %
+    :alt: trailer_h2_delivery.png
+    :align: center
+    Fig.1: Simple diagram of a hydrogen delivery trailer
+
+Trailer activity
+----------------
+Thresholds are set for both the origin and destination storages. The component
+then:
+* Checks the level of destination storage component: if it is below specified
+  threshold, low artificial costs are implemented (to encourage system to fill it).
+* Checks the level of origin storage component: if it is below specified
+  threshold, the trailer cannot take any hydrogen from it.
+* Checks the mass of hydrogen in both storages along with taking the trailer
+  capacity into consideration, and transports the maximum possible amount of
+  hydrogen.
+* Considers the round trip distance along with the assumptions that the
+  trailer can travel at 100 km/h and that the refuelling time for the trailer
+  is 15 minutes. With this information, it is determined whether or not
+  delivery is possible for the following time step with the trailer.
+"""
+
+
 import oemof.solph as solph
 from .component import Component
 
 
 class TrailerH2DeliverySingle(Component):
-    """Component created for a hydrogen trailer delivery"""
+    """
+    :param name: unqiue name given to the trailer component
+    :type name: str
+    :param bus_in: input hydrogen bus to the trailer
+    :type bus_in: str
+    :param bus_out: output hydrogen bus from the trailer
+    :type bus_out: str
+    :param trailer_capacity: trailer capacity [kg]
+    :type trailer_capacity: numerical
+    :param fs_destination_storage_threshold: threshold for destination storage
+        to encourage/discourage the use of the trailer [-]
+    :type fs_destination_storage_threshold: numerical
+    :param hydrogen_needed: mass of hydrogen needed from delivery [kg]
+    :type hydrogen_needed: numerical
+    :param fs_origin_available_kg: foreign state for the available mass of hydrogen
+        in the origin storage [kg]
+    :type fs_origin_available_kg: numerical
+    :param set_parameters(params): updates parameter default values
+        (see generic Component class)
+    :type set_parameters(params): function
+    :param current_ac: current artificial cost value [EUR/kg]
+    :type current_ac: numerical
+    """
 
     def __init__(self, params):
-
+        """Constructor method
+        """
         # Call the init function of the mother class.
         Component.__init__(self)
 
@@ -24,26 +95,25 @@ class TrailerH2DeliverySingle(Component):
         #  hour - this needs to be changed if the single trip distance from the origin to
         #  destination is longer than 45 minutes (1 hour - 15 mins refuelling)
 
-        # Trailer capacity (at maximum pressure) [kg]
         self.trailer_capacity = 900
-
-        # Define the threshold value for the artificial costs.
-        # The threshold for the destination storage to encourage/discourage the use of the trailer
-        # (percentage of capacity) [-]
         self.fs_destination_storage_threshold = None
-        # The amount of hydrogen needed [kg]
         self.hydrogen_needed = 0
-        # The amount of hydrogen needed [kg]
         self.fs_origin_available_kg = None
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
         # ------------------- INTERNAL VALUES -------------------
-        # The current artificial cost value [EUR/kg].
         self.current_ac = 0
 
     def prepare_simulation(self, components):
+        """Prepares the simulation by determining trailer activity and how much
+        hydrogen is needed
+
+        :param components: List containing each component object
+        :type components: list
+        :return: artificial costs and the amount of hydrogen needed
+        """
         # Check level of destination storage component: if it is below specified threshold,
         # implement low artificial costs (to encourage system to fill it)
         # Check level of all non-central storage component and use the one with the
@@ -106,8 +176,15 @@ class TrailerH2DeliverySingle(Component):
         self.current_ac = self.get_costs_and_art_costs()
 
     def create_oemof_model(self, busses, _):
-        trailer = solph.Transformer(
+        """Creates an oemof Transformer component from the information given in the
+        TrailerH2DeliverySingle class, to be used in the oemof model.
+
+        :param busses: list of the virtual buses used in the energy system
+        :type busses: list
+        :return: the 'trailer_single' oemof component
+        """
+        trailer_single = solph.Transformer(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_ac)},
             inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.hydrogen_needed)})
-        return trailer
+        return trailer_single

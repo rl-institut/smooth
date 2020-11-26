@@ -1,13 +1,97 @@
+"""
+This module represents a hydrogen trailer delivery from a single
+production site to one main destination site, and a secondary
+destination site that is dependent on the main site when
+necessary.
+
+*****
+Scope
+*****
+Hydrogen trailers can be crucial in an energy system as a means of transporting
+hydrogen from the production site to the destination site (e.g. a refuelling
+station). Sometimes it is the case that one production site should supply
+hydrogen to destination sites that are in close proximity to each other, for
+instance. If this is the case, it is beneficial for the energy system
+productivity to supply to both storages in one trip. This component represents
+a case where there is one main destination site that needs regular delivery,
+and one secondary destination site that will receive a delivery in the same
+trip as to the main destination site when necessary.
+
+*******
+Concept
+*******
+The cascade hydrogen trailer component is also a transformer component with a
+hydrogen bus input and output that are distinct from each other. This component
+should be used in parallel with the trailer gate and trailer gate cascade
+components. The amount of hydrogen that can be transported in a given time step
+is determined, and this value restricts the flow in the component.
+
+.. figure:: /images/trailer_h2_delivery.png
+    :width: 60 %
+    :alt: trailer_h2_delivery.png
+    :align: center
+    Fig.1: Simple diagram of a hydrogen delivery trailer
+
+Trailer activity
+----------------
+In this component, the trailer has the option of transporting hydrogen
+from one production site to two destination sites that are dependent
+on one another. Thresholds are set for the origin and destination storages.
+The component then:
+
+* Checks the level of the origin storage component: if it is below specified
+  threshold, the trailer cannot take hydrogen from it.
+* Checks the level of destination storage components: if they are both below
+  their specified thresholds, then the trailer is incentivised to deliver
+  to both storages.
+* Checks the mass of hydrogen in all storages as well as the trailer
+  capacity, and transports the maximum possible amount of hydrogen.
+* Calculates how much hydrogen should get delivered to the main and
+  secondary destination storages, prioritising filling up the main
+  storage when necessary.
+"""
+
+
 import oemof.solph as solph
 from .component import Component
 from oemof.outputlib import views
 
 
-class TrailerH2DeliverySingleCascade(Component):
-    """Component created for a hydrogen trailer delivery"""
+class TrailerH2DeliveryCascade(Component):
+    """
+    :param name: unique name given to the trailer component
+    :type name: str
+    :param bus_in: input hydrogen bus to the trailer
+    :type bus_in: str
+    :param bus_out: output hydrogen bus from the trailer
+    :type bus_out: str
+    :param trailer_capacity: trailer capacity [kg]
+    :type trailer_capacity: numerical
+    :param fs_destination_storage_threshold_1: threshold for main destination
+        storage to encourage/discourage the use of the trailer [-]
+    :type fs_destination_storage_threshold_1: numerical
+    :param fs_destination_storage_threshold_2: threshold for secondary destination
+        storage to encourage/discourage delivery to it [-]
+    :type fs_destination_storage_threshold_2: numerical
+    :param hydrogen_needed: mass of hydrogen needed from delivery [kg]
+    :type hydrogen_needed: numerical
+    :param output_h2_1: amount of hydrogen delivered to main destination [kg]
+    :type output h2_1: numerical
+    :param output_h2_2: amount of hydrogen delivered to secondary destination [kg]
+    :type output h2_2: numerical
+    :param fs_origin_available_kg: foreign state for the available mass of hydrogen
+        in the origin storage [kg]
+    :type fs_origin_available_kg: numerical
+    :param set_parameters(params): updates parameter default values
+        (see generic Component class)
+    :type set_parameters(params): function
+    :param current_ac: current artificial cost value [EUR/kg]
+    :type current_ac: numerical
+    """
 
     def __init__(self, params):
-
+        """Constructor method
+        """
         # Call the init function of the mother class.
         Component.__init__(self)
 
@@ -25,31 +109,30 @@ class TrailerH2DeliverySingleCascade(Component):
         #  hour - this needs to be changed if the single trip distance from the origin to
         #  destination is longer than 45 minutes (1 hour - 15 mins refuelling)
 
-        # Trailer capacity (at maximum pressure) [kg]
         self.trailer_capacity = 900
-
-        # Define the threshold value for the artificial costs.
-        # The threshold for the destination storage to encourage/discourage the use of the trailer
-        # (percentage of capacity) [-]
         self.fs_destination_storage_threshold_1 = None
         self.fs_destination_storage_threshold_2 = None
-        # The amount of hydrogen needed [kg]
         self.hydrogen_needed = 0
-        # The amount of hydrogen delivered to first destination [kg]
         self.output_h2_1 = 0
-        # The amount of hydrogen delivered to second destination [kg]
         self.output_h2_2 = 0
-        # The amount of hydrogen needed [kg]
         self.fs_origin_available_kg = None
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
 
         # ------------------- INTERNAL VALUES -------------------
-        # The current artificial cost value [EUR/kg].
         self.current_ac = 0
 
     def prepare_simulation(self, components):
+        """Prepares the simulation by determining trailer activity and parameters such
+        as how much hydrogen is needed for delivery and how this should be distributed
+        between the destination storages.
+
+        :param components: List containing each component object
+        :type components: list
+        :return: artificial costs, amount of hydrogen needed and the amounts delivered
+            to each storage
+        """
         # Check level of destination storage component: if it is below specified threshold,
         # implement low artificial costs (to encourage system to fill it)
         # Check level of all non-central storage component and use the one with the highest amount of h2:
@@ -145,6 +228,13 @@ class TrailerH2DeliverySingleCascade(Component):
         self.current_ac = self.get_costs_and_art_costs()
 
     def create_oemof_model(self, busses, _):
+        """Creates an oemof Transformer component from the information given in the
+        TrailerH2DeliveryCascade class, to be used in the oemof model.
+
+        :param busses: list of the virtual buses used in the energy system
+        :type busses: list
+        :return: the 'trailer_cascade' oemof component
+        """
         trailer_cascade = solph.Transformer(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_ac)},
