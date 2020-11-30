@@ -2,7 +2,7 @@ import pandas as pd
 from smooth.framework.functions.plot_results import plot_smooth_results
 
 
-def get_df_debug(df_results, results_dict, new_df_results):
+def get_df_debug(df_results, results_dict, new_df_results, index):
     """Generate debug info from results.
 
     :param df_results: results dataframe to compare against (e.g. last iteration)
@@ -46,6 +46,8 @@ def get_df_debug(df_results, results_dict, new_df_results):
     df_debug[['from', 'to']] = pd.DataFrame(df_debug['oemof_tuple'].tolist(), index=df_debug.index)
     df_debug = pd.merge(left=df_debug, right=operation_vals, how='left', left_on='oemof_tuple',
                         right_on='oemof_tuple')
+    # Add base index from smooth to oemof timestep index
+    df_debug['timestep'] = df_debug['timestep'] + index
 
     # Concatenate debug Dataframe with results of unfinished oemof iteration
     # (merging of different instances of oemof objects not working)
