@@ -26,7 +26,12 @@ assumed that:
 * The overall surface area exposed by the gas separators and the pipe
   communicating them is in a ratio of 1:0.42 with the surface area of the stack [3]
 
-*INCLUDE FIGURE?
+.. figure:: /images/electrolyzer_alkaline_waste_heat.png
+    :width: 60 %
+    :alt: electrolyzer_alkaline_waste_heat.png
+    :align: center
+
+    Fig.1: Simple diagram of an alkaline electrolyzer with waste heat.
 
 The alkaline electrolyzer with waste heat intakes an electrical flow and outputs
 hydrogen and thermal energy flows. The behaviour of the electrolyzer waste heat

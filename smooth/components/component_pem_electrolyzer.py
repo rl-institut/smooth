@@ -19,6 +19,13 @@ The PEM electrolyzer is modelled using oemof's Piecewise Linear Transformer
 components, and the component as a whole represents the intake of
 electricity to produce hydrogen and waste heat as a by-product.
 
+.. figure:: /images/pem_electrolyzer.png
+    :width: 60 %
+    :alt: pem_electrolyzer.png
+    :align: center
+
+    Fig.1: Simple diagram of a PEM electrolyzer.
+
 Efficiency
 ----------
 The amount of hydrogen and waste heat production is dependant on variable

@@ -18,6 +18,13 @@ electricity output that is governed by an efficiency, where the
 default value is chosen to be 99% [1]. A maximum output power is
 also defined in the component.
 
+.. figure:: /images/dc_ac_inverter.png
+    :width: 60 %
+    :alt: dc_ac_inverter.png
+    :align: center
+
+    Fig.1: Simple diagram of a DC-AC inverter.
+
 References
 ----------
 [1] Sunny Highpower PEAK3 inverter (see manufacturer PDF)

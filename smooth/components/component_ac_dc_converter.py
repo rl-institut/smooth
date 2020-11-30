@@ -18,6 +18,13 @@ but this value can be modified by the user in the model definition. The
 amount of electricity that can leave the converter is limited by the defined
 maximum power.
 
+.. figure:: /images/ac_dc_converter.png
+    :width: 60 %
+    :alt: ac_dc_converter.png
+    :align: center
+
+    Fig.1: Simple diagram of an AC-DC converter.
+
 References
 ----------
 [1] Harrison, K.W. et. al. (2009). The Wind-to-Hydrogen Project: Operational Experience,

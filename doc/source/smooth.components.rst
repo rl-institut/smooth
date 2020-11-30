@@ -197,6 +197,14 @@ H2 Refuel Cooling System
    :undoc-members:
    :show-inheritance:
 
+PEM Electrolyzer
+------------------------------------------------------------
+
+.. automodule:: smooth.components.component_pem_electrolyzer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
 Sink
 ----------------------------------------
 

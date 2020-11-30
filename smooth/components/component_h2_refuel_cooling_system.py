@@ -13,8 +13,16 @@ tank. This is in order to prevent the tank from overheating.
 Concept
 *******
 An oemof Sink component is used which has one electrical bus input that
-represents the electricity required to power the cooling system. The
-required electricity supply for the cooling system per timestep is
+represents the electricity required to power the cooling system.
+
+.. figure:: /images/h2_refuel_cooling_system.png
+    :width: 60 %
+    :alt: h2_refuel_cooling_system.png
+    :align: center
+
+    Fig.1: Simple diagram of a hydrogen refuel cooling system.
+
+The required electricity supply for the cooling system per timestep is
 calculated by the following equation:
 
 .. math::
