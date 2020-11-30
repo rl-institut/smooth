@@ -42,7 +42,7 @@ def get_df_debug(df_results, results_dict, new_df_results):
     operation_vals['oemof_tuple'] = [ot if ot[1] is not None else (ot[0],) for ot in
                                      operation_vals['oemof_tuple']]
     # Merge results DataFrame from last iteration with scalar values from results dictionary
-    df_debug = df_results[:][['value', 'variable_name', 'oemof_tuple']]
+    df_debug = df_results[:][['value', 'variable_name', 'oemof_tuple', 'timestep']]
     df_debug[['from', 'to']] = pd.DataFrame(df_debug['oemof_tuple'].tolist(), index=df_debug.index)
     df_debug = pd.merge(left=df_debug, right=operation_vals, how='left', left_on='oemof_tuple',
                         right_on='oemof_tuple')
@@ -57,7 +57,7 @@ def get_df_debug(df_results, results_dict, new_df_results):
     df_debug = pd.concat([df_debug, new_df_debug], axis=0)
 
     # Move columns for better readability
-    sel_cols = ['from', 'to', 'variable_name', 'fixed', 'min', 'value', 'max']
+    sel_cols = ['from', 'to', 'variable_name', 'timestep', 'fixed', 'min', 'value', 'max']
     df_debug = df_debug[sel_cols]
 
     return df_debug
