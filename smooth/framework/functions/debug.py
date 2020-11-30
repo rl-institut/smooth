@@ -97,4 +97,11 @@ def show_debug(df_debug, components):
     df_debug.loc[:, df_debug.columns != 'oemof_tuple'].to_csv("debugDataframe.csv")
     print("Saved to debugDataframe.csv")
 
-    plot_smooth_results(components)
+    #plot_smooth_results(components)
+    from eMetroBus_specific.plotting_dict import comp_dict_german
+    from eMetroBus_specific.plot_results_eMetroBus_v6 import plot_smooth_results
+    path = '\\examples\\UHAL_v2_MPC\\UHAL_TS1_v2\\results_and_plots\\'
+    # filename = 'Opt_1D1h_MaxPV_bat2M8kWh'
+    filename = 'Opt_1D1m_minBat'
+    filepath = path + filename + '\\'
+    plot_smooth_results(components, False, filepath, filename, comp_dict_german)
