@@ -19,9 +19,9 @@ def update_financials(component, financials):
     If multiple keys are defined, the calculations are done sequentially in order.
 
      * "variable" --> definition of multiple "CAPEX" or "OPEX" structures:
-    If the cost structure changes over the size of a specific value of the component, for example because of the
-    effects of economics of scale, the special key "variable" can be used to define multiple "CAPEX" or "OPEX" dicts for
-    different ranges of this value
+    If the cost structure changes over the size of a specific value of the component, for example
+    because of the effects of economics of scale, the special key "variable" can be used to define
+    multiple "CAPEX" or "OPEX" dicts for different ranges of this value
 
     :param component: object of this component
     :type component: :class:`~smooth.components.component.Component`
@@ -70,9 +70,9 @@ def update_emissions(component, emissions):
     If multiple keys are defined, the calculations are done sequentially in order.
 
      * "variable" --> definition of multiple "fix_emissions" or "op_emissions" structures:
-    If the emission structure changes over the size of a specific value of the component, for example because of the
-    effects of economics of scale, the special key "variable" can be used to define multiple "fix_emissions" or
-    "op_emissions" dicts for different ranges of this value
+    If the emission structure changes over the size of a specific value of the component, for
+    example because of the effects of economics of scale, the special key "variable" can be used to
+    define multiple "fix_emissions" or "op_emissions" dicts for different ranges of this value
 
     :param component: object of this component
     :type component:  component: :class:`~smooth.components.component.Component`
