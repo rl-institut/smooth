@@ -87,6 +87,7 @@ def main():
     #  n_gen: Number of generations that will be evaluated [-].
     #  n_core: Number of cores used in the optimization ('max' will use all of them) [-].
     #  plot_progress: show pareto front during each stop of the simulation [False].
+    #  ignore_zero:  Ignores components if the optimized value is zero for an individual [False]
     #  objectives: objective functions to maximize [2-tuple].
     #   Called with result of run_smooth.
     #   Negative sign for minimizing.
@@ -99,6 +100,7 @@ def main():
         'plot_progress': True,
         'post_processing': True,
         'save_intermediate_results': True,
+        'ignore_zero': True,
         'objectives': (
             lambda x: -sum([c.results["annuity_total"] for c in x]),
             lambda x: -sum([c.results["annual_total_emissions"] for c in x]),
@@ -125,7 +127,7 @@ def main():
     var_storage_capacity = {
         'comp_name': 'h2_storage',
         'comp_attribute': 'storage_capacity',
-        'val_min': 50,
+        'val_min': 0,
         'val_max': 2000,
         'val_step': 50
     }
