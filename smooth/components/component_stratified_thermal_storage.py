@@ -15,6 +15,13 @@ This component has been largely based on oemof thermal's stratified
 thermal storage component. Visit oemof thermal's readthedocs site for
 detailed information on how the component was constructed [1].
 
+.. figure:: /images/stratified_thermal_storage.png
+    :width: 60 %
+    :alt: stratified_thermal_storage.png
+    :align: center
+
+    Fig.1: Simple diagram of an electric heater.
+
 References
 ----------
 [1] oemof thermal (2019). Stratified thermal storage, Read the Docs:

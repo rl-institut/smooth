@@ -17,6 +17,13 @@ The alkaline electrolyser intakes an electricity flow and outputs a hydrogen flo
 The behaviour of the alkaline electrolyzer is non-linear, which is
 demonstrated through the use of oemof's Piecewise Linear Transformer component.
 
+.. figure:: /images/electrolyzer_alkaline.png
+    :width: 60 %
+    :alt: electrolyzer_alkaline.png
+    :align: center
+
+    Fig.1: Simple diagram of an alkaline electrolyzer.
+
 Maximum power
 ------------------------
 In order to make it possible to define the maximum power of the electrolyser,

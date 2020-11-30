@@ -15,6 +15,13 @@ The hydrogen compressor is powered by electricity and intakes a low
 pressure hydrogen flow while outputting a hgh pressure hydrogen flow.
 The efficiency of the compressor is assumed to be 88.8%.
 
+.. figure:: /images/hydrogen_compressor.png
+    :width: 60 %
+    :alt: hydrogen_compressor.png
+    :align: center
+
+    Fig.1: Simple diagram of a hydrogen compressor.
+
 Specific compression energy
 ---------------------------
 The specific compression energy is calculated by first obtaining the

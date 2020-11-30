@@ -54,7 +54,16 @@ Efficiency
 ----------
 The electrical and thermal production from the CHP is determined by variable
 efficiencies according to nominal load, and the efficiency curves used in the
-component can be seen in INSERT FIGURE.
+component can be seen in Figure 2. The piecewise linear representation that
+is actually used in the SMOOTH component is shown in the left image, and the
+approximated efficiency curve is shown in the right image.
+
+.. figure:: /images/chp_biogas_efficiency.png
+    :width: 60 %
+    :alt: chp_biogas_efficiency.png
+    :align: center
+
+    Fig.2: Piecewise and approximated efficiency of biogas gas engine CHP.
 
 Electrical and thermal energy production
 ----------------------------------------
