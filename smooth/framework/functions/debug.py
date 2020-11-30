@@ -63,6 +63,21 @@ def get_df_debug(df_results, results_dict, new_df_results):
     return df_debug
 
 
+def save_debug(df_debug, components, index):
+    """Save debug info, save to file with iteration index
+
+    :param df_debug: debug dataframe
+    :type df_debug: pandas dataframe
+    :param components: result from run_smooth for plotting
+    :type components: list of :class:`~smooth.components.component.Component`
+    :param index: current smooth iteration index
+    :type index: int
+    """
+    # Save to csv file
+    df_debug.loc[:, df_debug.columns != 'oemof_tuple'].to_csv("debugDataframe_" +  str(index) + ".csv")
+    print("Saved to debugDataframe.csv")
+
+
 def show_debug(df_debug, components):
     """Print and plot debug info, save to file
 

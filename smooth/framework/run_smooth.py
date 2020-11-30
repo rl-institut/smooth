@@ -119,7 +119,7 @@ Finally, return the updated components and the last oemof status.
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
-from smooth.framework.functions.debug import get_df_debug, show_debug
+from smooth.framework.functions.debug import get_df_debug, show_debug, save_debug
 from smooth.framework.exceptions import SolverNonOptimalError
 from smooth.framework.functions.functions import create_component_obj
 import pandas as pd
@@ -220,6 +220,11 @@ def run_smooth(model):
                 show_debug(df_debug, components)
             raise SolverNonOptimalError('solver status: ' + status +
                                         " / termination condition: " + termination_condition)
+
+        if i_interval > 0:#sim_params.show_debug_continuous_flag:
+            new_df_results = processing.create_dataframe(model_to_solve)
+            df_debug = get_df_debug(df_results, results_dict, new_df_results)
+            save_debug(df_debug, components, i_interval)
 
         # ------------------- HANDLE RESULTS -------------------
         # Get the results of this oemof run.
