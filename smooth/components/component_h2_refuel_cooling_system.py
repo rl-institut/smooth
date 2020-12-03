@@ -16,7 +16,7 @@ An oemof Sink component is used which has one electrical bus input that
 represents the electricity required to power the cooling system.
 
 .. figure:: /images/h2_refuel_cooling_system.png
-    :width: 60 %
+    :width: 40 %
     :alt: h2_refuel_cooling_system.png
     :align: center
 

@@ -66,6 +66,7 @@ volume is given:
 * :math:`V_{spec,0}` = predfined initial value for specific volume [m³/mol]
 
 Then using the initial value, the iterative process begins:
+
 .. math::
     V_{spec,i+1} = \\frac{R \\cdot T}{p + \\frac{rk_{a}}{T^{0.5}
     \\cdot V_{spec,i} \\cdot (V_{spec,i} + rk_{b})}} + rk_{b}

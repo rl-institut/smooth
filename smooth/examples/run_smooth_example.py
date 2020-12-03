@@ -20,7 +20,7 @@ This example shows how a simulation in SMOOTH can be defined.
   function.
 """
 
-from smooth.examples.example_model import mymodel
+from smooth.examples.example_model_costs import mymodel
 
 from smooth import run_smooth
 from smooth import plot_smooth_results

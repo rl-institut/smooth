@@ -59,7 +59,7 @@ is actually used in the SMOOTH component is shown in the left image, and the
 approximated efficiency curve is shown in the right image.
 
 .. figure:: /images/chp_biogas_efficiency.png
-    :width: 60 %
+    :width: 100 %
     :alt: chp_biogas_efficiency.png
     :align: center
 

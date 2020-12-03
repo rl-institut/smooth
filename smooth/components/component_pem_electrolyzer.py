@@ -29,9 +29,17 @@ electricity to produce hydrogen and waste heat as a by-product.
 Efficiency
 ----------
 The amount of hydrogen and waste heat production is dependant on variable
-efficiencies according to nominal load, as displayed in INSERT FIGURE.
+efficiencies according to nominal load, as displayed in Figure 2. The
+piecewise linear representation that is actually used in the SMOOTH component
+is shown in the left image, and the approximated efficiency curve is
+shown in the right image.
 
-INCLUDE EFFICIENCY CURVE FIGURE
+.. figure:: /images/pem_electrolyzer_efficiency.png
+    :width: 100 %
+    :alt: pem_electrolyzer_efficiency.png
+    :align: center
+
+    Fig.2: Piecewise and approximated efficiency of PEM electrolyzer.
 
 Hydrogen and waste heat production
 ----------------------------------

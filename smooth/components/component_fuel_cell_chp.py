@@ -29,11 +29,18 @@ Efficiency
 ----------
 The efficiency curves for both electrical and thermal energy output according
 to nominal load which are considered for the fuel cell CHP component are
-displayed in INSERT FIGURE. From the breakpoints, the electrical and thermal
+displayed in Figure 2. From the breakpoints, the electrical and thermal
 production based on the hydrogen consumption and variable efficiency can be
-obtained.
+obtained. The piecewise linear representation that is actually used in the
+SMOOTH component is shown in the left image, and the approximated efficiency
+curve is shown in the right image.
 
-INCLUDE EFFICIENCY CURVE FIGURE
+.. figure:: /images/fuel_cell_chp_efficiency.png
+    :width: 100 %
+    :alt: fuel_cell_chp_efficiency.png
+    :align: center
+
+    Fig.2: Piecewise and approximated efficiency of a fuel cell CHP.
 
 Electrical and thermal energy production
 ----------------------------------------

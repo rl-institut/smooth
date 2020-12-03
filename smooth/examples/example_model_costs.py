@@ -69,10 +69,10 @@ An example of this can be seen with the following PV component:
         'component': 'energy_source_from_csv',
         'name': 'pv_output',
         'bus_out': 'bel',
-        'csv_filename': 'ts_pv_1_kW.csv',
-        'csv_separator': ';',
+        'csv_filename': 'ts_pv_1kW.csv',
+        'csv_separator': ',',
         'nominal_value': 100,
-        'column_title': 'Power output',
+        'column_title': 'Power output [W]',
         'path': my_path,
         'life_time': 20,
         'capex': {
@@ -113,12 +113,12 @@ An example of this is shown with a wind component:
         'component': 'energy_source_from_csv',
         'name': 'wind_output',
         'bus_out': 'bel',
-        'csv_filename': 'ts_wind_1_kW.csv',
-        'csv_separator': ';',
+        'csv_filename': 'ts_wind_1kW.csv',
+        'csv_separator': ',',
         'nominal_value': 10,
-        'column_title': 'Power output in kW for 1 kW turbine',
+        'column_title': 0,
         'path': my_path,
-        'life_time': 20,
+        'life_time': 10,
         'capex': {
             'key': 'exp',
             'fitting_value': [750, 0.5],
@@ -265,50 +265,86 @@ can be defined as follows:
         'component': 'supply',
         'name': 'from_grid',
         'bus_out': 'bel',
-        'output_max': 5000000,
-        'variable_costs': 0.00016,
-        'fs_component_name': 'h2_storage',
-        'fs_attribute_name': 'storage_level',
-        'fs_threshold': 200,
-        'fs_low_art_cost': -0.001,
-        'fs_high_art_cost': 50,
+        'output_max': 1200e3,
+        'variable_costs': 0.00001,
         'dependency_flow_costs': ('from_grid', 'bel'),
-        'life_time': 50,
+        'life_time': 1,
         'capex': {
             'key': 'variable',
-            'var_capex_dependency': 'output_max',
-            0: {
-                'low_threshold': 0,
-                'high_threshold': 3000000,
-                'key': 'spec',
-                'fitting_value': 0.2,
-                'dependant_value': 'output_max',
-            },
-            1: {
-                'low_threshold': 3000000,
-                'high_threshold': float('inf'),
-                'key': 'spec',
-                'fitting_value': 0.1,
-                'dependant_value': 'output_max',
-            },
+            'var_dict_dependency': 'output_max',
+            'var_dicts':
+                [
+                    {
+                        'low_threshold': 0,
+                        'high_threshold': 900e3,
+                        'key': 'free',
+                        'fitting_value': [2, 3],
+                        'dependant_value': 'output_max'
+                    },
+                    {
+                        'low_threshold': 1000e3,
+                        'high_threshold': 5000e3,
+                        'key': ['spec', 'poly'],
+                        'fitting_value': [10, ['cost', 1]],
+                        'dependant_value': ['output_max', 'life_time'],
+                    },
+                    {
+                        'low_threshold': 5000e3,
+                        'high_threshold': float('inf'),
+                        'key': 'spec',
+                        'fitting_value': 50,
+                        'dependant_value': 'output_max',
+                    },
+                ],
+        },
+        'opex': {
+            'key': 'variable',
+            'var_dict_dependency': 'output_max',
+            'var_dicts': [
+                {
+                    'low_threshold': 0,
+                    'high_threshold': 1000e3,
+                    'key': 'spec',
+                    'fitting_value': 0.04,
+                    'dependant_value': 'capex',
+                },
+                {
+                    'low_threshold': 1000e3,
+                    'high_threshold': 5000e3,
+                    'key': 'spec',
+                    'fitting_value': 0.02,
+                    'dependant_value': 'capex',
+                },
+            ]
         },
     })
 
-This shows the varying fixed costs of the electricity supply from the grid,
-depending on the size of the grid. If the 'variable' key is defined for the
-CAPEX, the 'var_capex_dependancy' parameter must also be defined which states
-which variable the changing costs are dependant on.
+This shows the varying CAPEX and OPEX costs of the electricity supply from
+the grid, depending on its size. If the key 'variable' is defined, multiple
+CAPEX or OPEX costs can be defined depending on the value of one attribute
+of the component. This attribute is defined for the 'var_dict_dependency' key.
 
-A set of n dictionaries is implemented within the capex dictionary, where
-n is the number of different costs considered and the dictionaries are
-named 0, 1,..., n. Each of these sub-dictionaries is defined the same as
-other capex dictionaries, but with the inclusion of a low and high
-threshold. The above example states that:
+The specific dict that is used in the system is chosen if:
 
-* If the chosen maximum output power from the grid is less than 3 MW, the
-  CAPEX is 20 ct./W.
-* If the chosen maximum output power from the grid is 3 MW or larger, the
-  CAPEX is 10 ct./W.
+.. code:: bash
+
+    low_threshold <= value(var_capex_dependency) < high_threshold
+
+It should be noted that the number of dicts can be chosen freely, but
+they must be defined in ascending order. Also, gaps are fine between
+defined ranges whereas overlapping ranges are not possible. The above
+example states that:
+
+* If the chosen maximum output power from the grid is less than 900 kW, the
+  CAPEX is :math:`2 \\cdot output_{max}^{3}` EUR
+* If the chosen maximum output power from the grid is between 1000 kW and
+  5000 kW, the CAPEX is :math:`10 \\cdot output_{max} + lifetime` EUR
+* If the chosen maximum output power from the grid is above 5000 kW, the
+  CAPEX is :math:`50 \\cdot output_{max}` EUR
+* If the chosen maximum output power from the grid is less than 1000 kW, the
+  OPEX is 4% of the CAPEX
+* If the chosen maximum output power from the grid is between 1000 kW and
+  5000 kW, the OPEX is 2% of the CAPEX
 """
 
 import os
@@ -345,10 +381,10 @@ components.append({
     'component': 'energy_source_from_csv',
     'name': 'pv_output',
     'bus_out': 'bel',
-    'csv_filename': 'ts_pv_1_kW.csv',
-    'csv_separator': ';',
+    'csv_filename': 'ts_pv_1kW.csv',
+    'csv_separator': ',',
     'nominal_value': 100,
-    'column_title': 'Power output',
+    'column_title': 'Power output [W]',
     'path': my_path,
     'life_time': 20,
     'capex': {
@@ -367,10 +403,10 @@ components.append({
     'component': 'energy_source_from_csv',
     'name': 'wind_output',
     'bus_out': 'bel',
-    'csv_filename': 'ts_wind_1_kW.csv',
-    'csv_separator': ';',
+    'csv_filename': 'ts_wind_1kW.csv',
+    'csv_separator': ',',
     'nominal_value': 10,
-    'column_title': 'Power output in kW for 1 kW turbine',
+    'column_title': 0,
     'path': my_path,
     'life_time': 10,
     'capex': {
@@ -399,32 +435,57 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'output_max': 5000000,
-    'variable_costs': 0.00016,
-    'fs_component_name': 'h2_storage',
-    'fs_attribute_name': 'storage_level',
-    'fs_threshold': 200,
-    'fs_low_art_cost': -0.001,
-    'fs_high_art_cost': 50,
+    'output_max': 1200e3,
+    'variable_costs': 0.00001,
     'dependency_flow_costs': ('from_grid', 'bel'),
-    'life_time': 50,
+    'life_time': 1,
     'capex': {
         'key': 'variable',
-        'var_capex_dependency': 'output_max',
-        0: {
-            'low_threshold': 0,
-            'high_threshold': 3000000,
-            'key': 'spec',
-            'fitting_value': 0.2,
-            'dependant_value': 'output_max',
-        },
-        1: {
-            'low_threshold': 3000000,
-            'high_threshold': float('inf'),
-            'key': 'spec',
-            'fitting_value': 0.1,
-            'dependant_value': 'output_max',
-        },
+        'var_dict_dependency': 'output_max',
+        'var_dicts':
+            [
+                {
+                    'low_threshold': 0,
+                    'high_threshold': 900e3,
+                    'key': 'free',
+                    'fitting_value': [2, 3],
+                    'dependant_value': 'output_max'
+                },
+                {
+                    'low_threshold': 1000e3,
+                    'high_threshold': 5000e3,
+                    'key': ['spec', 'poly'],
+                    'fitting_value': [10, ['cost', 1]],
+                    'dependant_value': ['output_max', 'life_time'],
+                },
+                {
+                    'low_threshold': 5000e3,
+                    'high_threshold': float('inf'),
+                    'key': 'spec',
+                    'fitting_value': 50,
+                    'dependant_value': 'output_max',
+                },
+            ],
+    },
+    'opex': {
+        'key': 'variable',
+        'var_dict_dependency': 'output_max',
+        'var_dicts': [
+            {
+                'low_threshold': 0,
+                'high_threshold': 1000e3,
+                'key': 'spec',
+                'fitting_value': 0.04,
+                'dependant_value': 'capex',
+            },
+            {
+                'low_threshold': 1000e3,
+                'high_threshold': 5000e3,
+                'key': 'spec',
+                'fitting_value': 0.02,
+                'dependant_value': 'capex',
+            },
+        ]
     },
 })
 

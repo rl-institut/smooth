@@ -81,7 +81,7 @@ class Component:
         :param params: The set of parameters defined in the specific component class
         :type params: dict ToDo: make sure of this, maybe list
         :raises ValueError: Value error is raised if the parameter defined by the user
-        is not part of the component, or dependency flows are not defined
+            is not part of the component, or dependency flows are not defined
         :return: None
         """
         for this_param in params:
@@ -110,7 +110,7 @@ class Component:
         :param sim_params: The simulation parameters for the energy system (defined by user)
         :type sim_params: object
         :param comp_name: The name of the component - while components can generate more
-        than one oemof model, they sometimes need to give a custom name, defaults to None
+            than one oemof model, they sometimes need to give a custom name, defaults to None
         :type comp_name: str, optional
         :return: updated flow values for each flow in the 'flows' dict
         """
@@ -159,7 +159,7 @@ class Component:
         :param sim_params: simulation parameters for the energy system (defined by user)
         :type sim_params: object
         :return: if used as a placeholder, nothing will be returned. Else, refer to
-        specific component that uses the update_states function for further detail.
+            specific component that uses the update_states function for further detail.
         """
         pass
 
@@ -175,7 +175,8 @@ class Component:
         :param model_to_solve: ToDo: look this up in oemof
         :type model_to_solve:
         :return: If used as a placeholder, nothing will be returned. Else, refer
-        to specific component that uses the update_constraints function for further detail.
+            to specific component that uses the update_constraints function for
+            further detail.
         """
         pass
 
@@ -190,7 +191,7 @@ class Component:
         :param sim_params: The simulation parameters for the energy system (defined by user)
         :type sim_params: object
         :return: New values for the updated variable and artificial costs stored in
-        results['variable_costs'] and results['art_costs'] respectively
+            results['variable_costs'] and results['art_costs'] respectively
         """
 
         # First create an empty cost and art. cost array for this component, if
@@ -260,7 +261,7 @@ class Component:
         :param components: List containing each component object
         :type components: object
         :param index: Index of the foreign state (should be None if there
-        is only one foreign state) [-]
+            is only one foreign state) [-]
         :type index: int, optional
         :return: Foreign state value
         """

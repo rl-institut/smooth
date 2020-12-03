@@ -17,7 +17,7 @@ In order to build a component, you must do the following:
 
 #. Define any other functions that are specific to your component.
 
-#. All components built in SMOOTH must be created as oemof components to be used in the oemof model (see `oemof-solph's component list <https://oemof-solph.readthedocs.io/en/latest/usage.html#solph-components>`_ to choose the best fitting component. Then create the oemof component in the :func:`create_oemof_model` function, defining all of the necessary parameters.
+#. All components built in SMOOTH must be created as oemof components to be used in the oemof model (see `oemof-solph's component list <https://oemof-solph.readthedocs.io/en/latest/usage.html#solph-components>`_ to choose the best fitting component). Then create the oemof component in the :func:`create_oemof_model` function, defining all of the necessary parameters.
 
 #. If the states of the component need updating after each time step, specifiy these in the :func:`update_states` function. 
 
@@ -26,7 +26,7 @@ Artificial costs
 The oemof framework always solves the system by minimizing the costs. In order to be able to control the system behaviour in a certain way,
 artificial costs as a concept is introduced. These costs are defined in the components and are used in the oemof model (and therefore
 have an effect on the cost minimization). The higher (more positive) artificial costs are implemented for less desired system options, and
-the lower (more negative) artificial costs are implemented to incentivise the system to choose the given system option where possible. 
+the lower (more negative) artificial costs are implemented to incentivise the system to choose the desired system options where possible. 
 It should be noted that due to these costs being not real costs and their purpose is only to control system behaviour, they are not considered
 in the financial evaluation at the end of the simulation. 
 
