@@ -251,13 +251,12 @@ def choose_valid_dict(component, var_dict):
     """Function to select a valid dict (capex / fix_emissions) depending on the value
     of an attribute of the specific component.
 
-    # todo: check opex and op_emissions
-
     :param component: object of this component
     :type component: class:`~smooth.components.component.Component`
     :param var_dict: dict object (capex/fix_emissions) of this component
     :type var_dict: dict
-    :return: Valid dictionary (capex/fix_emissions) for the actual value of the depending parameter of the component
+    :return: Valid dictionary (capex/fix_emissions) for the actual value of the depending parameter
+     of the component
     """
 
     low_thresholds = [d['low_threshold'] for d in var_dict['var_dicts']]
