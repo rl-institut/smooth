@@ -245,3 +245,47 @@ def extract_flow_per_bus(smooth_result, name_label_dict):
         )
 
     return busses_to_plot
+
+
+def choose_valid_dict(component, var_dict):
+    """Function to select a valid dict (capex / fix_emissions) depending on the value
+    of an attribute of the specific component.
+
+    # todo: check opex and op_emissions
+
+    :param component: object of this component
+    :type component: class:`~smooth.components.component.Component`
+    :param var_dict: dict object (capex/fix_emissions) of this component
+    :type var_dict: dict
+    :return: Valid dictionary (capex/fix_emissions) for the actual value
+        of the depending parameter of the component
+    """
+
+    low_thresholds = [d['low_threshold'] for d in var_dict['var_dicts']]
+    high_thresholds = [d['high_threshold'] for d in var_dict['var_dicts']]
+    for i in range(len(low_thresholds)):
+        assert low_thresholds[i] < high_thresholds[i],\
+            'The threshold range of a variable_dict (capex or emissions) for component \''\
+            + component.name + '\' is either zero or negative.'
+        if i < len(low_thresholds) - 1:
+            assert low_thresholds[i] <= low_thresholds[i + 1], \
+                'A variable_dict (capex or emissions) of component \'' \
+                + component.name + '\' is not defined with thresholds in ascending order.'
+            assert high_thresholds[i] <= low_thresholds[i + 1], \
+                'A variable_dict (capex or emissions) of component \'' \
+                + component.name + '\' has an overlap in its threshold definition.'
+
+    success = False
+    for i in range(len(var_dict['var_dicts'])):
+        if (getattr(component, var_dict['var_dict_dependency'])
+            >= var_dict['var_dicts'][i]['low_threshold']) & \
+            (getattr(component, var_dict['var_dict_dependency'])
+             < var_dict['var_dicts'][i]['high_threshold']):
+            var_dict = var_dict['var_dicts'][i]
+            success = True
+            break
+    assert success, \
+        'No suitable capex / fix_emissions found for component ' + component.name + ' with ' + \
+        var_dict['var_dict_dependency'] + ' = ' \
+        + str(getattr(component, var_dict['var_dict_dependency']))
+    return var_dict
