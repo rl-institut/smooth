@@ -16,17 +16,26 @@ Similarly to the hydrogen trailer component with multiple production sites, the
 single hydrogen trailer component is a transformer component with a hydrogen
 bus input and a hydrogen bus output, which should be distinct from each other in
 order to maintain a one way flow from the production site to the destination site.
-The only difference between this component and the hydrogen trailer component is
-that here, there is only one option for the origin storage and this is
-predetermined. This component should be used in parallel with the trailer gate
-component. The amount of hydrogen that can be transported in a given time step
-is determined, and this value restricts the flow in the component.
 
 .. figure:: /images/trailer_h2_delivery.png
     :width: 60 %
     :alt: trailer_h2_delivery.png
     :align: center
     Fig.1: Simple diagram of a hydrogen delivery trailer
+
+The only difference between this component and the hydrogen trailer component is
+that here, there is only one option for the origin storage and this is
+predetermined. This component should be used in parallel with the trailer gate
+component. The amount of hydrogen that can be transported in a given time step
+is determined, and this value restricts the flow in the component. A simple
+depiction of how the concept for the single hydrogen delivery trailer is shown in
+Figure 2.
+
+.. figure:: /images/single_trailer_delivery.png
+    :width: 60 %
+    :alt: single_trailer_delivery.png
+    :align: center
+    Fig.2: Single hydrogen delivery trailer concept
 
 Trailer activity
 ----------------

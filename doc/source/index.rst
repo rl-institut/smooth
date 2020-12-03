@@ -11,7 +11,7 @@ Welcome to smooth's documentation!
    :caption: Contents:
 
    getting_started
-   smooth_components
+   smooth.components
 
 
 Indices and tables
