@@ -16,12 +16,12 @@ comp_dict_german = {
     'CHP_Methane': 'Biogas-BHKW',
     'ch4_grid': 'Biogas-Zufuhr',
     'h2_compressor_from_ely': 'Wasserstoffkompressor (Niederdruck)',
-    'li_battery': 'Lithium Batterie',
+    'li_battery': 'Lithium-Batterie',
 }
 
 bus_dict_german = {
     'bel': 'Elektrische Leistung',
-    'bel_wind':	'Wind Leistung',
+    'bel_wind': 'Wind Leistung',
     'bel_pv': 'PV Leistung',
     'bth': 'Thermische Leistung',
     'bh2_lp': 'Wasserstoff-Fluss bei Niederdruck',
@@ -32,7 +32,7 @@ bus_dict_german = {
 
 y_dict_german = {
     'bel': 'Leistung in W',
-    'bel_wind':	'Leistung in W',
+    'bel_wind': 'Leistung in W',
     'bel_pv': 'Leistung in W',
     'bth': 'Leistung in W',
     'bh2_lp': 'Wasserstoff in kg/h',
@@ -64,7 +64,7 @@ comp_dict_english = {
 
 bus_dict_english = {
     'bel': 'Electrical power',
-    'bel_wind':	'Wind power',
+    'bel_wind': 'Wind power',
     'bel_pv': 'PV power',
     'bth': 'Thermal power',
     'bh2_lp': 'Low pressure hydrogen flow',
@@ -75,7 +75,7 @@ bus_dict_english = {
 
 y_dict_english = {
     'bel': 'Power in W',
-    'bel_wind':	'Power in W',
+    'bel_wind': 'Power in W',
     'bel_pv': 'Power in W',
     'bth': 'Power in W',
     'bh2_lp': 'Hydrogen in kg/h',
