@@ -188,8 +188,10 @@ class GasEngineChpBiogas(Component):
             expr += - model.flow[busses[self.bus_ch4], self.model_el, t]
             return (expr == 0)
 
-        model_to_solve.chp_flow_ratio_fix_methane = po.Constraint(
-            model_to_solve.TIMESTEPS, rule=chp_ratio_rule_methane)
+        setattr(model_to_solve,
+                'chp_flow_ratio_fix_methane_{}'.format(self.name.replace(' ', '')),
+                po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule_methane)
+                )
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
