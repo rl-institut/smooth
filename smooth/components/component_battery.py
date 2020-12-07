@@ -109,10 +109,10 @@ class Battery(Component):
     :type set_parameters(params): function
     :param soc: state of charge [-]
     :type soc: numerical
-    :param e_in_max: max. chargeable energy [Wh]
-    :type e_in_max: numerical
-    :param e_out_max: max. dischargeable energy [Wh]
-    :type e_out_max: numerical
+    :param p_in_max: max. chargeable power [W]
+    :type p_in_max: numerical
+    :param p_out_max: max. dischargeable power [W]
+    :type p_out_max: numerical
     :param loss_rate: adjusted loss rate to chosen timestep [%/timestep]
     :type loss_rate: numerical
     :param current_vac: current artificial costs for input and output [EUR/Wh]
@@ -149,9 +149,9 @@ class Battery(Component):
 
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the
-        # battery [EUR/Wh]. vac_out should be set to a minimal value to ensure,
+        # battery [EUR/Wh]. vac_out should be set to a minimal value to ensure
         # that the supply for the demand is first satisfied by the renewables
-        # (costs are 0), second satisfied by the battery and last by the grid.
+        # (costs are 0), and second satisfied by the battery and last by the grid.
         self.vac_in = None
         self.vac_out = None
         self.soc_wanted = None
@@ -168,7 +168,8 @@ class Battery(Component):
 
         # ------------------- STATES -------------------
         self.soc = self.soc_init
-        self.e_in_max = None
+        self.p_in_max = None
+        self.p_out_max = None
         self.loss_rate = (self.loss_rate / 24) * (self.sim_params.interval_time / 60)
 
         # ------------------- VARIABLE ARTIFICIAL COSTS -------------------
@@ -199,20 +200,26 @@ class Battery(Component):
 
         # ToDo: c_rate depending on the soc
 
-        # Max. chargeable or dischargeable energy [Wh] going in from the bus
+        # Max. chargeable or dischargeable power [W] going in from the bus
         # due to c_rate depending on the soc. To ensure that the battery can
         # be fully charged in one timestep, the nominal value of the input-flow
         # needs to be higher than what's actually going into the battery.
         # Therefore we need to divide by the efficiency_charge.  Due to the
         # inflow_conversion_factor (in "create oemof model") the battery will
         # then receive right amount.
-        self.e_in_max = min(
-            self.c_rate_charge * self.battery_capacity * self.sim_params.interval_time / 60,
-            self.battery_capacity - self.soc * self.battery_capacity) / \
-            self.efficiency_charge
-        self.e_out_max = min(
-            self.c_rate_discharge * self.battery_capacity * self.sim_params.interval_time / 60,
-            self.soc * self.battery_capacity)
+        # Flows are calculated as Power [W], so the amount of charge- or dischargeable
+        # energy [Wh] has to be divided by the intervaltime [h]  (P = E / t)
+        # The c-rate is given in [W/Wh], multiplication with capacity [Wh] results in power [W]
+
+        self.p_in_max = min(
+            self.c_rate_charge * self.battery_capacity,
+            (self.battery_capacity - self.soc * self.battery_capacity) /
+            (self.sim_params.interval_time/60)
+            ) / self.efficiency_charge
+        self.p_out_max = min(
+            self.c_rate_discharge * self.battery_capacity,
+            (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60)
+            )
 
     def create_oemof_model(self, busses, _):
         """Creates an oemof Generic Storage component from the information given in
@@ -225,10 +232,10 @@ class Battery(Component):
         battery = solph.components.GenericStorage(
             label=self.name,
             inputs={busses[self.bus_in_and_out]: solph.Flow(
-                    nominal_value=self.e_in_max, variable_costs=self.current_vac[0])
+                    nominal_value=self.p_in_max, variable_costs=self.current_vac[0])
                     },
             outputs={busses[self.bus_in_and_out]: solph.Flow(
-                nominal_value=self.e_out_max, variable_costs=self.current_vac[1])
+                nominal_value=self.p_out_max, variable_costs=self.current_vac[1])
             },
             loss_rate=self.loss_rate,
             initial_storage_level=self.soc,

@@ -54,7 +54,8 @@ class EnergyDemandFromCsv(Component):
      """
 
     def __init__(self, params):
-
+        """Constructor method
+        """
         # Call the init function of the mother class.
         Component.__init__(self)
 
