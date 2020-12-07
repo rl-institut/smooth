@@ -5,7 +5,11 @@ import smooth.framework.functions.functions as func
 
 
 class EnergySourceFromCsv (Component):
-    """ General energy sources are created through this class by importing csv files """
+    """ General energy sources are created through this class by importing csv files
+
+    Each line in the csv file represents one timestep and each value
+    the respective power (e.g. in [W]) coming from the energy source at that timestep
+    """
 
     def __init__(self, params):
 
