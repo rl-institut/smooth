@@ -9,7 +9,8 @@ To use, call run_optimization with a configuration dictionary and your smooth mo
 You will receive a list of :class:`Individual` in return. These individuals are
 pareto-optimal in regard to the given objective functions (limited to two functions).
 
-An example configuration can be seen in smooth/example/run_optimization_example.py.
+An example configuration can be seen in run_optimization_example in the
+`examples directory <https://github.com/rl-institut/smooth/tree/dev/smooth/examples>`_.
 
 Objective functions
 -------------------
@@ -32,7 +33,7 @@ After the given number of generations or aborting, the result is printed to the 
 All individuals currently on the pareto front are returned in a list.
 Their `values` member contain the component attribute values in the order
 given by the `attribute_variation` dictionary from the optimization params.
-In addition, when `SAVE_ALL_SMOOTH_RESULTS` was set to True, the `smooth_result`
+In addition, when `SAVE_ALL_SMOOTH_RESULTS` is set to True, the `smooth_result`
 member of each individual contains the value returned by run_smooth.
 
 .. warning::
