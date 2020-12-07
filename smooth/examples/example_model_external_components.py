@@ -4,7 +4,10 @@ external components that are not included in the simulation/optimization,
 although the costs should still be considered.
 
 The only changes in this example are the creation of external components
-in a list e.g.:
+in a list. The 'H2 Dispenser' external component is used here, which
+calculates the needed number of dispenser units to fulfill the hydrogen
+load (specified in a given CSV file). External components can be
+included in the model definition in the following way:
 
 .. code:: bash
 

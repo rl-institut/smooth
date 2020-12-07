@@ -254,10 +254,13 @@ stages it can be broken down as follows:
   variable in a polynomial function to obtain
   :math:`600 \\cdot s_{c} + 100 \\cdot p_{max}`.
 
-Economy of scale
-----------------
-There is also the option to include the economy of scale in the costs, and it
-can be defined as follows:
+Variable dicts for costs (CAPEX/OPEX)
+-------------------------------------
+There is also the option to include multiple dictionaries containing
+varying cost functions depending on a parameter. As an example,
+this can be useful for considering the economies of scale, where
+specific costs of a unit decrease with increasing scale. The
+variable dicts for costs can be defined as follows:
 
 .. code:: bash
 
@@ -332,7 +335,9 @@ The specific dict that is used in the system is chosen if:
 
 It should be noted that the number of dicts can be chosen freely, but
 they must be defined in ascending order. Also, gaps are fine between
-defined ranges whereas overlapping ranges are not possible. The above
+defined ranges whereas overlapping ranges are not possible. However,
+any values that lie within the gaps cannot be considered in the
+system because a cost has not been assigned to these values. The above
 example states that:
 
 * If the chosen maximum output power from the grid is less than 900 kW, the
