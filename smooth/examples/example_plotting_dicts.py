@@ -74,7 +74,7 @@ bus_dict_english = {
 }
 
 y_dict_english = {
-    'bel': 'Power in W',
+    'bel': 'Power in W', 
     'bel_wind': 'Power in W',
     'bel_pv': 'Power in W',
     'bth': 'Power in W',
