@@ -137,6 +137,28 @@ components.append({
     'fs_low_art_cost': -0.001,
     'fs_high_art_cost': 50,
     'dependency_flow_costs': ('from_grid', 'bel'),
+    'life_time': 50,
+    'capex': {
+        'key': 'variable',
+        'var_dict_dependency': 'output_max',
+        'var_dicts':
+        [
+            {
+                'low_threshold': 0,
+                'high_threshold': 3000000,
+                'key': 'spec',
+                'fitting_value': 0.2,
+                'dependant_value': 'output_max',
+            },
+            {
+                'low_threshold': 3000000,
+                'high_threshold': float('inf'),
+                'key': 'spec',
+                'fitting_value': 0.1,
+                'dependant_value': 'output_max',
+            },
+        ]
+    },
 })
 
 components.append({
