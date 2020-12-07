@@ -154,26 +154,6 @@ components.append({
 
 })
 
-"""components.append({
-    'component': 'energy_demand_from_csv',
-    'name': 'thermal_demand',
-    'bus_in': 'bth',
-    'csv_filename': 'ts_demand_h2.csv',
-    'nominal_value': 1,
-    'column_title': 'Hydrogen load',
-    'path': my_path
-})
-
-
-components.append({
-    'component': 'fuel_cell_chp',
-    'name': 'fuel_cell_chp',
-    'bus_el': 'bel',
-    'bus_h2': 'bh2_hp',
-    'bus_th': 'bth',
-    'power_max': 500e3
-})"""
-
 sim_params = {
     'start_date': '1/1/2019',
     'n_intervals': 10,
