@@ -115,7 +115,7 @@ class Component:
         time derivatives (e.g. [W] or [kg/h]) and hence have to be adjusted to interval time [h].
 
         :param results: oemof result object for this time step
-        :param sim_params: simulation parameters defined by the user
+        :param sim_params: simulation parameters defined by the user 
         """
 
         # First create an empty cost and art. cost array for this component, if
