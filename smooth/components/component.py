@@ -109,10 +109,14 @@ class Component:
     # ------------------- UPDATE THE COSTS -------------------
 
     def update_var_costs(self, results, sim_params):
-        # Track the costs and artificial costs of a component for each time step.
-        # Parameters:
-        #  results: oemof result object for this time step.
-        #  sim_params: simulation parameters defined by the user.
+        """
+        Track the costs and artificial costs of a component for each time step.
+        Costs are associated with absolute values (e.g. [Wh] or [kg]), flows are given in
+        time derivatives (e.g. [W] or [kg/h]) and hence have to be adjusted to interval time [h].
+
+        :param results: oemof result object for this time step
+        :param sim_params: simulation parameters defined by the user
+        """
 
         # First create an empty cost and art. cost array for this component, if
         # it hasn't been created before.
@@ -124,25 +128,25 @@ class Component:
             self.results['art_costs'] = [0] * sim_params.n_intervals
 
         # Update the costs for this time step [EUR].
-        # Costs are associated with absolute values (e.g. [Wh] org [kg]), flows are given in
-        # time derivatives (e.g. [W] org [kg/h]) and have to be adjusted to interval time [h]
         if self.variable_costs is not None:
             this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
             self.results['variable_costs'][sim_params.i_interval] = \
                 this_dependency_value * sim_params.interval_time/60 * self.variable_costs
         # Update the artificial costs for this time step [EUR].
-        # Costs are associated with absolute values (e.g. [Wh] org [kg]), flows are given in
-        # time derivatives (e.g. [W] org [kg/h]) and have to be adjusted to interval time [h]
         if self.artificial_costs is not None:
             this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
             self.results['art_costs'][sim_params.i_interval] = \
                 this_dependency_value * sim_params.interval_time/60 * self.artificial_costs
 
     def update_var_emissions(self, results, sim_params):
-        # Track the emissions of a component for each time step.
-        # Parameters:
-        #  results: oemof result object for this time step.
-        #  sim_params: simulation parameters defined by the user.
+        """
+        Track the emissions of a component for each time step.
+        Emissions are associated with absolute values (e.g. [Wh] or [kg]), flows are given in
+        time derivatives (e.g. [W] or [kg/h]) and hence have to be adjusted to interval time [h].
+
+        :param results: oemof result object for this time step
+        :param sim_params: simulation parameters defined by the user
+        """
 
         # First create an empty emission array for this component, if it hasn't been created before.
         if 'variable_emissions' not in self.results:
@@ -152,8 +156,6 @@ class Component:
 
         # Update the emissions for this time step [kg]. Before, verify if a
         # flow name is given as emission dependency.
-        # Emissions are associated with absolute values (e.g. [Wh] org [kg]), flows are given in
-        # time derivatives (e.g. [W] org [kg/h]) and have to be adjusted to interval time [h]
         if self.variable_emissions is not None:
             this_dependency_value = \
                 self.flows[self.dependency_flow_emissions][sim_params.i_interval]

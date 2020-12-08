@@ -31,7 +31,8 @@ def update_annuities(component):
     if not component.op_emissions:
         op_emissions = 0
     else:
-        # Check if 'variable' op_emissions are beeing used, if so decide which op_emissions are valid
+        # Check if 'variable' op_emissions are being used, if so decide which
+        # op_emissions are valid
         if component.op_emissions['key'] == 'variable':
             component.op_emissions = choose_valid_dict(component, component.op_emissions)
         op_emissions = component.op_emissions['cost']
