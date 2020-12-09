@@ -1,4 +1,4 @@
-from smooth.examples.example_model_trailer import mymodel
+from smooth.examples.example_model import mymodel
 
 from smooth import run_smooth
 from smooth import plot_smooth_results
