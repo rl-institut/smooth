@@ -190,7 +190,7 @@ class H2Chp(Component):
         # the thermal part are always the same (which is necessary while the
         # piecewise linear transformer cannot have two outputs yet and
         # therefore the two parts need to be separate components).
-        def h2_chp_ratio_rule(model, t):
+        def chp_ratio_rule(model, t):
             # Inverter flow
             expr = 0
             expr += model.flow[busses[self.bus_h2], self.model_th, t]
@@ -198,8 +198,10 @@ class H2Chp(Component):
             expr += - model.flow[busses[self.bus_h2], self.model_el, t]
             return (expr == 0)
 
-        model_to_solve.h2_chp_flow_ratio_fix = po.Constraint(
-            model_to_solve.TIMESTEPS, rule=h2_chp_ratio_rule)
+        setattr(model_to_solve,
+                'chp_flow_ratio_fix_{}'.format(self.name.replace(' ', '')),
+                po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
+                )
 
     def update_flows(self, results, sim_params):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
