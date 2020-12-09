@@ -6,6 +6,7 @@ Open Energy Modelling Framework solver (`oemof-solph <https://github.com/oemof/o
 How to use
 **********
 The :func:`run_smooth` function expects an energy model. Such a model consists of:
+
 * energy sources
 * energy sinks
 * energy transformers
@@ -81,12 +82,16 @@ The first item returned is a list of all components, each updated with
 **************
 Implementation
 **************
-The concept of :func:`run_smooth` is demonstrated in the below diagram:
-.. image:: path/filename.png
-  :width: 400
-  :alt: Alternative text
+The concept of :func:`run_smooth` is demonstrated in the figure below:
 
-:func:`run_smooth` has three distinct phases:
+.. figure:: /images/run_smooth.png
+    :width: 60 %
+    :alt: run_smooth.png
+    :align: center
+
+    Fig.1: Concept of run_smooth function.
+
+The :func:`run_smooth` function has three distinct phases:
 initialization, simulation and post processing.
 
 Initialization
