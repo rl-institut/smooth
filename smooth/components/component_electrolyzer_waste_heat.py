@@ -51,7 +51,7 @@ class ElectrolyzerWasteHeat(Electrolyzer):
         # The external surface area of the electrolysis stack is calculated assuming that it is
         # cylindrical
         self.area_stack = (
-                2 * self.area_cell / 10000 + 3.14 * self.diameter_cell * self.height_stack
+            2 * self.area_cell / 10000 + 3.14 * self.diameter_cell * self.height_stack
         )  # [m^2]
         # The overall surface area exposed by the gas separators and the pipe communicating
         # them is assumed to be in a ratio of 1 : 0.42 with the area of the stack (taken from

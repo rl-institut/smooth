@@ -1,4 +1,3 @@
-# from smooth.examples.example_model_external_components import mymodel
 from smooth.examples.example_model import mymodel
 
 from smooth import run_smooth
