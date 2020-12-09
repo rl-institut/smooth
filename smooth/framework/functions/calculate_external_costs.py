@@ -69,3 +69,44 @@ def costs_for_ext_components(model):
         this_ext_comp.generate_results()
 
     return ext_components
+
+
+def print_ext_components(ext_components):
+    """Print the financial results of a smooth run.
+
+    :param ext_components: result from costs_for_ext_components() containing all external components
+    :type ext_components: list of :class:`~smooth.components.component.Component`
+    """
+
+    # Calculate the sum of all total annuities [EUR/a] and annual emissions [kg/a].
+    sum_of_tot_annuity = 0
+    sum_of_tot_ann_emission = 0
+
+    print("\n++++++++")
+    print('External Components:')
+    print("++++++++\n")
+    print('{:20s} {:20s} {:20s} {:20s} {:20s} {:20s} {:20s}'.format(
+        'component name', 'annutiy capex', 'annuity opex', 'annuity total',
+        'annual fix GGE', 'annual op. GGE', 'annual total GGE'
+    ))
+
+    for this_comp in ext_components:
+        # Print the annuity costs for each component.
+        print('{:20s} {:<20d} {:<20d} {:<20d} {:<20d} {:<20d} {:<20d}'.format(
+            this_comp.name,
+            int(this_comp.results['annuity_capex']),
+            int(this_comp.results['annuity_opex']),
+            int(this_comp.results['annuity_total']),
+            int(this_comp.results['annual_fix_emissions']),
+            int(this_comp.results['annual_op_emissions']),
+            int(this_comp.results['annual_total_emissions'])
+        ))
+        # print('Comp: {}: flow: {}'.format(this_comp.name, this_comp.flows))
+        # print('Comp: {}: states: {}'.format(this_comp.name, this_comp.states))
+        # print('Comp: {}: results: {}'.format(this_comp.name, this_comp.results))
+
+        sum_of_tot_annuity += this_comp.results['annuity_total']
+        sum_of_tot_ann_emission += this_comp.results['annual_total_emissions']
+
+    print('\nSum of total annuity is {} EUR/a'.format(int(sum_of_tot_annuity)))
+    print('\nSum of total annual emission is {} kg/a'.format(int(sum_of_tot_ann_emission)))
