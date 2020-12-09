@@ -1,4 +1,110 @@
-""" DEFINE THE MODEL YOU WANT TO SIMULATE """
+"""
+This example demonstrates the basic usage of hydrogen trailers in an energy system,
+and how they should be included in the model definition. The energy system in this
+example has three production sites, with a trailer delivering from the first production
+site to a refuelling station, and another trailer delivering from the other two production
+sites to another refuelling station. Below, notable components in the model definition
+(in relation to hydrogen trailers) are outlined.
+
+Gate at production sites
+------------------------
+A gate component is used at the production sites to allow for produced hydrogen to be
+directly sent to the delivery, without having to go through the storage. This is
+necessary to ensure that the buses coming out of the storage and coming straight
+from the electrolyzer are the same, because the buses entering and leaving the
+storage are distinct in this case.
+
+.. code:: bash
+
+components.append({
+    'component': 'gate',
+    'name': 'storage_gate_prod_site_1',
+    'bus_in': 'bh2_300_prod_site_1',
+    'bus_out': 'bh2_300_prod_site_1_for_dlvry',
+    'max_input': 1000e3,
+    'artificial_costs': -200,
+    'dependency_flow_costs': ('bh2_300_prod_site_1', 'storage_gate_prod_site_1'),
+})
+
+Trailer gate
+------------
+A trailer gate component is defined to limit the flows into the trailer
+components depending on whether delivery is possible or not. This can
+be defined as follows:
+
+.. code:: bash
+
+components.append({
+    'component': 'trailer_gate',
+    'name': 'h2_gate_dlvry_to_HRS_1',
+    'bus_in': 'bh2_300_prod_site_1',
+    'bus_out': 'bh2_300_dlvry_HRS_1',
+    'max_input': 1000e6,
+    'trailer_distance': 20,  # 20 km
+    'driver_costs': 0,
+    'variable_costs': 35 / 100 * 1.2,
+    'dependency_flow_costs': ('h2_gate_dlvry_to_HRS_1', 'bh2_300_dlvry_HRS_1'),
+    # Foreign states
+    'fs_component_name': ['trailer_HRS_1', 'storage_prod_site_1', 'storage_prod_site_1',
+                          'storage_prod_site_1', 'storage_HRS_1', 'storage_HRS_1',
+                          'trailer_HRS_1'],
+    'fs_attribute_name': ['fs_origin_available_kg', 'storage_level', 'storage_level_min',
+                          'storage_capacity', 'storage_level', 'storage_capacity',
+                          'fs_destination_storage_threshold']
+})
+
+Trailer delivery from single origin
+-----------------------------------
+The delivery from production site 1 to refuelling station 1 is achieved
+using the below component, which states that if the destination storage
+falls below 30%, the system is incentivised to pick up hydrogen from
+the production site.
+
+.. code:: bash
+
+components.append({
+    'component': 'trailer_h2_delivery_single',
+    'name': 'trailer_HRS_1',
+    'trailer_capacity': 900,
+    'bus_in': 'bh2_300_dlvry_HRS_1',
+    'bus_out': 'bh2_300_HRS_1',
+    # Foreign states
+    'fs_component_name': ['storage_prod_site_1', 'storage_prod_site_1', 'storage_prod_site_1',
+                          'storage_HRS_1', 'storage_HRS_1'],
+    'fs_attribute_name': ['storage_level', 'storage_level_min', 'storage_capacity',
+                          'storage_level', 'storage_capacity'],
+    'fs_destination_storage_threshold': 0.3,
+    'dependency_flow_costs': ('bh2_300_dlvry_HRS_1', 'trailer_HRS_1')
+})
+
+Trailer delivery from multiple origins
+--------------------------------------
+This is defined in a similar way to the above trailer component, but it
+also considers both production site 2 and 3. It determines which one
+should be collected from (if the destination storage is running low) for
+the given timestep, based on storage availability.
+
+.. code:: bash
+
+components.append({
+    'component': 'trailer_h2_delivery',
+    'name': 'trailer_HRS_2',
+    'trailer_capacity': 900,
+    'bus_in': 'bh2_300_dlvry_HRS_2',
+    'bus_out': 'bh2_300_HRS_2',
+    # Foreign states
+    'fs_component_name': ['storage_prod_site_2', 'storage_prod_site_3',
+                          'storage_prod_site_2', 'storage_prod_site_3',
+                          'storage_prod_site_2', 'storage_prod_site_3',
+                          'storage_HRS_2', 'storage_HRS_2'],
+    'fs_attribute_name': ['storage_level', 'storage_level',
+                          'storage_level_min', 'storage_level_min',
+                          'storage_capacity', 'storage_capacity',
+                          'storage_level', 'storage_capacity'],
+    'fs_destination_storage_threshold': 0.3,
+    'dependency_flow_costs': ('bh2_300_dlvry_HRS_2', 'trailer_HRS_2')
+})
+"""
 import os
 
 # Define where Python should look for csv files
@@ -11,7 +117,8 @@ busses = ['bel_prod_site_1', 'bh2_40_prod_site_1', 'bh2_300_prod_site_1',
           'bh2_300_prod_site_2', 'bh2_300_prod_site_2_for_dlvry', 'bel_prod_site_3',
           'bh2_40_prod_site_3', 'bh2_300_prod_site_3', 'bh2_300_prod_site_3_for_dlvry',
           'bh2_300_dlvry_HRS_1', 'bh2_300_HRS_1', 'bh2_300_dlvry_HRS_2', 'bh2_300_HRS_2',
-          ]
+          'bh2_300_HRS_1_2', 'bh2_350_HRS_1', 'bel_HRS_1', 'bh2_350_HRS_plön',
+          'bh2_300_HRS_2_2', 'bh2_350_HRS_2', 'bel_HRS_2']
 
 
 """ Define components """
@@ -24,6 +131,7 @@ components.append({
     'name': 'wind_output_prod_site_1',
     'bus_out': 'bel_prod_site_1',
     'csv_filename': 'ts_wind_1kW_prod_site_1.csv',
+    'csv_separator': ',',
     'nominal_value': 10e3,  # 10 MW
     'column_title': 'Power output in W',
     'path': my_path
@@ -144,7 +252,8 @@ components.append({
     'component': 'energy_source_from_csv',
     'name': 'wind_output_prod_site_2',
     'bus_out': 'bel_prod_site_2',
-    'csv_filename': 'ts_wind_1kW_prod_site_2.csv',  # ToDo: change
+    'csv_filename': 'ts_wind_1kW_prod_site_2.csv',
+    'csv_separator': ',',
     'nominal_value': 5e3,  # 10 MW
     'column_title': 'Power output in W',
     'path': my_path
@@ -265,7 +374,7 @@ components.append({
     'component': 'energy_source_from_csv',
     'name': 'pv_output_prod_site_3',
     'bus_out': 'bel_prod_site_3',
-    'csv_filename': 'ts_pv_1kW.csv',  # ToDo: get timeseries
+    'csv_filename': 'ts_pv_1kW_prod_site_3.csv',
     'csv_separator': ',',
     'nominal_value': 5000,  # 5 MW
     'life_time': 26.42,
@@ -396,10 +505,12 @@ components.append({
     'variable_costs': 35 / 100 * 1.2,
     'dependency_flow_costs': ('h2_gate_dlvry_to_HRS_1', 'bh2_300_dlvry_HRS_1'),
     # Foreign states
-    'fs_component_name': ['trailer_HRS_1', 'storage_prod_site_1', 'storage_prod_site_1', 'storage_prod_site_1',
-                          'storage_HRS_1', 'storage_HRS_1', 'trailer_HRS_1'],
-    'fs_attribute_name': ['fs_origin_available_kg', 'storage_level', 'storage_level_min', 'storage_capacity',
-                          'storage_level', 'storage_capacity', 'fs_destination_storage_threshold'],
+    'fs_component_name': ['trailer_HRS_1', 'storage_prod_site_1', 'storage_prod_site_1',
+                          'storage_prod_site_1', 'storage_HRS_1', 'storage_HRS_1',
+                          'trailer_HRS_1'],
+    'fs_attribute_name': ['fs_origin_available_kg', 'storage_level', 'storage_level_min',
+                          'storage_capacity', 'storage_level', 'storage_capacity',
+                          'fs_destination_storage_threshold']
 })
 
 # TRAILER DELIVERY TO HRS 1
@@ -432,10 +543,12 @@ components.append({
     'variable_costs': 35 / 100 * 1.2,
     'dependency_flow_costs': ('h2_gate_wind_dlvry_to_HRS_2', 'bh2_300_dlvry_HRS_2'),
     # Foreign states
-    'fs_component_name': ['trailer_HRS_2', 'storage_prod_site_2', 'storage_prod_site_2', 'storage_prod_site_2',
-                          'storage_HRS_2', 'storage_HRS_2', 'trailer_HRS_2'],
-    'fs_attribute_name': ['fs_origin_available_kg', 'storage_level', 'storage_level_min', 'storage_capacity',
-                          'storage_level', 'storage_capacity', 'fs_destination_storage_threshold'],
+    'fs_component_name': ['trailer_HRS_2', 'storage_prod_site_2', 'storage_prod_site_2',
+                          'storage_prod_site_2', 'storage_HRS_2', 'storage_HRS_2',
+                          'trailer_HRS_2'],
+    'fs_attribute_name': ['fs_origin_available_kg', 'storage_level', 'storage_level_min',
+                          'storage_capacity', 'storage_level', 'storage_capacity',
+                          'fs_destination_storage_threshold'],
 })
 
 ## PROD SITE 3 TRAILER GATE H2 FOR DELIVERY TO HRS 2
@@ -450,10 +563,12 @@ components.append({
     'variable_costs': 35 / 100 * 1.2,
     'dependency_flow_costs': ('h2_gate_pv_dlvry_to_HRS_2', 'bh2_300_dlvry_HRS_2'),
     # Foreign states
-    'fs_component_name': ['trailer_HRS_2', 'storage_prod_site_3', 'storage_prod_site_3', 'storage_prod_site_3',
-                          'storage_HRS_2', 'storage_HRS_2', 'trailer_HRS_2'],
-    'fs_attribute_name': ['fs_origin_available_kg', 'storage_level', 'storage_level_min', 'storage_capacity',
-                          'storage_level', 'storage_capacity', 'fs_destination_storage_threshold'],
+    'fs_component_name': ['trailer_HRS_2', 'storage_prod_site_3', 'storage_prod_site_3',
+                          'storage_prod_site_3', 'storage_HRS_2', 'storage_HRS_2',
+                          'trailer_HRS_2'],
+    'fs_attribute_name': ['fs_origin_available_kg', 'storage_level', 'storage_level_min',
+                          'storage_capacity', 'storage_level', 'storage_capacity',
+                          'fs_destination_storage_threshold'],
 })
 
 # TRAILER DELIVERY TO HRS 2
@@ -553,12 +668,12 @@ components.append({
     'dependency_flow_costs': ('el_grid_HRS_1', 'bel_HRS_1')
 })
 
-# H2 DEMAND, 43,920 kg/a  # ToDo: change this and include correct timeseries!
+# H2 DEMAND 1
 components.append({
     'component': 'energy_demand_from_csv',
-    'name': 'h2_bus_demand_plön',
-    'bus_in': 'bh2_350_HRS_plön',
-    'csv_filename': 'bus_demand_plön_43920_kg.csv',  # checked
+    'name': 'h2_demand_HRS_1',
+    'bus_in': 'bh2_350_HRS_1',
+    'csv_filename': 'ts_h2_demand_HRS_1.csv',
     'nominal_value': 1,
     'column_title': 'H2 demand in kg',
     'path': my_path
@@ -638,15 +753,15 @@ components.append({
     'output_max': 1000e6,
     'variable_costs': 18.55 / 100 / 1000,  # 18.55 ct/kWh
     'artificial_costs': 2500,
-    'dependency_flow_costs': ('el_grid_HRS_1', 'bel_HRS_1')
+    'dependency_flow_costs': ('el_grid_HRS_2', 'bel_HRS_2')
 })
 
-# H2 DEMAND, 43,920 kg/a  # ToDo: change this and include correct timeseries!
+# H2 DEMAND 1
 components.append({
     'component': 'energy_demand_from_csv',
-    'name': 'h2_bus_demand_plön',
-    'bus_in': 'bh2_350_HRS_plön',
-    'csv_filename': 'bus_demand_plön_43920_kg.csv',  # checked
+    'name': 'h2_demand_HRS_2',
+    'bus_in': 'bh2_350_HRS_2',
+    'csv_filename': 'ts_h2_demand_HRS_2.csv',
     'nominal_value': 1,
     'column_title': 'H2 demand in kg',
     'path': my_path
@@ -654,7 +769,7 @@ components.append({
 
 sim_params = {
     'start_date': '1/1/2019',
-    'n_intervals': 10,
+    'n_intervals': 24*7,
     'interval_time': 60,
     'interest_rate': 0.03,
     'print_progress': False,
