@@ -21,6 +21,7 @@ site.
     :width: 60 %
     :alt: trailer_h2_delivery.png
     :align: center
+
     Fig.1: Simple diagram of a hydrogen delivery trailer
 
 This component should be used in parallel with the trailer gate
@@ -30,9 +31,10 @@ depiction of how the concept for the single hydrogen delivery trailer is shown i
 Figure 2.
 
 .. figure:: /images/multiple_trailer_delivery.png
-    :width: 60 %
+    :width: 100 %
     :alt: multiple_trailer_delivery.png
     :align: center
+
     Fig.2: Multiple hydrogen delivery trailer concept
 
 Trailer activity
@@ -40,6 +42,7 @@ Trailer activity
 In this component, the trailer has the option of transporting hydrogen from
 multiple production sites to one destination. Thresholds are set for both
 the origin and destination storages. The component then:
+
 * Checks the level of destination storage component: if it is below specified
   threshold, low artificial costs are implemented (to encourage system to fill it).
 * Checks the level of the origin storage components and chooses the one with

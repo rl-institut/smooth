@@ -21,6 +21,7 @@ order to maintain a one way flow from the production site to the destination sit
     :width: 60 %
     :alt: trailer_h2_delivery.png
     :align: center
+
     Fig.1: Simple diagram of a hydrogen delivery trailer
 
 The only difference between this component and the hydrogen trailer component is
@@ -32,15 +33,17 @@ depiction of how the concept for the single hydrogen delivery trailer is shown i
 Figure 2.
 
 .. figure:: /images/single_trailer_delivery.png
-    :width: 60 %
+    :width: 100 %
     :alt: single_trailer_delivery.png
     :align: center
+
     Fig.2: Single hydrogen delivery trailer concept
 
 Trailer activity
 ----------------
 Thresholds are set for both the origin and destination storages. The component
 then:
+
 * Checks the level of destination storage component: if it is below specified
   threshold, low artificial costs are implemented (to encourage system to fill it).
 * Checks the level of origin storage component: if it is below specified

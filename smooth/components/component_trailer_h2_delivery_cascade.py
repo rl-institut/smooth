@@ -30,15 +30,17 @@ is determined, and this value restricts the flow in the component.
     :width: 60 %
     :alt: trailer_h2_delivery.png
     :align: center
+
     Fig.1: Simple diagram of a hydrogen delivery trailer
 
 A simple depiction of the concept for the single hydrogen delivery trailer is
 shown in Figure 2.
 
 .. figure:: /images/cascade_trailer_delivery.png
-    :width: 60 %
+    :width: 100 %
     :alt: cascade_trailer_delivery.png
     :align: center
+
     Fig.2: Cascade hydrogen delivery trailer concept
 
 Trailer activity
