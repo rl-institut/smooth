@@ -1,5 +1,6 @@
 """
-This module represents a hydrogen trailer delivery.
+This module represents a hydrogen trailer delivery from multiple
+production sites.
 
 *****
 Scope
@@ -14,83 +15,75 @@ Concept
 The hydrogen trailer component is a transformer component with a hydrogen
 bus input and a hydrogen bus output, which should be distinct from each other
 in order to maintain a one way flow from the production site to the destination
-site. The amount of hydrogen that can be transported in a given time step
-is determined, and this value restricts the flow in the component.
+site.
 
 .. figure:: /images/trailer_h2_delivery.png
     :width: 60 %
     :alt: trailer_h2_delivery.png
     :align: center
-
     Fig.1: Simple diagram of a hydrogen delivery trailer
+
+This component should be used in parallel with the trailer gate
+component. The amount of hydrogen that can be transported in a given time step is
+determined, and this value restricts the flow in the component. A simple
+depiction of how the concept for the single hydrogen delivery trailer is shown in
+Figure 2.
+
+.. figure:: /images/multiple_trailer_delivery.png
+    :width: 60 %
+    :alt: multiple_trailer_delivery.png
+    :align: center
+    Fig.2: Multiple hydrogen delivery trailer concept
 
 Trailer activity
 ----------------
-Thresholds are set for both the origin and destination storages. The component
-then:
-
+In this component, the trailer has the option of transporting hydrogen from
+multiple production sites to one destination. Thresholds are set for both
+the origin and destination storages. The component then:
 * Checks the level of destination storage component: if it is below specified
   threshold, low artificial costs are implemented (to encourage system to fill it).
-* Checks the level of non-central storage component: if it is below specified
-  threshold, the trailer cannot take any hydrogen from it.
-* Checks the mass of hydrogen in both storages along with taking the trailer
-  capacity into consideration, and transports the maximum possible amount of
-  hydrogen.
+* Checks the level of the origin storage components and chooses the one with
+  maximum available mass of hydrogen
+* Takes into consideration the mass of hydrogen in the chosen origin storage
+  component and the destination storage, as well as the trailer capacity, and
+  transports the maximum possible amount of hydrogen.
 * Considers the round trip distance along with the assumptions that the
   trailer can travel at 100 km/h and that the refuelling time for the trailer
   is 15 minutes. With this information, it is determined whether or not
   delivery is possible for the following time step with the trailer.
 """
-
 import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
 
 
 class TrailerH2Delivery(Component):
     """
-    :param name: unique name given to the h2 trailer delivery component
+    :param name: unique name given to the trailer components
     :type name: str
-    :param bus_in: hydrogen bus that enters the component
+    :param bus_in: input hydrogen bus to the trailer
     :type bus_in: str
-    :param bus_out: hydrogen bus that leaves the component
+    :param bus_out: output hydrogen bus from the trailer
     :type bus_out: str
-    :param trailer_capacity: trailer capacity (at maximum pressure) [kg]
+    :param trailer_capacity: trailer capacity [kg]
     :type trailer_capacity: numerical
-    :param fs_destination_storage_threshold: threshold for the destination storage to
-        encourage/discourage the use of the trailer (percentage of capacity) [-]
+    :param fs_destination_storage_threshold: threshold for destination storage
+        to encourage/discourage the use of the trailer [-]
     :type fs_destination_storage_threshold: numerical
-    :param fs_origin_storage_threshold: threshold for the origin storage to
-        encourage/discourage the use of the trailer (percentage of capacity) [-]
-    :type fs_origin_storage_threshold: numerical
-    :param hydrogen_transported: amount of hydrogen transported by the trailer [kg]
-    :type hydrogen_transported: numerical
-    :param hydrogen_needed: amount of hydrogen needed [kg]
+    :param hydrogen_needed: mass of hydrogen needed from delivery [kg]
     :type hydrogen_needed: numerical
-    :param fs_low_art_cost: low artificial cost value (set for destination storage) [EUR/kg]
-    :type fs_low_art_cost: numerical
-    :param fs_high_art_cost: high artificial cost value (set for destination storage) [EUR/kg]
-    :type fs_high_art_cost: numerical
+    :param fs_origin_available_kg: foreign state for the available mass of hydrogen
+        in the origin storage [kg]
+    :type fs_origin_available_kg: numerical
     :param set_parameters(params): updates parameter default values
         (see generic Component class)
     :type set_parameters(params): function
-    :param round_trip_distance: round-trip distance [km]
-    :type round_trip_distance: numerical
-    :param flow_switch: this determines whether there is a flow in the current
-        timestep: 0 = off, 1 = on
-    :type flow_switch: int
-    :param max_delivery_value: maximum amount of hydrogen that can be delivered in
-        the given timestep [kg]
-    :type max_delivery_value: numerical
-    :param delivery_possible: this states whether or not delivery is possible in the given
-        timestep: 0 = no, 1 = yes
-    :type delivery_possible: int
     :param current_ac: current artificial cost value [EUR/kg]
     :type current_ac: numerical
     """
 
     def __init__(self, params):
-
+        """ Constructor method
+        """
         # Call the init function of the mother class.
         Component.__init__(self)
 
@@ -107,28 +100,13 @@ class TrailerH2Delivery(Component):
         #  hour - this needs to be changed if the single trip distance from the origin to
         #  destination is longer than 45 minutes (1 hour - 15 mins refuelling)
 
-        self.trailer_capacity = 500
-        self.single_trip_distance = 30
-        # Define the threshold value for the artificial costs.
+        self.trailer_capacity = 900
         self.fs_destination_storage_threshold = None
-        self.fs_origin_storage_threshold = None
-        self.hydrogen_transported = 0
         self.hydrogen_needed = 0
-        self.fs_low_art_cost = None
-        self.fs_high_art_cost = None
+        self.fs_origin_available_kg = None
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
-
-        self.round_trip_distance = self.single_trip_distance * 2
-
-        # ------------------- STATES -------------------
-        self.flow_switch = None
-        # This defines the maximum amount of hydrogen that can be delivered in the given timestep:
-        # - 0 if the origin storage level is below the specified threshold
-        # - else, the capacity of the trailer
-        self.max_delivery_value = None
-        self.delivery_possible = 1
 
         # ------------------- INTERNAL VALUES -------------------
         self.current_ac = 0
@@ -173,68 +151,108 @@ class TrailerH2Delivery(Component):
                     this_dependency_value * self.artificial_costs
 
     def prepare_simulation(self, components):
-        """Prepares the simulation by determining whether hydrogen should be transported
-        from the origin storage, and if so, how much hydrogen can be transported.
+        """Prepares the simulation by determining trailer activity such as
+        which origin storage to take from and how much hydrogen is needed.
 
         :param components: List containing each component object
         :type components: list
+        :return: artificial costs and amount of hydrogen needed
         """
         # Check level of destination storage component: if it is below specified threshold,
         # implement low artificial costs (to encourage system to fill it)
-        # Check level of non-central storage component: if it is below specified threshold, the
-        # trailer cannot take any hydrogen from it
+        # Check level of all non-central storage component and use the one with the
+        # highest amount of h2:
+        # if it is below specified threshold, the trailer cannot take any hydrogen from it
+
+        # In the model definition, the foreign states must be defined in the following order:
+        # 1) all origin storage levels [kg]
+        # 2) all origin minimum storage levels [kg]
+        # 3) all origin capacities [kg]
+        # 4) destination storage level [kg]
+        # 5) destination scapacity [kg]
+        # The order for each of these in terms of production sites must also be the same e.g.
+        # the first entry relates to the first site, the second entry relates
+        # to the second site etc.
         if self.fs_component_name is not None:
-            # Obtains the origin storage level [kg]
-            fs_origin_storage_level_kg = self.get_foreign_state_value(components, index=0)
-            # Obtains the origin storage capacity [kg]
-            fs_origin_storage_capacity = self.get_foreign_state_value(components, index=1)
-            # Obtains the available mass that can be taken from the origin storage [kg]
-            fs_origin_available_kg = \
-                fs_origin_storage_level_kg - \
-                (self.fs_origin_storage_threshold * fs_origin_storage_capacity)
+
+            # n is the number of production sites that the trailer is connected to
+            n = int((len(self.fs_component_name) - 2) / 3)
+            # Creates an index list for the number of foreign states considered
+            index_list = list(range(0, len(self.fs_component_name)))
+            # List containing the origin storage levels [kg]
+            fs_origin_storage_levels = []
+            # List containing the origin minimum storage levels [kg]
+            fs_origin_min_storage_levels = []
+            # List containing the origin capacities [kg]
+            fs_origin_capacities = []
+            # List containing the origin available masses [kg]
+            fs_origin_available_masses = []
+
+            # Obtains a list of the origin storage levels for n sites
+            for i in index_list[0:n]:
+                this_origin_storage_level = self.get_foreign_state_value(components, index=i)
+                fs_origin_storage_levels.append(this_origin_storage_level)
+
+            # Obtains a list of the origin minimum storage levels for n sites
+            for i in index_list[n:2*n]:
+                this_min_storage_level = self.get_foreign_state_value(components, index=i)
+                fs_origin_min_storage_levels.append(this_min_storage_level)
+
+            # Obtains a list of the origin capacity levels for n sites
+            for i in index_list[2*n:3*n]:
+                this_capacity = self.get_foreign_state_value(components, index=i)
+                fs_origin_capacities.append(this_capacity)
+
+            # Obtains a list for the available masses that can be taken from the
+            # origin storage [kg].
+            # It cannot take more than half of the capacity into account
+            for i in range(int(n)):
+                this_available_kg = min((fs_origin_storage_levels[i]
+                                         - fs_origin_min_storage_levels[i]),
+                                        fs_origin_capacities[i] / 2)
+                fs_origin_available_masses.append(this_available_kg)
+
+            # Get the availability mass of hydrogen of the fullest origin storage
+            self.fs_origin_available_kg = max(fs_origin_available_masses)
             # Obtains the destination storage level [kg]
-            fs_destination_storage_level_kg = self.get_foreign_state_value(components, index=2)
+            fs_destination_storage_level = \
+                self.get_foreign_state_value(components, index=index_list[-2])
             # Obtains the destination storage capacity [kg]
-            fs_destination_storage_capacity = self.get_foreign_state_value(components, index=3)
+            fs_destination_capacity = \
+                self.get_foreign_state_value(components, index=index_list[-1])
             # Obtains the available mass that can be delivered to the destination storage [kg]
             fs_destination_available_storage = \
-                fs_origin_storage_capacity - fs_destination_storage_level_kg
+                fs_destination_capacity - fs_destination_storage_level
 
-            # Checks if the destination storage level is below the threshold: if yes, low
-            # artificial costs are implemented to encourage a delivery from the trailer
-            if fs_destination_storage_level_kg \
-                    < self.fs_destination_storage_threshold * fs_destination_storage_capacity:
-                self.artificial_costs = self.fs_low_art_cost
+            # Checks if the destination storage level is below the threshold:
+            # if yes, delivery possible
+
+            # todo: implement multiple storage delivery in one time step from different wind
+            #  parks - low priority
+
+            if fs_destination_storage_level \
+                    < self.fs_destination_storage_threshold * fs_destination_capacity:
+
                 # If the available mass [kg] in the destination storage and the amount of
                 # available hydrogen [kg] in the origin storage exceed the trailer capacity,
                 # the trailer should be completely filled
-                if fs_destination_available_storage > self.trailer_capacity \
-                        and fs_origin_available_kg >= self.trailer_capacity:
+                if fs_destination_available_storage >= self.trailer_capacity \
+                        and self.fs_origin_available_kg >= self.trailer_capacity:
                     self.hydrogen_needed = self.trailer_capacity
                 # If the available mass [kg] in the destination storage exceeds the trailer
                 # capacity but the amount of available hydrogen in the origin storage is less
                 # than the trailer capacity, the trailer should be filled with the maximum amount
                 # of available hydrogen from the origin storage
                 elif fs_destination_available_storage > \
-                        self.trailer_capacity > fs_origin_available_kg:
-                    self.hydrogen_needed = fs_origin_available_kg
+                        self.trailer_capacity > self.fs_origin_available_kg:
+                    self.hydrogen_needed = self.fs_origin_available_kg
                 # Else, the trailer should deliver the maximum amount of hydrogen that can fit
                 # into the destination storage
                 else:
                     self.hydrogen_needed = fs_destination_available_storage
-            # If the destination storage level is not below the threshold, high artificial costs are
-            # implemented to discourage unnecessary deliveries
+            # If the destination storage level is not below the threshold no delivery possible
             else:
-                self.artificial_costs = self.fs_high_art_cost
-            # If the origin storage level is below the specified threshold or the distance is far
-            # enough that the trailer cannot complete the round trip plus refuelling in one hour,
-            # delivery is not possible from this storage
-            if fs_origin_storage_level_kg < \
-                    self.fs_origin_storage_threshold * fs_origin_storage_capacity \
-                    or self.delivery_possible == 0:
-                self.hydrogen_transported = 0
-            else:
-                self.hydrogen_transported = self.hydrogen_needed
+                self.hydrogen_needed = 0
 
         self.current_ac = self.get_costs_and_art_costs()
 
@@ -242,44 +260,12 @@ class TrailerH2Delivery(Component):
         """Creates an oemof Transformer component from the information given in the
         TrailerH2Delivery class, to be used in the oemof model.
 
-        :param busses: List of the virtual buses used in the energy system
+        :param busses: list of the virtual buses used in the energy system
         :type busses: list
-        :return: 'trailer' oemof component
+        :return: the 'trailer' oemof component
         """
         trailer = solph.Transformer(
             label=self.name,
             outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_ac)},
-            inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.hydrogen_transported
-                                                    )})
+            inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.hydrogen_needed)})
         return trailer
-
-    def update_states(self, results, sim_params):
-        """Updates the states of the storage component for each time step.
-
-        :param results: oemof results for the given time step
-        :type results: object
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
-        :return: updated state values for each state in the 'state' dict
-        """
-        data_trailer = views.node(results, self.name)
-        df_trailer = data_trailer['sequences']
-
-        for i_result in df_trailer:
-            if 'is_delivery_possible' not in self.states:
-                self.states['is_delivery_possible'] = [None] * sim_params.n_intervals
-
-            if i_result[0][1] == self.name and i_result[1] == 'flow':
-                # The amount of hydrogen entering the trailer is recorded
-                this_h2_delivered = df_trailer[i_result][0]
-                # If the trailer is used (this_h2_delivered > 0) and under the assumption that:
-                # - it takes 15 minutes for the trailer to refuel
-                # - the trailer can travel at 100 km/h so 75 km in 45 minutes
-                if this_h2_delivered > 0 and self.round_trip_distance > 75:
-                    # if the trailer is located too far away, delivery is not possible
-                    # for the next timestep
-                    self.delivery_possible = 0
-                else:
-                    self.delivery_possible = 1
-
-                self.states['is_delivery_possible'][sim_params.i_interval] = self.delivery_possible

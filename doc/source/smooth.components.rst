@@ -236,11 +236,43 @@ Supply
    :members:
    :undoc-members:
    :show-inheritance:
+   
+Trailer Gate
+------------------------------------------
+
+.. automodule:: smooth.components.component_trailer_gate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+Trailer Gate Cascade
+------------------------------------------
+
+.. automodule:: smooth.components.component_trailer_gate_cascade
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Trailer H2 Delivery
 ------------------------------------------
 
 .. automodule:: smooth.components.component_trailer_h2_delivery
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+Trailer H2 Delivery Cascade
+------------------------------------------
+
+.. automodule:: smooth.components.component_trailer_h2_delivery_cascade
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+Trailer H2 Delivery Single
+------------------------------------------
+
+.. automodule:: smooth.components.component_trailer_h2_delivery_single
    :members:
    :undoc-members:
    :show-inheritance:
