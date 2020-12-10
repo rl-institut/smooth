@@ -2,7 +2,7 @@
 Getting started
 ~~~~~~~~~~~~~~~
 
-SMOOTH stands for "Simulation Model for Optimized Operation and Topology of Hybrid energy systems", and this
+SMOOTH stands for "Simulation Model for Optimized Operation and Topology of Hybrid energy systems". This
 tool serves to minimise costs and maximise the sustainability of dynamic energy systems. The key features 
 of SMOOTH are:
 
