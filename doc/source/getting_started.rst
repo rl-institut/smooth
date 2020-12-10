@@ -22,21 +22,34 @@ of SMOOTH are:
 Documentation
 =============
 
-Full documentation can be found soon.
+Full documentation can be found `here <https://smooth.readthedocs.io/en/latest/>`_
 
 Installing smooth
 =================
 
-In order to use SMOOTH, the smooth package and its requirements need to be installed.
+In order to use SMOOTH, the smooth package and its requirements need to be installed. There
+is the option to clone the current repository of SMOOTH to your local machine using:
+
+.. code:: bash
+
+	git clone https://github.com/rl-institut/smooth
+
+The necessary requirements (found in requirements.txt in repository) are installed into a
+working Python3 environment by: 
 
 .. code:: bash
 
     pip install -r requirements.txt
+	
+SMOOTH is then installed by:
+
+.. code:: bash
+
     python setup.py install
 
 
 You also need to install the solver for oemof. This can be done according to
-`this <https://oemof.readthedocs.io/en/stable/installation_and_setup.html#installation-and-setup-label>`_
+`this <https://oemof-solph.readthedocs.io/en/latest/readme.html#installing-a-solver>`_
 documentation page.
 
 
