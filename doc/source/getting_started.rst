@@ -72,8 +72,7 @@ An outline and brief description of the available functions in the framework is 
   and must be called by the user.
 * :func:`~smooth.framework.functions.calculate_external_costs`: calculates costs for components 
   in the system which are not part of the optimization but their costs should be taken into 
-  consideration. This function can be called in the same file as where the run_smooth function is
-  called. 
+  consideration. This function can be called in the same file as the run_smooth function. 
 * :func:`~smooth.framework.functions.debug`: generates debugging information from
   the results, and prints, plots and saves them. It is called in the run_smooth function if the 
   user sets the *show_debug_flag* parameter as True in the simulation parameters.
