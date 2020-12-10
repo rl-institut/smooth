@@ -80,16 +80,14 @@ components.append({
     'temp_init': 293.15,
     'life_time': 20,
     'capex': {
-        'key': 'fix',
-        'fitting_value': None,
-        'dependant_value': None,
-        'cost': 2000
+        'key': ['free', 'spec'],
+        'fitting_value': [[193, -0.366], 'cost'],
+        'dependant_value': ['power_max', 'power_max']
     },
     'opex': {
-        'key': 'fix',
-        'fitting_value': None,
-        'dependant_value': None,
-        'cost': 200
+        'key': 'spec',
+        'fitting_value': 0.04,
+        'dependant_value': 'capex',
     }
 })
 
