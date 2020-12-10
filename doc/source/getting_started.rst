@@ -92,8 +92,8 @@ An outline and brief description of the available functions in the framework is 
 * :func:`~smooth.framework.functions.save_results`: saves the results of either a SMOOTH
   run or an optimization, which can be called after the results are obtained.
 * :func:`~smooth.framework.functions.update_annuities`: calculates and updates the financial
-  and emissions annuities for the components used in the system. This is called in the 
-  generic Component class to be used by all components.
+  and emission annuities for the components used in the system. It is called in the 
+  generic Component class, which is used to define each component.
 * :func:`~smooth.framework.functions.update_fitted_costs`: calculates the fixed costs and
  fixed emissions of a component. The user can define the dependencies on certain values 
  using a set of specific fitting methods. This function is also called in the generic 
