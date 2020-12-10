@@ -49,7 +49,7 @@ Components
 ==========
 The :ref:`smooth.components package` contains all of the existing components of an energy
 system that have already been built in SMOOTH, along with any related functions. Input parameters
-that are defined by the user in the model definition, or default values that are specified within
+that are defined by the user in the model definition, or by default values that are specified within
 the component, are used to calculate and determine the behaviour of the component for each timestep.  
 Within each component, an oemof component is created using the parameters defined or 
 calculated in the SMOOTH component to be used later in the oemof model. Visit the section for 
