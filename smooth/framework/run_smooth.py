@@ -216,14 +216,14 @@ def run_smooth(model):
         if status != "ok" and termination_condition != "optimal":
             if sim_params.show_debug_flag:
                 new_df_results = processing.create_dataframe(model_to_solve)
-                df_debug = get_df_debug(df_results, results_dict, new_df_results)
+                df_debug = get_df_debug(df_results, results_dict, new_df_results, i_interval)
                 show_debug(df_debug, components)
             raise SolverNonOptimalError('solver status: ' + status +
                                         " / termination condition: " + termination_condition)
 
         if i_interval > 0:#sim_params.show_debug_continuous_flag:
             new_df_results = processing.create_dataframe(model_to_solve)
-            df_debug = get_df_debug(df_results, results_dict, new_df_results)
+            df_debug = get_df_debug(df_results, results_dict, new_df_results, i_interval)
             save_debug(df_debug, components, i_interval)
 
         # ------------------- HANDLE RESULTS -------------------
