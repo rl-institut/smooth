@@ -163,7 +163,17 @@ but not the computation (as this runs in the separate main process).
 
 When hovering with the mouse pointer over a point in the pareto front,
 an annotation is built with the info of the :class:`Individual`.
-The annotation is removed when leaving the point.
+The annotation is removed when leaving the point. A simple example
+of how this looks is illustrated in Figure 1. In this example,
+after the first generation there is one optimal energy system
+found which costs 244,416.21 EUR and produces 0 emissions.
+
+.. figure:: /images/pareto_annotation.png
+    :width: 60 %
+    :alt: pareto_annotation.png
+    :align: center
+
+    Fig.1: Simple diagram of a pareto front with annotations
 
 Sending None through the pipe makes the process show the plot until the user closes it.
 This blocks the process, so no new data is received, but user events are still processed.
