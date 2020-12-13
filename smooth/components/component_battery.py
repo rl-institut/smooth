@@ -137,5 +137,5 @@ class Battery(Component):
                     # Initialize a.n array that tracks the state SoC
                     self.states["soc"] = [None] * sim_params.n_intervals
                 # Check if this result is the state of charge.
-                self.soc = df_storage[i_result][0] / self.battery_capacity
+                self.soc = (df_storage[i_result][0]+0.005) / self.battery_capacity
                 self.states["soc"][sim_params.i_interval] = self.soc
