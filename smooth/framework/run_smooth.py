@@ -253,6 +253,4 @@ def run_smooth(model):
     for this_comp in components:
         this_comp.generate_results()
 
-
-
     return components, status

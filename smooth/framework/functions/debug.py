@@ -126,5 +126,3 @@ def plot_mpc(debug_list, h):
         plt.plot(df['timestep'], df['value'])
 
     plt.show()
-
-self.soc = (df_storage[i_result][0]+0.005) / self.battery_capacity
