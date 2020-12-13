@@ -119,7 +119,7 @@ Finally, return the updated components and the last oemof status.
 from oemof import solph
 from oemof.outputlib import processing
 from smooth.framework.simulation_parameters import SimulationParameters as sp
-from smooth.framework.functions.debug import get_df_debug, show_debug, save_debug
+from smooth.framework.functions.debug import get_df_debug, show_debug, save_debug, plot_mpc
 from smooth.framework.exceptions import SolverNonOptimalError
 from smooth.framework.functions.functions import create_component_obj
 import pandas as pd
@@ -151,6 +151,7 @@ def run_smooth(model):
     # There are no results yet.
     df_results = None
     results_dict = None
+    debug_list = []
 
     # ------------------- SIMULATION -------------------
     for i_interval in range(sim_params.n_intervals):
@@ -217,6 +218,8 @@ def run_smooth(model):
             if sim_params.show_debug_flag:
                 new_df_results = processing.create_dataframe(model_to_solve)
                 df_debug = get_df_debug(df_results, results_dict, new_df_results, i_interval)
+                if sim_params.mpc_flag:
+                    plot_mpc(debug_list, sim_params.mpc_control_horizon)
                 show_debug(df_debug, components)
             raise SolverNonOptimalError('solver status: ' + status +
                                         " / termination condition: " + termination_condition)
@@ -224,6 +227,7 @@ def run_smooth(model):
         if i_interval > 0:#sim_params.show_debug_continuous_flag:
             new_df_results = processing.create_dataframe(model_to_solve)
             df_debug = get_df_debug(df_results, results_dict, new_df_results, i_interval)
+            debug_list.append(df_debug)
             save_debug(df_debug, components, i_interval)
 
         # ------------------- HANDLE RESULTS -------------------
@@ -243,9 +247,12 @@ def run_smooth(model):
             # Update the costs and artificial costs.
             this_comp.update_var_emissions(results, sim_params)
     # if sim_params.mpc_flag:
+    #     plot_mpc(debug_list, sim_params.mpc_control_horizon)
     #     return results, results_dict, df_results
     # Calculate the annuity for each component.
     for this_comp in components:
         this_comp.generate_results()
+
+
 
     return components, status

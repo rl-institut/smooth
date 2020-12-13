@@ -107,3 +107,24 @@ def show_debug(df_debug, components):
     filename = 'Opt_1D1m_minBat'
     filepath = path + filename + '\\'
     plot_smooth_results(components, False, filepath, filename, comp_dict_german)
+
+
+def plot_mpc(debug_list, h):
+    import matplotlib.pyplot as plt
+
+    for d_df in debug_list:
+        df = d_df[h:2 * h - 1]  # [96:120][121:144][24:46]#[d_df['to']=='li_battery']
+        plt.subplot(311)
+        plt.plot(df['timestep'], df['value'])  # , c=(0,0,1-(df.iloc[0]['timestep'])/24, 0.1))
+
+        df = d_df[5 * h + 1:6 * h]  # [24:46]#[d_df['to']=='li_battery']
+        plt.subplot(312)
+        plt.plot(df['timestep'], df['value'])
+
+        df = d_df[4 * h:5 * h]  # [121:144][24:46]#[d_df['to']=='li_battery']
+        plt.subplot(313)
+        plt.plot(df['timestep'], df['value'])
+
+    plt.show()
+
+self.soc = (df_storage[i_result][0]+0.005) / self.battery_capacity
