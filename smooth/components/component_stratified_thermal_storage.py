@@ -135,27 +135,15 @@ class StratifiedThermalStorage (Component):
 
         # ------------------- PARAMETERS -------------------
         self.name = 'Stratified_thermal_storage_default_name'
-
-        # Define the heat bus the storage is connected to.
         self.bus_in = None
         self.bus_out = None
-
-        # Storage capacity [Wh]
         self.storage_capacity = 6000e3
-        # Calculate the minimum storage level relative to storage capacity [Wh]
         self.storage_level_min = 0.025
-        # Calculate the maximum storage level relative to storage capacity [Wh]
         self.storage_level_max = 0.975
-        # The maximum heat charged into the storage per timestep [Wh]
         self.max_heat_flow_charge = self.storage_level_max * self.storage_capacity
-        # The maximum heat discharged into the storage per timestep [Wh]
         self.max_heat_flow_discharge = (1 - self.storage_level_min) * self.storage_capacity
-        # Initial storage level factor in relation to the capacity
         self.initial_storage_factor = 0.5
-        # Lifetime [a]
         self.life_time = 20
-
-        # To be used for extracting an environmental temp timeseries from csv file
         self.nominal_value = 1
         self.csv_filename = None
         self.csv_separator = ','
@@ -163,25 +151,15 @@ class StratifiedThermalStorage (Component):
         self.path = os.path.dirname(__file__)
 
         # ------------------- PARAMETERS TAKEN FROM OEMOF THERMAL EXAMPLE FILE -------------------
-        # Density of the storage medium [kg/m3]
         self.density = 971.78
-        # Heat capacity of the storage medium [J/(kg*K)]
         self.heat_capacity = 4180
-        # The hot temperature level of the stratified storage tank [K]
         self.temp_h = 368.15
-        # The cold temperature level of the stratified storage tank [K]
         self.temp_c = 333.15
-        # The environment temperature value [C] because timeseries is usually in degrees C
         self.temp_env = 25
-        # The chosen height to diameter ratio [-]
         self.height_diameter_ratio = 3
-        # Thickness of isolation layer [m]
         self.s_iso = 0.05
-        # Heat conductivity of isolation material [W/(m*K)]
         self.lamb_iso = 0.03
-        # Heat transfer coefficient inside [W/(m2*K)]
         self.alpha_inside = 1
-        # Heat transfer coefficient outside [W/(m2*K)]
         self.alpha_outside = 1
 
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
@@ -198,9 +176,6 @@ class StratifiedThermalStorage (Component):
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
         self.set_parameters(params)
-        self.storage_level_init = self.initial_storage_factor * self.storage_capacity
-
-        # Initial storage level [kg].
         self.storage_level_init = self.initial_storage_factor * self.storage_capacity
 
         # Check to see if the environmental temperature has been given as a

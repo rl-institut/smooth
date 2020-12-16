@@ -114,45 +114,6 @@ class TrailerH2Delivery(Component):
         # ------------------- INTERNAL VALUES -------------------
         self.current_ac = 0
 
-    def update_var_costs(self, results, sim_params):
-        """Tracks the costs and artificial costs of a component for each time step.
-
-        :param results: oemof results for the given time step
-        :type results: object
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
-        :return: updated artificial costs for this time step [EUR]
-        """
-        # In this component, the variable costs are calculated differently to the other components,
-        # to only apply if the trailer is used based on the distance travelled by the trailer.
-
-        # First create an empty cost and art. cost array for this component, if it hasn't been
-        # created before.
-        if 'variable_costs' not in self.results:
-            # If this function is not overwritten in the component, then costs and art. costs are
-            # not part of the component and therefore set to 0.
-            self.results['variable_costs'] = [0] * sim_params.n_intervals
-            self.results['art_costs'] = [0] * sim_params.n_intervals
-            # A list is created for the flow switch values
-            self.flow_switch = [0] * sim_params.n_intervals
-
-        if self.variable_costs is not None:
-            this_dependency_value = self.flows[self.dependency_flow_costs][sim_params.i_interval]
-            if this_dependency_value > 0:
-                flow_switch_value = 1
-            else:
-                flow_switch_value = 0
-            self.flow_switch[sim_params.i_interval] = flow_switch_value
-            self.results['variable_costs'][sim_params.i_interval] = \
-                flow_switch_value * self.round_trip_distance * self.variable_costs
-
-            # Update the artificial costs for this time step [EUR].
-            if self.artificial_costs is not None:
-                this_dependency_value = \
-                    self.flows[self.dependency_flow_costs][sim_params.i_interval]
-                self.results['art_costs'][sim_params.i_interval] = \
-                    this_dependency_value * self.artificial_costs
-
     def prepare_simulation(self, components):
         """Prepares the simulation by determining trailer activity such as
         which origin storage to take from and how much hydrogen is needed.

@@ -1,9 +1,10 @@
 smooth.components package
 =========================
-Listed below are components that can already be used in an energy system model (see 
-`examples directory <https://github.com/rl-institut/smooth/tree/dev/smooth/examples>`_ for the usage of components 
-in an energy system). It is also possible to build your own component if your energy system requires one
-that is not already in the framework. 
+
+This section first explains how to create a new component and what are their generic 
+properties. Listed below are components that can already be used in an energy system
+model (see `examples directory <https://github.com/rl-institut/smooth/tree/dev/smooth/examples>`_ 
+for the usage of components in an energy system).
 
 Building a component
 --------------------
@@ -48,7 +49,7 @@ The costs and revenues are tracked for each component individually. There are th
 consideration in the energy system, namely capital expenditures (CAPEX), operational expenditures (OPEX) and variable
 costs. The CAPEX costs are fixed initial investment costs (EUR), the OPEX costs are the yearly operational and
 maintenance costs (EUR/a) and the variable costs are those that are dependant on the use of the component in the 
-system, such as the cost of buying/selling electricity from/to the grid (EUR/*).
+system, such as the cost of buying/selling electricity from/to the grid (EUR/unit).
 
 The ﬁnancial analysis is based on annuities of the system. The CAPEX cost of a component for one year is calculated 
 by taking into consideration both the lifetime of the given component and the interest rate, and the OPEX costs remains 
@@ -72,9 +73,6 @@ the :ref:`smooth.framework.functions package`.
 * :math:`VC_{annuity}` = annual variable costs [EUR/a]
 * :math:`VC` = total variable costs [EUR]
 * :math:`S` = number of simulation days [days]
-
-Submodules
-----------
 
 Component - The mother class of all components
 ----------------------------------

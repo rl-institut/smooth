@@ -94,7 +94,7 @@ electrical energy required to compress 1 kg of hydrogen:
 
 import oemof.solph as solph
 from .component import Component
-from .component_functions.all_component_functions import calculate_compressibility_factor
+from .component_functions.component_functions import calculate_compressibility_factor
 from math import log
 
 

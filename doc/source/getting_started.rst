@@ -52,6 +52,22 @@ You also need to install the solver for oemof. This can be done according to
 `this <https://oemof-solph.readthedocs.io/en/latest/readme.html#installing-a-solver>`_
 documentation page.
 
+General concept
+===============
+SMOOTH solves an explicitly defined energy system with several components, such as energy sources, electrolyzers, storages etc.
+The energy system is parameterized with the help of different input parameters such as investment and operating costs as well as 
+site-related time series with a fixed time resolution. While the components and the algorithm executing the simulation are part of 
+SMOOTH, each component creates a valid oemof model for each time step and the system is solved using
+`oemof-solph <https://oemof.readthedocs.io/en/release-v0.1/oemof_solph.html>`_. The financial costs/revenues and emissions, where 
+the costs are divided into variable costs, CAPEX and OPEX, are tracked for each component individually. After the simulation, all 
+costs/revenues and emissions are transferred to annuities (kg/a and EUR/a, respectively) based on the component lifetimes, and the 
+total system financial and emissions annuities are recorded. The notable states of the components and the energy and mass flows of 
+the system are also recorded and all results can be saved for later use.
+
+An additional functionality of SMOOTH is the optimization (MOEA) which optimizes the topology and operational management of an
+energy system with regards to ecological and economic target criteria. Key parameters of components are chosen, such as the
+maximum power output or capacity, and varied in numerous versions of the energy system until the optimal solution/s is/are 
+reached. The specification of the final system/s is/are finally returned as SMOOTH results.
 
 Structure of the SMOOTH module
 ==============================
