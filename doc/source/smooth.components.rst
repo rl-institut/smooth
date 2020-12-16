@@ -76,7 +76,7 @@ the :ref:`smooth.framework.functions package`.
 Submodules
 ----------
 
-Component
+Component - The mother class of all components
 ----------------------------------
 
 .. automodule:: smooth.components.component
