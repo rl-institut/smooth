@@ -111,20 +111,20 @@ class Battery(Component):
         # The c-rate is given in [W/Wh], multiplication with capacity [Wh] results in power [W]
 
         # todo: verify functionality and choose between p_max definitions
-        self.p_in_max = min(
-            self.c_rate_charge * self.battery_capacity,
-            (self.battery_capacity -
-             self.soc * self.battery_capacity +
-             self.loss_rate * self.soc * self.battery_capacity) /
-            (self.sim_params.interval_time/60)
-            ) / self.efficiency_charge
-        self.p_out_max = min(
-            self.c_rate_discharge * self.battery_capacity,
-            (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60)
-            ) * self.efficiency_discharge
+        # self.p_in_max = min(
+        #     self.c_rate_charge * self.battery_capacity,
+        #     (self.battery_capacity -
+        #      self.soc * self.battery_capacity +
+        #      self.loss_rate * self.soc * self.battery_capacity) /
+        #     (self.sim_params.interval_time/60)
+        #     ) / self.efficiency_charge
+        # self.p_out_max = min(
+        #     self.c_rate_discharge * self.battery_capacity,
+        #     (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60)
+        #     ) * self.efficiency_discharge
 
-        # self.p_in_max = self.c_rate_charge * self.battery_capacity / self.efficiency_charge
-        # self.p_out_max = self.c_rate_discharge * self.battery_capacity * self.efficiency_discharge
+        self.p_in_max = self.c_rate_charge * self.battery_capacity / self.efficiency_charge
+        self.p_out_max = self.c_rate_discharge * self.battery_capacity * self.efficiency_discharge
 
     def create_oemof_model(self, busses, _):
         """ Create oemof model """
@@ -159,6 +159,6 @@ class Battery(Component):
                     self.states["soc"] = [None] * sim_params.n_intervals
                 # Check if this result is the state of charge.
                 # todo: Remove hack + 0.005 and find better solution
-                self.soc = df_storage[i_result][0] / self.battery_capacity
-                # self.soc = (df_storage[i_result][0]+0.005) / self.battery_capacity
+                # self.soc = df_storage[i_result][0] / self.battery_capacity
+                self.soc = (df_storage[i_result][0]+0.005) / self.battery_capacity
                 self.states["soc"][sim_params.i_interval] = self.soc
