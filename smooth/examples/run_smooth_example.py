@@ -19,7 +19,14 @@ This example shows how a simulation in SMOOTH can be defined.
   :func:`~smooth.framework.functions.calculate_external_costs.costs_for_ext_components`
   function.
 """
+
 from smooth.examples.example_model import mymodel
+# from smooth.examples.example_model_costs import mymodel
+# from smooth.examples.example_model_dict import mymodel
+# from smooth.examples.example_model_emissions import mymodel
+# from smooth.examples.example_model_external_components import mymodel
+# from smooth.examples.example_model_infeasable import mymodel
+# from smooth.examples.example_model_trailer import mymodel
 
 from smooth import run_smooth
 from smooth import plot_smooth_results
