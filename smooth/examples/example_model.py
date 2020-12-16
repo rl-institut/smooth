@@ -1,15 +1,75 @@
-""" DEFINE THE MODEL YOU WANT TO SIMULATE """
+"""
+This example represents a simple hydrogen energy system model definition.
+
+1. The virtual busses to be used in the system are defined as a list. In this
+example, an electricity bus (*bel*), a low pressure hydrogen bus (*bh2_lp*),
+a high pressure hydrogen bus (*bh2_hp*) and a thermal bus (*bth*) are used.
+
+.. code:: bash
+
+    busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
+
+2. The components are created in a list. An example of a component being
+added to the list is as follows:
+
+.. code:: bash
+
+    components = list()
+    components.append({
+        'component': 'electrolyzer',
+        'name': 'this_ely',
+        'bus_el': 'bel',
+        'bus_h2': 'bh2_lp',
+        'power_max': 100e3,
+        'temp_init': 293.15,
+        'life_time': 20,
+        'capex': {
+            'key': ['free', 'spec'],
+            'fitting_value': [[193, -0.366], 'cost'],
+            'dependant_value': ['power_max', 'power_max']
+        },
+        'opex': {
+            'key': 'spec',
+            'fitting_value': 0.04,
+            'dependant_value': 'capex',
+        }
+    })
+
+3. The simulation parameters are stated:
+
+.. code:: bash
+
+    sim_params = {
+        'start_date': '1/1/2019',
+        'n_intervals': 10,
+        'interval_time': 60,
+        'interest_rate': 0.03,
+        'print_progress': False,
+        'show_debug_flag': False,
+    }
+
+4. A model is created containing the above three elements
+
+.. code:: bash
+
+    mymodel = {
+        'busses': busses,
+        'components': components,
+        'sim_params': sim_params
+    }
+
+Now this model definition is ready to be used in either a simulation or an
+optimization.
+"""
 import os
 
 # Define where Python should look for csv files
 my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
-""" Create busses """
-# create hydrogen bus
+# Create busses list
 busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
 
-
-""" Define components """
+# Define components list
 components = list()
 components.append({
     'component': 'electrolyzer',
@@ -47,6 +107,7 @@ components.append({
     'name': 'wind_output',
     'bus_out': 'bel',
     'csv_filename': 'ts_wind.csv',
+    'csv_separator': ';',
     'nominal_value': 1/4,
     'column_title': 'Power output',
     'path': my_path
@@ -151,7 +212,6 @@ components.append({
         'fitting_value': 0.04,
         'dependant_value': 'capex'
     }
-
 })
 
 sim_params = {

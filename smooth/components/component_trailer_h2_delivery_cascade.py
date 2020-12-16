@@ -30,15 +30,17 @@ is determined, and this value restricts the flow in the component.
     :width: 60 %
     :alt: trailer_h2_delivery.png
     :align: center
+
     Fig.1: Simple diagram of a hydrogen delivery trailer
 
 A simple depiction of the concept for the single hydrogen delivery trailer is
 shown in Figure 2.
 
 .. figure:: /images/cascade_trailer_delivery.png
-    :width: 60 %
+    :width: 100 %
     :alt: cascade_trailer_delivery.png
     :align: center
+
     Fig.2: Cascade hydrogen delivery trailer concept
 
 Trailer activity
@@ -63,7 +65,6 @@ The component then:
 
 import oemof.solph as solph
 from .component import Component
-from oemof.outputlib import views
 
 
 class TrailerH2DeliveryCascade(Component):
@@ -144,7 +145,8 @@ class TrailerH2DeliveryCascade(Component):
         """
         # Check level of destination storage component: if it is below specified threshold,
         # implement low artificial costs (to encourage system to fill it)
-        # Check level of all non-central storage component and use the one with the highest amount of h2:
+        # Check level of all non-central storage component and use the one with the highest
+        # amount of h2:
         # if it is below specified threshold, the trailer cannot take any hydrogen from it
         if self.fs_component_name is not None:
             # Obtains the origin storage level [kg]
@@ -155,8 +157,9 @@ class TrailerH2DeliveryCascade(Component):
             fs_origin_capacity = self.get_foreign_state_value(components, index=2)
 
             # Obtains the available mass that can be taken from the origin storage [kg]
-            self.fs_origin_available_kg = min((fs_origin_storage_level_kg - fs_origin_min_storage_level),
-                                           fs_origin_capacity/2)
+            self.fs_origin_available_kg = min(
+                (fs_origin_storage_level_kg - fs_origin_min_storage_level),
+                fs_origin_capacity / 2)
             # Obtains the first destination storage level [kg]
             fs_destination_storage_level_kg_1 = self.get_foreign_state_value(components, index=3)
             # Obtains the first destination storage capacity [kg]
@@ -166,11 +169,13 @@ class TrailerH2DeliveryCascade(Component):
             # Obtains the second destination storage capacity [kg]
             fs_destination_storage_capacity_2 = self.get_foreign_state_value(components, index=6)
 
-            # Obtains the available mass that can be delivered to the first destination storage [kg]
+            # Obtains the available mass that can be delivered to the first
+            # destination storage [kg]
             fs_destination_available_storage_1 = \
                 fs_destination_storage_capacity_1 - fs_destination_storage_level_kg_1
 
-            # Obtains the available mass that can be delivered to the second destination storage [kg]
+            # Obtains the available mass that can be delivered to the second
+            # destination storage [kg]
             fs_destination_available_storage_2 = \
                 fs_destination_storage_capacity_2 - fs_destination_storage_level_kg_2
 
@@ -178,8 +183,8 @@ class TrailerH2DeliveryCascade(Component):
             if fs_destination_storage_level_kg_1 \
                     < self.fs_destination_storage_threshold_1 * fs_destination_storage_capacity_1:
                 # check threshold of second storage
-                if fs_destination_storage_level_kg_2 \
-                        < self.fs_destination_storage_threshold_2 * fs_destination_storage_capacity_2:
+                if fs_destination_storage_level_kg_2 < self.fs_destination_storage_threshold_2 * \
+                        fs_destination_storage_capacity_2:
                     available_storage_tot = \
                         fs_destination_available_storage_1 + fs_destination_available_storage_2
 
@@ -187,7 +192,8 @@ class TrailerH2DeliveryCascade(Component):
                     if available_storage_tot >= self.trailer_capacity \
                             and self.fs_origin_available_kg >= self.trailer_capacity:
                         self.hydrogen_needed = self.trailer_capacity
-                        # calculate the amount of hydrogen which gets delivered to storage one and two
+                        # calculate the amount of hydrogen which gets delivered to storage one and
+                        # two
                         if fs_destination_available_storage_1 >= self.trailer_capacity:
                             self.output_h2_1 = self.trailer_capacity
                             self.output_h2_2 = 0
@@ -199,7 +205,8 @@ class TrailerH2DeliveryCascade(Component):
                     elif available_storage_tot \
                             > self.trailer_capacity > self.fs_origin_available_kg:
                         self.hydrogen_needed = self.fs_origin_available_kg
-                        # calculate the amount of hydrogen which gets delivered to storage one and two
+                        # calculate the amount of hydrogen which gets delivered to storage one and
+                        # two
                         if self.fs_origin_available_kg <= fs_destination_available_storage_1:
                             self.output_h2_1 = self.fs_origin_available_kg
                             self.output_h2_2 = 0
@@ -249,6 +256,3 @@ class TrailerH2DeliveryCascade(Component):
             outputs={busses[self.bus_out]: solph.Flow(variable_costs=self.current_ac)},
             inputs={busses[self.bus_in]: solph.Flow(nominal_value=self.hydrogen_needed)})
         return trailer_cascade
-
-
-

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to smooth's documentation!
+Welcome to SMOOTH's documentation!
 ==================================
 
 .. toctree::
@@ -12,7 +12,9 @@ Welcome to smooth's documentation!
 
    getting_started
    smooth.components
-
+   smooth.examples
+   smooth.framework
+   smooth.optimization
 
 Indices and tables
 ==================

@@ -160,4 +160,6 @@ def save_important_parameters(optimization_results, result_index, result_filenam
     plt.savefig(str(result_filename) + '_electricity_use_breakdown.png', bbox_inches='tight')
     plt.show()
 
+    sns.reset_orig()
+
     return flow_sums_dataframe

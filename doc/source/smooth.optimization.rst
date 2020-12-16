@@ -12,7 +12,7 @@ Subpackages
 Submodules
 ----------
 
-smooth.optimization.run\_optimization module
+Run Optimization
 --------------------------------------------
 
 .. automodule:: smooth.optimization.run_optimization
