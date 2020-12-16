@@ -25,10 +25,9 @@ Artificial costs
 ----------------
 The oemof framework always solves the system by minimizing the costs. In order to be able to control the system behaviour in a certain way,
 artificial costs as a concept is introduced. These costs are defined in the components and are used in the oemof model (and therefore
-have an effect on the cost minimization). The higher (more positive) artificial costs are implemented for less desired system options, and
-the lower (more negative) artificial costs are implemented to incentivise the system to choose the desired system options where possible. 
-It should be noted that due to these costs being not real costs and their purpose is only to control system behaviour, they are not considered
-in the financial evaluation at the end of the simulation. 
+have an effect on the cost minimization). While artificial costs are treated the same way as real costs by the oemof solver, they are
+being neglected in the financial evaluation at the end of the simulation. Unwanted system behaviour can be avoided by setting high (more positive) 
+artificial costs, while the solver can be incentivised to choose a desired system behaviour by implementing lower (more negative) artificial costs. 
 
 Foreign states
 --------------
