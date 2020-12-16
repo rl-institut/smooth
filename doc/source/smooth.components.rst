@@ -13,7 +13,7 @@ In order to build a component, you must do the following:
 
 #. In the :func:`__init__` function, define all parameters that are specific to your component, and set default values.
 
-#. Consider if the component requires variable artificial costs depending on system behaviour. If it does, the method for setting the appropriate costs is defined in the :func:`prepare_simulation` function. 
+#. Consider if the component requires variable artificial costs depending on system behaviour. If it does, the method for setting the appropriate costs has to be defined in the :func:`prepare_simulation` function of the new component. 
 
 #. Define any other functions that are specific to your component.
 
