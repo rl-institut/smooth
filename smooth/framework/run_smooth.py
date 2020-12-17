@@ -1,11 +1,11 @@
-"""Core of smooth.
-Solves (M)ILP of an energy system model for discrete time steps using the
-Open Energy Modelling Framework solver (`oemof <https://github.com/oemof/oemof-solph>`_).
+"""This is the core of smooth.
+It solves (M)ILP of an energy system model for discrete time steps using the
+Open Energy Modelling Framework solver (`oemof-solph <https://github.com/oemof/oemof-solph>`_).
 
 **********
 How to use
 **********
-:func:`run_smooth` expects an energy model. Such a model consists of
+The :func:`run_smooth` function expects an energy model. Such a model consists of:
 
 * energy sources
 * energy sinks
@@ -82,18 +82,28 @@ The first item returned is a list of all components, each updated with
 **************
 Implementation
 **************
-:func:`run_smooth` has three distinct phases:
+The concept of :func:`run_smooth` is demonstrated in the figure below:
+
+.. figure:: /images/run_smooth.png
+    :width: 60 %
+    :alt: run_smooth.png
+    :align: center
+
+    Fig.1: Concept of run_smooth function.
+
+The :func:`run_smooth` function has three distinct phases:
 initialization, simulation and post processing.
 
 Initialization
 --------------
-Not much to see here. Mainly, component instances get created from the model description.
-For legacy models (version < 0.2.0), the component list is converted to a dictionary.
-No oemof model is built here.
+There is not much to see here. Mainly, component instances get created from the
+model description. For legacy models (version < 0.2.0), the component list is
+converted to a dictionary. No oemof model is built here.
 
 Simulation
 ----------
-The main part of the function. For each time step, an oemof model is solved and evaluated:
+This is the main part of the function. For each time step, an oemof model is
+solved and evaluated:
 
 #. print current time step to console if *print_progress* is set in parameters
 #. initialize oemof energy system model
@@ -126,7 +136,7 @@ import pandas as pd
 
 
 def run_smooth(model):
-    """Run the smooth simulation framework
+    """Runs the smooth simulation framework
 
     :param model: smooth model object containing parameters for components, simulation and busses
     :type model: dictionary

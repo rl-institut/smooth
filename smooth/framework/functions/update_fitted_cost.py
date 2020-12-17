@@ -207,7 +207,7 @@ def get_exp(component, fitting_dict, index, dependant_value):
 
 
 def get_poly(component, fitting_dict, index, dependant_value):
-    """Case: An polynomial fitting of the cost function is wanted.
+    """Case: A polynomial fitting of the cost function is wanted.
 
     In this case, an arbitrary number of fitting parameters can be given.
     They will be used in the following order: fv_1, fv_2, fv_3, ... fv_n.
@@ -215,6 +215,12 @@ def get_poly(component, fitting_dict, index, dependant_value):
     Function::
 
         fv_1 + fv_2*dependant_value + fv_3*dependant_value^2 + ... fv_n*dependant_value^(n-1)
+
+    It is possible to use the polynomial function to add different cost equations together.
+    This is achieved because the result of the initial equation used
+    (which can be any of the cost functions) is stored as the 'cost' variable, which can
+    then be used in a following polynomial function but now as a new free variable.
+    See the example_model_costs example for an applied case.
 
     :param component: object of this component
     :type component: :class:`~smooth.components.component.Component`

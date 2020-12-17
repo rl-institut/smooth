@@ -1,15 +1,16 @@
-"""This is the core of the genetic algorith (GA) used for optimization.
+"""This is the core of the genetic algorithm (GA) used for optimization.
 It uses the `NSGA-II <https://www.sciencedirect.com/science/article/pii/S1877705811022466>`_
 algorithm for multi-objective optimization of smooth components.
 
 **********
 How to use
 **********
-To use, call run_optimzation with a configuration dictionary and your smooth model.
+To use, call run_optimization with a configuration dictionary and your smooth model.
 You will receive a list of :class:`Individual` in return. These individuals are
 pareto-optimal in regard to the given objective functions (limited to two functions).
 
-An example configuration can be seen in smooth/example/run_optimization_example.py.
+An example configuration can be seen in run_optimization_example in the
+`examples directory <https://github.com/rl-institut/smooth/tree/dev/smooth/examples>`_.
 
 Objective functions
 -------------------
@@ -32,7 +33,7 @@ After the given number of generations or aborting, the result is printed to the 
 All individuals currently on the pareto front are returned in a list.
 Their `values` member contain the component attribute values in the order
 given by the `attribute_variation` dictionary from the optimization params.
-In addition, when `SAVE_ALL_SMOOTH_RESULTS` was set to True, the `smooth_result`
+In addition, when `SAVE_ALL_SMOOTH_RESULTS` is set to True, the `smooth_result`
 member of each individual contains the value returned by run_smooth.
 
 .. warning::
@@ -162,7 +163,17 @@ but not the computation (as this runs in the separate main process).
 
 When hovering with the mouse pointer over a point in the pareto front,
 an annotation is built with the info of the :class:`Individual`.
-The annotation is removed when leaving the point.
+The annotation is removed when leaving the point. A simple example
+of how this looks is illustrated in Figure 1. In this example,
+after the first generation there is one optimal energy system
+found which costs 244,416.21 EUR and produces 0 emissions.
+
+.. figure:: /images/pareto_annotation.png
+    :width: 60 %
+    :alt: pareto_annotation.png
+    :align: center
+
+    Fig.1: Simple diagram of a pareto front with annotations
 
 Sending None through the pipe makes the process show the plot until the user closes it.
 This blocks the process, so no new data is received, but user events are still processed.
@@ -193,7 +204,7 @@ class AttributeVariation:
     :type comp_attribute: string
     :param val_min: minimum value of component attribute
     :type val_min: number
-    :param val_max: maximum value of component attribute (inklusive)
+    :param val_max: maximum value of component attribute (inclusive)
     :type val_max: number
     :param val_step: step size of component attribute
     :type val_step: number, optional
@@ -201,6 +212,7 @@ class AttributeVariation:
     :type num_steps: int
     :raises: AssertionError when any non-optional parameter is missing or *val_step* is negative
     """
+
     def __init__(self, iterable=(), **kwargs):
         self.val_step = None
         self.__dict__.update(iterable, **kwargs)
@@ -233,6 +245,7 @@ class Individual:
         """Class to iterate over gene values.
 
         """
+
         def __init__(self, individual):
             self._idx = 0
             self.individual = individual
@@ -502,6 +515,7 @@ class PlottingProcess(mp.Process):
     :var points: plotted results or None
     :var annot: current annotation or None
     """
+
     def __init__(self):
         self.exit_flag = mp.Event()
         self.exit_flag.clear()
@@ -774,7 +788,7 @@ class Optimization:
 
     def set_fitness(self, result):
         """Async success callback
-            Update master individual in population and `evaluated` dictionary
+        Update master individual in population and `evaluated` dictionary
 
         :param result: result from fitness_function
         :type result: tuple(index, :class:`Individual`)

@@ -95,7 +95,7 @@ def calc_annuity(component, target):
         capital_recovery_factor = cap_nominator / cap_denominator
         # Calculate the annuity of the target in [target]/a.
 
-        # Check if 'variable' capex are beeing used, if so decide which capex is valid
+        # Check if 'variable' capex are being used, if so decide which capex is valid
         if target['key'] == 'variable':
             target = choose_valid_dict(component, target)
         target_annuity = target['cost'] * capital_recovery_factor

@@ -4,7 +4,6 @@ from scipy import interpolate
 
 # Function for CompressorH2 component in order to calculate compressibility factor
 def calculate_compressibility_factor(p_in, p_out, temp_in, temp_out):
-
     temp = np.transpose([200, 300, 400, 500, 600, 800, 1000, 2000])
 
     p = [1, 10, 20, 40, 60, 80, 100, 200, 400, 600, 800, 1000]

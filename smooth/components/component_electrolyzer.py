@@ -1,3 +1,98 @@
+"""
+This module represents an alkaline electrolyzer that exhibits non-linear behaviour.
+
+*****
+Scope
+*****
+The conversion of electricity into hydrogen can be done through the process of
+electrolysis. There is a widespread use of alkaline water electrolyzers in
+dynamic energy systems (involving hydrogen production) due to their simplicity,
+and providing the electrolyzer with electricity from renewable sources can
+result in sustainable hydrogen production.
+
+*******
+Concept
+*******
+The alkaline electrolyser intakes an electricity flow and outputs a hydrogen flow.
+The behaviour of the alkaline electrolyzer is non-linear, which is
+demonstrated through the use of oemof's Piecewise Linear Transformer component.
+
+.. figure:: /images/electrolyzer_alkaline.png
+    :width: 60 %
+    :alt: electrolyzer_alkaline.png
+    :align: center
+
+    Fig.1: Simple diagram of an alkaline electrolyzer.
+
+Maximum power
+------------------------
+In order to make it possible to define the maximum power of the electrolyser,
+the number of cells required in the electrolyser is adjusted accordingly.
+This is achieved by checking how many cells lead to the maximum power at
+maximum temperature.
+
+Maximum hydrogen production
+---------------------------------------
+The maximum amount of hydrogen that can be produced in one time step is
+determined by the following equation:
+
+.. math::
+    H_{2,max} = \\frac{J_{max} \\cdot A_{cell} \\cdot t \\cdot 60
+     \\cdot z_{cell}}{(2 \\cdot F) \\cdot \\frac{M_{H_{2}}}{1000}}
+
+* :math:`H_{2,max}` = maximum hydrogen produced in one time step [kg]
+* :math:`J_{max}` = maximum current density [A/cm^2]
+* :math:`A_{cell}` = size of cell surface [cm²]
+* :math:`t` = interval time
+* :math:`z_{cell}` = number of cells per stack
+* :math:`F` = faraday constant F [As/mol]
+* :math:`M_{H_{2}}` = molar mass M_H2 [g/mol]
+
+Hydrogen production
+-------------------
+Initially, the breakpoints are set up for the electrolyzer conversion of electricity to
+hydrogen. The breakpoint values for the electric energy are taken in ten evenly spaced
+incremental steps from 0 to the maximum energy, and the hydrogen production and
+resulting electrolyzer temperature at each breakpoint is eventually determined.
+
+First, the current density at each breakpoint is calculated (see get_electricity_by_power
+function). Using this value, the hydrogen mass produced is calculated:
+
+.. math::
+    H_{2} = \\frac{I \\cdot A_{cell} \\cdot t \\cdot 60 \\cdot
+    z_{cell}}{(2 \\cdot F) \\cdot \\frac{M_{H_{2}}}{1000}}
+
+* :math:`H_2` = hydrogen produced in one time step [kg]
+* :math:`I` = current [A]
+
+Varying temperature
+-------------------
+The new temperature of the electrolyzer is calculated using Newton's law of cooling.
+The temperature to which the electrolyzer will heat up to depends on the given
+current density. Here, linear interpolation is used:
+
+.. math::
+    T_{aim} = T_{min} + (T_{max} - T_{min}) \\cdot \\frac{J}{J_{T_{max}}} \n
+    T_{new} = T_{aim} + (T_{old} - T_{aim}) \\cdot e^{-t \\frac{60}{2310}}
+
+* :math:`T_{aim}` = temperature to which the electrolyser is heating up,
+  depending on current density [K]
+* :math:`T_{min}` = minimum temperature of electrolyzer [K]
+* :math:`T_{max}` = maximum temperature of electrolyzer [K]
+* :math:`J` = current density [A/cm²]
+* :math:`J_{T_{max}}` = current density at maximum temperature [A/cm²]
+* :math:`T_{new}` = new temperature of electrolyzer [K]
+* :math:`T_{new}` = new temperature of electrolyzer [K]
+* :math:`T_{old}` = old temperature of electrolyzer [K]
+* :math:`t` = interval time [min]
+
+Additional calculations
+-----------------------
+For more in depth information on how parameters such as the current density or reversible
+voltage are calculated, see inside the component for the necessary functions.
+
+"""
+
 from oemof.outputlib import views
 import oemof.solph as solph
 from .component import Component
@@ -7,12 +102,48 @@ import warnings
 
 
 class Electrolyzer (Component):
-    """Electrolyzer agents are created through this class
-
-    :param name: unique name of the component
+    """
+    :param name: unique name given to the electrolyser component
     :type name: str
-    :param bus_el: name of the electric bus
+    :param bus_el: electricity bus that is the input of the electrolyser
     :type bus_el: str
+    :param bus_h2: hydrogen bus that is the output of the electrolyser
+    :type bus_h2: str
+    :param power_max: maximum power of the electrolyser [W]
+    :type power_max: numerical
+    :param pressure: pressure of hydrogen in the system [Pa]
+    :type pressure: numerical
+    :param fs_pressure: pressure of hydrogen in the system, to be used
+        in other components [bar]
+    :type fs_pressure: numerical
+    :param temp_init: initial electrolyser temperature [K]
+    :type temp_init: numerical
+    :param life_time: life time of the component [a]
+    :type life_time: numerical
+    :param fitting_value_exchange_current_density: fitting parameter
+        exchange current density [A/cm²]
+    :type fitting_value_exchange_current_density: numerical
+    :param fitting_value_electrolyte_thickness: thickness of the
+        electrolyte layer [cm]
+    :type fitting_value_electrolyte_thickness: numerical
+    :param temp_min: minimum temperature of the electrolyzer
+        (completely cooled down) [K]
+    :type temp_min: numerical
+    :param temp_max: highest temperature the electrolyser can be [K]
+    :type temp_max: numerical
+    :param cur_dens_max: maximal current density given by the
+        manufacturer [A/cm^2]
+    :type cur_dens_max: numerical
+    :param cur_dens_max_temp: current density at which the maximal
+        temperature is reached [A/cm^2]
+    :type cur_dens_max_temp: numerical
+    :param area_cell: size of the cell surface [cm²]
+    :type area_cell: numerical
+    :param set_parameters(params): updates parameter default values
+        (see generic Component class)
+    :type set_parameters(params): function
+    :param interval_time: interval time [min]
+    :type interval_time: numerical
     """
 
     def __init__(self, params):
@@ -110,8 +241,13 @@ class Electrolyzer (Component):
         self.supporting_points = {}
 
     def conversion_fun_ely(self, ely_energy):
-        # Create a function that will give out the mass values for the energy
-        # values at the breakpoints.
+        """Gives out the hydrogen mass values for the electric energy values at the
+        breakpoints
+
+        :param ely_energy: electric energy values at the breakpoints
+        :type ely_energy: numerical
+        :return: The according hydrogen production value [kg]
+        """
 
         # Check the index of this ely_energy entry.
         this_index = self.supporting_points['energy'].index(ely_energy)
@@ -119,6 +255,13 @@ class Electrolyzer (Component):
         return self.supporting_points['h2_produced'][this_index]
 
     def create_oemof_model(self, busses, _):
+        """Creates an oemof Transformer component from the information given in the
+        Electrolyzer class, to be used in the oemof model
+
+        :param busses: virtual buses used in the energy system
+        :type busses: list
+        :return: the oemof electrolyzer component
+        """
         # Get the non-linear behaviour.
         self.update_nonlinear_behaviour()
 
@@ -135,6 +278,9 @@ class Electrolyzer (Component):
         return electrolyzer
 
     def update_nonlinear_behaviour(self):
+        """Updates the nonlinear behaviour of the electrolyser in terms of hydrogen production,
+        as well as the resulting temperature of the electrolyser
+        """
         # Set up the breakpoints for the electrolyzer conversion of electricity to hydrogen.
         n_supporting_point = 10
         # Get the breakpoint values for electric energy [Wh] and produced hydrogen [kg].
@@ -157,9 +303,13 @@ class Electrolyzer (Component):
         self.supporting_points['energy'] = bp_ely_energy
 
     def get_mass_and_temp(self, energy_used):
-        # Calculate the mass produced and the resulting electrolyzer for a certain energy.
-        # Parameter:
-        #  energy_used: Energy value for the next time step [kWh].
+        """Calculates the mass of hydrogen produced along with the resulting temperature
+        of the electrolyzer for a certain energy
+
+        :param energy_used: energy value for the next time step [kWh]
+        :type energy_used: numerical
+        :return: produced hydrogen [kg] and the resulting electrolyzer temperature [K]
+        """
 
         # Convert energy to power [kW]
         power = energy_used / (self.interval_time / 60)
@@ -179,9 +329,12 @@ class Electrolyzer (Component):
         return [h2_produced, new_ely_temp]
 
     def get_mass_produced_by_current_state(self, cur_dens):
-        # Calculate the mass produced by a given current density.
-        # Parameters:
-        #  cur_dens: Given current density [A/cm²].
+        """Calculates the hydrogen mass produced by a given current density
+
+        :param cur_dens: given current density [A/cm²]
+        :type cur_dens: numerical
+        :return: hydrogen mass produced [kg]
+        """
 
         # Get the current [A].
         current = cur_dens * self.area_cell
@@ -192,9 +345,12 @@ class Electrolyzer (Component):
         return h2_production
 
     def get_cell_temp(self, cur_dens):
-        # Calculate the electrolyzer temperature for the next time step.
-        # Parameters:
-        #  cur_dens: Given current density [A/cm²].
+        """Calculates the electrolyzer temperautre for the following time step
+
+        :param cur_dens: given current density [A/cm²]
+        :type cur_dens: numerical
+        :return: new electrolyzer temperature [K]
+        """
 
         # Check if current density is higher than the given density at the
         # highest possible temperature. If so, set the current density to its
@@ -219,10 +375,14 @@ class Electrolyzer (Component):
         return temp_new
 
     def get_electricity_by_power(self, power, this_temp=None):
-        # Calculate the current density for a given power.
-        # Parameters:
-        #  power: Current power the electrolyzer is operated with [kW].
-        #  this_temp: Temperature of the electrolyzer [K].
+        """Calculates the current density for a given power
+
+        :param power: current power the electrolyzer is operated with [kW]
+        :type power: numerical
+        :param this_temp: temperature of the electrolyzer [K]
+        :type this_temp: numerical
+        :return: current density [A/cm²]
+        """
 
         if this_temp is None:
             this_temp = self.temperature
@@ -276,6 +436,14 @@ class Electrolyzer (Component):
         return cur_dens_iteration
 
     def ely_voltage_u_act(self, cur_dens, temp):
+        """Describes the activity losses within the electolyzer
+
+        :param cur_dens: current density [A/cm²]
+        :type cur_dens: numerical
+        :param temp: temperature [K]
+        :type temp: numerical
+        :return: activation voltage for this node [V]
+        """
         # This voltage part describes the activity losses within the electolyser.
         # Source: 'Modeling an alkaline electrolysis cell through reduced-order
         #     and loss estimate approaches'
@@ -283,10 +451,8 @@ class Electrolyzer (Component):
         # Parameter:
         #  cur_dens: Current density [A/cm²]
         #  temp: Temperature [K]
-
         j0 = self.fitting_value_exchange_current_density
-
-        '# COMPUTATION FOR EACH NODE'
+        # COMPUTATION FOR EACH NODE
         # The temperature of this loop run[K].
         this_temp = temp
         # The "alpha" values are valid for Ni - based electrodes.
@@ -303,18 +469,20 @@ class Electrolyzer (Component):
         return voltage_activation
 
     def ely_voltage_u_ohm(self, cur_dens, temp):
-        # This model takes into account two ohmic losses, one being the
+        """Takes into account two ohmic losses, one being the
         # resistance of the electrolyte itself (resistanceElectrolyte) and
-        # other losses like the presence of bubbles (resistanceOther).
+        # other losses like the presence of bubbles (resistanceOther)
+
+        :param cur_dens: current density [A/cm²]
+        :type cur_dens: numerical
+        :param temp: temperature [K]
+        :type temp: numerical
+        :return: cell voltage loss due to ohmic resistance [V]
+        """
         # Source: 'Modeling an alkaline electrolysis cell through reduced-order
         #     and loss estimate approaches'
         #     from Milewski et al. (2014)
-        # Parameter:
-        #  cur_dens: Current density [A/cm²]
-        #  temp: Temperature [K]
-
         electrolyte_thickness = self.fitting_value_electrolyte_thickness
-
         # Temperature of this loop run [K].
         this_temp = temp
         # The conductivity of the the potassium hydroxide (KOH) solution [1/(Ohm*cm)].
@@ -341,17 +509,19 @@ class Electrolyzer (Component):
         return voltage_ohm
 
     def ely_voltage_u_rev(self, temp):
-        # The reversible voltage can be calculated by two parts, one takes into
-        # account changes of the reversible cell voltage due to temperature
-        # changes, the second part due to pressure changes.
+        """Calculates the reversible voltage taking two parts into consideration:
+        the first part takes into account changes of the reversible cell voltage
+        due to temperature changes, the second part due to pressure changes
+
+        :param temp: temperature [K]
+        :return: reversible voltage [V]
+        """
         # Source: 'Modeling an alkaline electrolysis cell through reduced-order
         #     and loss estimate approaches'
         #     from Milewski et al. (2014)
         # This calculations are valid in a temperature range from 0°C - 250°C,
         # a pressure range from 1 bar - 200 bar and a concentration range from
         # 2 mol/kg - 18 mol/kg.
-        # Parameter:
-        #  temp: Temperature [K]
 
         # Coefficient 1 for the vapor pressure of the KOH solution.
         c1 = -0.0151 * self.molality_KOH - 1.6788e-03 * \
@@ -360,7 +530,7 @@ class Electrolyzer (Component):
         c2 = 1.0 - 1.2062e-03 * self.molality_KOH + 5.6024e-04 * \
             self.molality_KOH ** 2 - 7.8228e-06 * self.molality_KOH**3
 
-        '# COMPUTATION FOR ALL REQUESTED TEMPERATURES'
+        # COMPUTATION FOR ALL REQUESTED TEMPERATURES
         # Get the temperature for this loop run [K].
         this_temp = temp
         # Compute the part of the reversible cell voltage that changes due to temperature [V].
@@ -388,8 +558,14 @@ class Electrolyzer (Component):
         return voltage_reversible
 
     def update_states(self, results, sim_params):
-        # Update the states of the electrolyzer
+        """Updates the states of the electrolyser component for each time step
 
+        :param results: oemof results for the given time step
+        :type results: object
+        :param sim_params: simulation parameters for the energy system (defined by user)
+        :type sim_params: object
+        :return: updated state values for each state in the 'state' dict
+        """
         # If the states dict of this object wasn't created yet, it's done here.
         if 'temperature' not in self.states:
             self.states['temperature'] = [None] * sim_params.n_intervals
