@@ -123,6 +123,8 @@ from smooth.framework.functions.debug import get_df_debug, show_debug, save_debu
 from smooth.framework.exceptions import SolverNonOptimalError
 from smooth.framework.functions.functions import create_component_obj
 import pandas as pd
+# TODO: To be exchanged with oemof.solph.constraints import limit_active_flow_count when available
+from smooth.framework.functions.temporal_functions import limit_active_flow_count
 
 
 def run_smooth(model):
@@ -199,6 +201,21 @@ def run_smooth(model):
         # ------------------- RUN THE SIMULATION -------------------
         # Do the simulation for this time step.
         model_to_solve = solph.Model(oemof_model)
+
+        # Add constraints to the oemof model
+        # - Only one Battery flow should be active per timestep
+        # TODO: specify constrained flow within model description file (maybe using keyword),
+        #  so it does not apply for all Generic Storages, but e.g. only batteries
+        my_constraint_flows = []
+        for flow in model_to_solve.flows:
+            for in_or_out in flow:
+                if isinstance(in_or_out, solph.components.GenericStorage):
+                    my_constraint_flows.append(flow)
+        model_to_solve = limit_active_flow_count(model_to_solve,
+                                                 'in_or_out_flow',
+                                                 my_constraint_flows,
+                                                 lower_limit=0,
+                                                 upper_limit=1)
 
         for this_comp in components:
             this_comp.update_constraints(busses, model_to_solve)

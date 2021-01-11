@@ -110,9 +110,11 @@ class Battery(Component):
         storage = solph.components.GenericStorage(
             label=self.name,
             inputs={busses[self.bus_in_and_out]: solph.Flow(
-                    nominal_value=self.p_in_max, variable_costs=self.current_vac[0])
-                    },
+                nonconvex=solph.NonConvex(), exclusive_flow=True,
+                nominal_value=self.p_in_max, variable_costs=self.current_vac[0]),
+            },
             outputs={busses[self.bus_in_and_out]: solph.Flow(
+                nonconvex=solph.NonConvex(), exclusive_flow=False,
                 nominal_value=self.p_out_max, variable_costs=self.current_vac[1])
             },
             loss_rate=self.loss_rate,
