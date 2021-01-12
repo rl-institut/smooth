@@ -3,8 +3,8 @@
 [![Build Status](https://travis-ci.com/rl-institut/smooth.svg?branch=dev)](https://travis-ci.com/rl-institut/smooth)
 [![Documentation Status](https://readthedocs.org/projects/smooth/badge/?version=latest)](https://smooth.readthedocs.io/en/latest/?badge=latest)
 
-SMOOTH stands for “Simulation Model for Optimized Operation and Topology of
-Hybrid energy systems”. This tool serves to minimise costs and maximise the
+SMOOTH stands for "Simulation Model for Optimized Operation and Topology of
+Hybrid energy systems". This tool serves to minimise costs and maximise the
 sustainability of dynamic energy systems. The key features of SMOOTH are:
 
   * The real world energy system is reduced to its relevant components
