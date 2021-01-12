@@ -85,8 +85,8 @@ class Battery(Component):
     :type c_rate_charge: numerical
     :param c_rate_discharge: C-Rate [-/h]
     :type c_rate_discharge: numerical
-    :param dod: depth of discharge [-]
-    :type dod: numerical
+    :param soc_min: minimal state of charge [-]
+    :type soc_min: numerical
     :param life_time: life time of the component [a]
     :type life_time: numerical
     :param vac_in: normal variable artificial costs for charging (in)
@@ -142,8 +142,8 @@ class Battery(Component):
         self.c_rate_symm = 1
         self.c_rate_charge = 1
         self.c_rate_discharge = 1
-        # Depth of discharge [-].
-        self.dod = 0
+        # minimal state of charge [-].
+        self.soc_min = 0.1
         # Life time [a].
         self.life_time = 20
         # ToDo: set default value for degradation over lifetime
@@ -162,12 +162,15 @@ class Battery(Component):
         self.vac_low_out = 0
 
         # ------------------- UPDATE PARAMETER DEFAULT VALUES -------------------
+        if 'dod' in params:
+            raise ValueError(
+                'The parameter dod was renamed as soc_min. Please change your model description.')
         self.set_parameters(params)
-        # Raise an error if the initial state of charge [%] is set below depth of discharge [%].
-        if self.soc_init < self.dod:
+        # Raise an error if the initial state of charge [-] is below minimal state of charge [-].
+        if self.soc_init < self.soc_min:
             raise ValueError(
                 'Initial state of charge is set below depth of discharge! '
-                'Please adjust soc_init or dod.')
+                'Please adjust soc_init or soc_min.')
         if self.symm_c_rate:
             self.c_rate_charge = self.c_rate_symm
             self.c_rate_discharge = self.c_rate_symm
@@ -241,7 +244,7 @@ class Battery(Component):
             loss_rate=self.loss_rate,
             initial_storage_level=self.soc,
             nominal_storage_capacity=self.battery_capacity,
-            min_storage_level=self.dod,
+            min_storage_level=self.soc_min,
             inflow_conversion_factor=self.efficiency_charge,
             outflow_conversion_factor=self.efficiency_discharge,
             balanced=False,
