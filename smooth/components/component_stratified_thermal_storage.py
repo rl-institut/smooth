@@ -267,8 +267,6 @@ class StratifiedThermalStorage (Component):
 
         :param results: oemof results for the given time step
         :type results: object
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: updated state values for each state in the 'state' dict
         """
         data_storage = views.node(results, self.name)
@@ -335,8 +333,6 @@ class StratifiedThermalStorage (Component):
     def calculate_losses(self, u_val, d, de, h_c, t_c, t_h, t_env, time_increment=1):
         """Calculates the loss rate and the fixed losses for the stratified thermal storage
 
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :param u_val: thermal transmittance [W/(m2*K)]
         :type u_val: numerical
         :param d: diameter of storage tank [m]

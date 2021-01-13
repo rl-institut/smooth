@@ -241,8 +241,6 @@ class CompressorH2(Component):
 
         :param results: oemof results object for the given time step
         :type results: object
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: updated values for each state in the 'states' dict
         """
         # Update the states of the compressor

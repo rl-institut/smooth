@@ -327,8 +327,6 @@ class FuelCellChp(Component):
 
         :param results: The oemof results for the given time step
         :type results: object
-        :param sim_params: The simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: updated flow values for each flow in the 'flows' dict
         """
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.

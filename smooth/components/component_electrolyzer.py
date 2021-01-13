@@ -562,8 +562,6 @@ class Electrolyzer (Component):
 
         :param results: oemof results for the given time step
         :type results: object
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: updated state values for each state in the 'state' dict
         """
         # If the states dict of this object wasn't created yet, it's done here.

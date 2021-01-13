@@ -78,8 +78,6 @@ class TrailerGate(Component):
 
         :param results: oemof results object for this timestep
         :type results: object
-        :param sim_params: simulation parameters defined by user
-        :type sim_params: object
         """
         # First create an empty cost and art. cost array for this component, if it hasn't been
         # created before.

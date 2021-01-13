@@ -17,8 +17,6 @@ class Component:
     :type name: str
     :param life_time: lifetime of the component [a]
     :type life_time: numerical
-    :param sim_params: simulation parameters such as the interval time and interest rate
-    :type sim_params: object
     :param results: dictionary containing the main results for the component
     :type results: dict
     :param states: dictionary containing the varying states for the component
@@ -107,8 +105,6 @@ class Component:
 
         :param results: The oemof results for the given time step
         :type results: object
-        :param sim_params: The simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :param comp_name: The name of the component - while components can generate more
             than one oemof model, they sometimes need to give a custom name, defaults to None
         :type comp_name: str, optional
@@ -156,8 +152,6 @@ class Component:
 
         :param results: oemof results object for the given time step
         :type results: object
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: if used as a placeholder, nothing will be returned. Else, refer to
             specific component that uses the update_states function for further detail.
         """
@@ -188,8 +182,6 @@ class Component:
 
         :param results: The oemof results object for the given time step
         :type results: object
-        :param sim_params: The simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: New values for the updated variable and artificial costs stored in
             results['variable_costs'] and results['art_costs'] respectively
         """
@@ -221,8 +213,6 @@ class Component:
 
         :param results: The oemof results object for the given time step
         :type results: object
-        :param sim_params: The simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: A new value for the updated emissions stored in results['variable_emissions']
         """
         # First create an empty emission array for this component, if it hasn't been created before.
