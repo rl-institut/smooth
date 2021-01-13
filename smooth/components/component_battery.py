@@ -182,7 +182,7 @@ class Battery(Component):
         # Raise an error if the initial state of charge [-] is below minimal state of charge [-].
         if self.soc_init < self.soc_min:
             raise ValueError(
-                'Initial state of charge is set below depth of discharge! '
+                'Initial state of charge is set below minimal state of charge! '
                 'Please adjust soc_init or soc_min.')
         if self.symm_c_rate:
             self.c_rate_charge = self.c_rate_symm
