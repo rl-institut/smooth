@@ -37,26 +37,35 @@ the system to maintain the wanted storage level.
 
 Maximum chargeable/dischargeable energy
 ---------------------------------------
-The maximum chargeable and dischargeable energy [Wh] per timestep is dependant on
-the C-rate and the state of charge of the battery. Because of the charging losses
-defined by charging efficiency, the nominal value of the input flow must be higher
-than what is actually entering the battery in order to ensure that the battery can
-be fully charged in one time step. Due to the *inflow_conversion_factor*
-parameter (in :func:`~smooth.components.component_battery.Battery.create_oemof_model`),
-the battery will then receive the right amount.
+The maximum chargeable or dischargeable power [W] going in to or out of the battery is dependant
+on the C-rate and the capacity:
 
 .. math::
-    E_{in,max} = \\frac{min(c_{r,charge} \\cdot C \\cdot \\frac{t}{60},
-    C - SOC \\cdot C)}{\\mu_{charge}} \n
-    E_{out,max} = min(c_{r,discharge} \\cdot C \\cdot \\frac{t}{60}, SOC \\cdot C)
+    P_{charge,max} = C * c_{r,charge}
 
-* :math:`E_{in,max}` = maximum chargeable energy [Wh]
-* :math:`c_{r,charge}` = C-Rate [-/h]
+    P_{discharge,max} = C * c_{r,discharge}
+To ensure that the battery can be charged and discharged within the time frame inherently defined
+by the C-rate (1C : Full capacity can be (dis-)charged within one hour), the nominal value of
+the input-flow/output-flow between bus and battery needs to include the energy losses during the
+(dis-)charging process:
+
+.. math::
+    P_{in,max} = P_{charge,max} / \\mu_{charge}
+
+    P_{out,max} = P_{discharge,max} * \\mu_{discharge}
+Due to the inflow_conversion_factor / outflow_conversion_factor
+(in :func:`~smooth.components.component_battery.Battery.create_oemof_model`)
+the battery will then receive right amount.
+
+* :math:`P_{charge,max}` = maximum chargeable power at the battery [W]
 * :math:`C` = storage capacity [Wh]
-* :math:`SOC` = state of charge [Wh]
+* :math:`c_{r,charge}` = C-Rate for charging [-/h]
+* :math:`P_{discharge,max}` = maximum dischargeable power at the battery [W]
+* :math:`c_{r,discharge}` = C-Rate for discharging [-/h]
+* :math:`P_{in,max}` = maximum nominal power flowing from bus to battery [W]
 * :math:`\\mu_{charge}` = charging efficiency [-]
-* :math:`E_{out,max}` = maximum dischargeable energy [Wh]
-* :math:`c_{r,discharge}` = C-Rate [-/h]
+* :math:`P_{out,max}` = maximum nominal power flowing from battery to bus [W]
+* :math:`\\mu_{charge}` = discharging efficiency [-]
 """
 
 import oemof.solph as solph
@@ -213,15 +222,18 @@ class Battery(Component):
 
         # ToDo: c_rate depending on the soc
 
-        # Max. chargeable or dischargeable power [W] going in from the bus
-        # due to c_rate depending on the capacity. To ensure that the battery can be charged
-        # within the time frame inherently defined by the c-rate (1C : Full capacity can be charged
-        # within one hour) which is attained by a charging power [W] of
-        # (p_charge_max = battery_capacity * c_rate_charge), the nominal value of the input-flow
-        # needs to include the energy lost during the charging process
-        # (p_in_max = p_charge_max / efficiency_charge).
-        # Due to the inflow_conversion_factor (in "create oemof model") the battery will
-        # then receive right amount.
+        # The maximum chargeable or dischargeable power [W] going in to or out of the battery is
+        # dependant on the C-rate and the capacity:
+        # p_charge_max = battery_capacity * c_rate_charge
+        # p_discharge_max = battery_capacity * c_rate_discharge
+        # To ensure that the battery can be charged and discharged within the time frame inherently
+        # defined by the C-rate (1C : Full capacity can be (dis-)charged within one hour), the
+        # nominal value of the input-flow/output-flow between bus and battery needs to include the
+        # energy losses during the (dis-)charging process:
+        # p_in_max = p_charge_max / efficiency_charge
+        # p_out_max = p_discharge_max * efficiency_charge
+        # Due to the inflow_conversion_factor / outflow_conversion_factor (in "create oemof model")
+        # the battery will then receive right amount.
 
         self.p_in_max = self.c_rate_charge * self.battery_capacity / self.efficiency_charge
         self.p_out_max = self.c_rate_discharge * self.battery_capacity * self.efficiency_discharge
