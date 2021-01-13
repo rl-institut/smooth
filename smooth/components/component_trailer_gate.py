@@ -72,7 +72,6 @@ class TrailerGate(Component):
         # ------------------- STATES -------------------
         self.flow_switch = None
 
-
     def update_var_costs(self, results, sim_params):
         """Calculates variable costs of the component which only applies if the
         trailer is used, based on the distance travelled by the trailer.
