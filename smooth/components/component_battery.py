@@ -81,9 +81,13 @@ class Battery(Component):
     :type efficiency_discharge: numerical
     :param loss_rate: loss rate [%/day]
     :type loss_rate: numerical
-    :param c_rate_charge: C-Rate [-/h]
+    :param symm_c_rate: flag to indicate if the c-rate is symmetrical
+    :type symm_c_rate: boolean
+    :param c_rate_symm: C-Rate for charging and discharging (only used if symm_c_rate==True) [-/h]
+    :type c_rate_symm: numerical
+    :param c_rate_charge: C-Rate for charging [-/h]
     :type c_rate_charge: numerical
-    :param c_rate_discharge: C-Rate [-/h]
+    :param c_rate_discharge: C-Rate for discharging [-/h]
     :type c_rate_discharge: numerical
     :param soc_min: minimal state of charge [-]
     :type soc_min: numerical
