@@ -1,15 +1,75 @@
-""" DEFINE THE MODEL YOU WANT TO SIMULATE """
+"""
+This example represents a simple hydrogen energy system model definition.
+
+1. The virtual busses to be used in the system are defined as a list. In this
+example, an electricity bus (*bel*), a low pressure hydrogen bus (*bh2_lp*),
+a high pressure hydrogen bus (*bh2_hp*) and a thermal bus (*bth*) are used.
+
+.. code:: bash
+
+    busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
+
+2. The components are created in a list. An example of a component being
+added to the list is as follows:
+
+.. code:: bash
+
+    components = list()
+    components.append({
+        'component': 'electrolyzer',
+        'name': 'this_ely',
+        'bus_el': 'bel',
+        'bus_h2': 'bh2_lp',
+        'power_max': 100e3,
+        'temp_init': 293.15,
+        'life_time': 20,
+        'capex': {
+            'key': ['free', 'spec'],
+            'fitting_value': [[193, -0.366], 'cost'],
+            'dependant_value': ['power_max', 'power_max']
+        },
+        'opex': {
+            'key': 'spec',
+            'fitting_value': 0.04,
+            'dependant_value': 'capex',
+        }
+    })
+
+3. The simulation parameters are stated:
+
+.. code:: bash
+
+    sim_params = {
+        'start_date': '1/1/2019',
+        'n_intervals': 10,
+        'interval_time': 60,
+        'interest_rate': 0.03,
+        'print_progress': False,
+        'show_debug_flag': False,
+    }
+
+4. A model is created containing the above three elements
+
+.. code:: bash
+
+    mymodel = {
+        'busses': busses,
+        'components': components,
+        'sim_params': sim_params
+    }
+
+Now this model definition is ready to be used in either a simulation or an
+optimization.
+"""
 import os
 
 # Define where Python should look for csv files
 my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
-""" Create busses """
-# create hydrogen bus
-busses = ['bel', 'bh2_lp', 'bh2_hp']
+# Create busses list
+busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
 
-
-""" Define components """
+# Define components list
 components = list()
 components.append({
     'component': 'electrolyzer',
@@ -47,6 +107,7 @@ components.append({
     'name': 'wind_output',
     'bus_out': 'bel',
     'csv_filename': 'ts_wind.csv',
+    'csv_separator': ';',
     'nominal_value': 1/4,
     'column_title': 'Power output',
     'path': my_path
@@ -73,7 +134,29 @@ components.append({
     'fs_threshold': 200,
     'fs_low_art_cost': -0.001,
     'fs_high_art_cost': 50,
-    'dependency_flow_costs': 'flow: from_grid-->bel',
+    'dependency_flow_costs': ('from_grid', 'bel'),
+    'life_time': 50,
+    'capex': {
+        'key': 'variable',
+        'var_dict_dependency': 'output_max',
+        'var_dicts':
+        [
+            {
+                'low_threshold': 0,
+                'high_threshold': 3000000,
+                'key': 'spec',
+                'fitting_value': 0.2,
+                'dependant_value': 'output_max',
+            },
+            {
+                'low_threshold': 3000000,
+                'high_threshold': float('inf'),
+                'key': 'spec',
+                'fitting_value': 0.1,
+                'dependant_value': 'output_max',
+            },
+        ]
+    },
 })
 
 components.append({
@@ -81,7 +164,7 @@ components.append({
     'name': 'to_grid',
     'bus_in': 'bel',
     'artificial_costs': 10,
-    'dependency_flow_costs': 'flow: bel-->to_grid',
+    'dependency_flow_costs': ('bel', 'to_grid'),
 })
 
 components.append({
@@ -92,7 +175,6 @@ components.append({
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
-    'storage_level_init': 300,
     'life_time': 30,
     'capex': {
         'key': ['poly', 'spec'],
@@ -105,7 +187,6 @@ components.append({
         'dependant_value': 'capex'
     }
 })
-
 
 components.append({
     'component': 'compressor_h2',
@@ -131,29 +212,7 @@ components.append({
         'fitting_value': 0.04,
         'dependant_value': 'capex'
     }
-
 })
-"""
-components.append({
-    'component': 'energy_demand_from_csv',
-    'name': 'thermal_demand',
-    'bus_in': 'bth',
-    'csv_filename': 'ts_demand_h2.csv',
-    'nominal_value': 1,
-    'column_title': 'Hydrogen load',
-    'path': my_path
-})
-
-
-components.append({
-    'component': 'fuel_cell_chp',
-    'name': 'fuel_cell_chp',
-    'bus_el': 'bel',
-    'bus_h2': 'bh2_hp',
-    'bus_th': 'bth',
-    'power_max': 500e3
-})
-"""
 
 sim_params = {
     'start_date': '1/1/2019',

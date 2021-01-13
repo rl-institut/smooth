@@ -1,15 +1,56 @@
-""" DEFINE THE MODEL YOU WANT TO SIMULATE """
+"""
+This example demonstrates how the components can be created in a dictionary
+instead of a list, which has advantages over the list form such as the
+inherent uniqueness of component names as well as easier access to components
+by name. This is particularly useful for large systems with many components.
+
+An example of a component created as a dictionary entry is displayed below:
+
+.. code:: bash
+
+    components = {
+        "this_ely": {
+            "component": "electrolyzer",
+            "bus_el": "bel",
+            "bus_h2": "bh2_lp",
+            "power_max": 100000.0,
+            "temp_init": 293.15,
+            "life_time": 20,
+            "capex": {
+                "key": [
+                    "free",
+                    "spec"
+                ],
+                "fitting_value": [
+                    [
+                        193,
+                        -0.366
+                    ],
+                    "cost"
+                ],
+                "dependant_value": [
+                    "power_max",
+                    "power_max"
+                ]
+            },
+            "opex": {
+                "key": "spec",
+                "fitting_value": 0.04,
+                "dependant_value": "capex"
+            }
+    }
+
+"""
 import os
 
 # Define where Python should look for csv files
 my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
-""" Create busses """
-# create hydrogen bus
+# Create busses
 busses = ['bel', 'bh2_lp', 'bh2_hp']
 
 
-""" Define components """
+# Define components
 components = {
     "this_ely": {
         "component": "electrolyzer",
@@ -41,7 +82,7 @@ components = {
             "dependant_value": "capex"
         }
     },
-    "solar_output": {
+    "pv_output": {
         "component": "energy_source_from_csv",
         "bus_out": "bel",
         "csv_filename": "ts_pv.csv",
@@ -54,6 +95,7 @@ components = {
         "component": "energy_source_from_csv",
         "bus_out": "bel",
         "csv_filename": "ts_wind.csv",
+        "csv_separator": ";",
         "nominal_value": 0.25,
         "column_title": "Power output",
         "path": my_path
@@ -76,15 +118,15 @@ components = {
         "fs_threshold": 200,
         "fs_low_art_cost": -0.001,
         "fs_high_art_cost": 50,
-        "dependency_flow_costs": "flow: from_grid-->bel",
-        "dependency_flow_emissions": "flow: from_grid-->bel"
+        "dependency_flow_costs": ("from_grid", "bel"),
+        "dependency_flow_emissions": ("from_grid", "bel")
     },
     "to_grid": {
         "component": "sink",
         "bus_in": "bel",
         "artificial_costs": 10,
-        "dependency_flow_costs": "flow: bel-->to_grid",
-        "dependency_flow_emissions": "flow: bel-->to_grid"
+        "dependency_flow_costs": ("bel", "to_grid"),
+        "dependency_flow_emissions": ("bel", "to_grid")
     },
     "h2_storage": {
         "component": "storage_h2",
@@ -93,7 +135,6 @@ components = {
         "p_min": 5,
         "p_max": 450,
         "storage_capacity": 500,
-        "storage_level_init": 300,
         "life_time": 30,
         "capex": {
             "key": [
@@ -148,7 +189,6 @@ components = {
         }
     }
 }
-
 
 sim_params = {
     'start_date': '1/1/2019',

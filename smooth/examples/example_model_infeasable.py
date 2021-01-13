@@ -25,11 +25,11 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'input_max': 400000,
+    'output_max': 400000,
     'variable_costs': 0.00016,
-    'dependency_flow_costs': 'flow: from_grid-->bel',
+    'dependency_flow_costs': ('from_grid', 'bel'),
     'variable_emissions': 0.341,
-    'dependency_flow_emissions': 'flow: from_grid-->bel',
+    'dependency_flow_emissions': ('from_grid', 'bel'),
     # Foreign states
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
@@ -43,13 +43,13 @@ components.append({
 #     'name': 'to_grid',
 #     'bus_in': 'bel',
 #     'artificial_costs': 10,
-#     'dependency_flow_costs': 'flow: bel-->to_grid',
+#     'dependency_flow_costs': ('bel', 'to_grid'),
 # })
 
 # Electicity generators
 components.append({
     'component': 'energy_source_from_csv',
-    'name': 'solar_output',
+    'name': 'pv_output',
     # Busses
     'bus_out': 'bel',
     # Parameters
@@ -74,6 +74,7 @@ components.append({
     'name': 'wind_output',
     'bus_out': 'bel',
     'csv_filename': 'ts_wind.csv',
+    'csv_separator': ';',
     'nominal_value': 1/8,
     'column_title': 'Power output',
     'path': my_path,
@@ -93,7 +94,7 @@ components.append({
     'bus_th': 'bth',
     'power_max': 500e3,
     'variable_emissions': 0.778,
-    'dependency_flow_emissions': 'flow: fuel_cell_chp_electric-->bel',
+    'dependency_flow_emissions': ('fuel_cell_chp_electric', 'bel'),
     'life_time': 20,
     'fix_emissions': {
         'key': ['free', 'spec'],
@@ -181,7 +182,6 @@ components.append({
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
-    'storage_level_init': 300,
     'life_time': 30,
     # Financials
     'capex': {

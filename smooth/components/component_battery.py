@@ -1,42 +1,147 @@
+"""
+This module represents a stationary battery.
+
+*****
+Scope
+*****
+Batteries are crucial in effectively integrating high shares of renewable
+energy electricity sources in diverse energy systems. They can be particularly
+useful for off-grid energy systems, or for the management of grid stability
+and flexibility. This flexibility is provided to the energy system by the
+battery in times where the electric consumers cannot.
+
+*******
+Concept
+*******
+The battery component has an electricity bus input and output, where factors
+such as the charging and discharging efficiency, the loss rate, the C-rates
+and the depth of discharge define the electricity flows.
+
+.. figure:: /images/battery.png
+    :width: 60 %
+    :alt: battery.png
+    :align: center
+
+    Fig.1: Simple diagram of a battery storage.
+
+Wanted storage level
+--------------------
+Within this component, there is the possibility to choose a wanted
+storage level that the energy system should try to maintain when it
+feasibly can. If the state of charge level wanted is defined, the variable
+artificial costs change depending on whether the storage level is above or
+below the desired value. If the battery level is too low, the artificial
+costs of storing electricity into the battery can be reduced and the costs
+of extracting electricity from the battery can be increased to incentivise
+the system to maintain the wanted storage level.
+
+Maximum chargeable/dischargeable energy
+---------------------------------------
+The maximum chargeable and dischargeable energy [Wh] per timestep is dependant on
+the C-rate and the state of charge of the battery. Because of the charging losses
+defined by charging efficiency, the nominal value of the input flow must be higher
+than what is actually entering the battery in order to ensure that the battery can
+be fully charged in one time step. Due to the *inflow_conversion_factor*
+parameter (in :func:`~smooth.components.component_battery.Battery.create_oemof_model`),
+the battery will then receive the right amount.
+
+.. math::
+    E_{in,max} = \\frac{min(c_{r,charge} \\cdot C \\cdot \\frac{t}{60},
+    C - SOC \\cdot C)}{\\mu_{charge}} \n
+    E_{out,max} = min(c_{r,discharge} \\cdot C \\cdot \\frac{t}{60}, SOC \\cdot C)
+
+* :math:`E_{in,max}` = maximum chargeable energy [Wh]
+* :math:`c_{r,charge}` = C-Rate [-/h]
+* :math:`C` = storage capacity [Wh]
+* :math:`SOC` = state of charge [Wh]
+* :math:`\\mu_{charge}` = charging efficiency [-]
+* :math:`E_{out,max}` = maximum dischargeable energy [Wh]
+* :math:`c_{r,discharge}` = C-Rate [-/h]
+"""
+
 import oemof.solph as solph
 from .component import Component
 from oemof.outputlib import views
 
 
 class Battery(Component):
-    """ Stationary battery is created through this class """
+    """
+    :param name: unique name given to the battery component
+    :type name: str
+    :param bus_in_and_out: electricity bus the battery is connected to
+    :type bus_in_and_out: str
+    :param battery_capacity: battery capacity (assuming all the capacity
+        can be used) [Wh]
+    :type battery_capacity: numerical
+    :param soc_init: initial state of charge [-]
+    :type soc_init: numerical
+    :param efficiency_charge: charging efficiency [-]
+    :type efficiency_charge: numerical
+    :param efficiency_discharge: discharging efficiency [-]
+    :type efficiency_discharge: numerical
+    :param loss_rate: loss rate [%/day]
+    :type loss_rate: numerical
+    :param c_rate_charge: C-Rate [-/h]
+    :type c_rate_charge: numerical
+    :param c_rate_discharge: C-Rate [-/h]
+    :type c_rate_discharge: numerical
+    :param dod: depth of discharge [-]
+    :type dod: numerical
+    :param life_time: life time of the component [a]
+    :type life_time: numerical
+    :param vac_in: normal variable artificial costs for charging (in)
+        the battery [EUR/Wh]
+    :type vac_in: numerical
+    :param vac_out: normal variable artificial costs for discharging (out)
+        the battery [EUR/Wh]
+    :type vac_out: numerical
+    :param soc_wanted: if a soc level is set as wanted, the vac_low costs
+        apply if the capacity is below that level [Wh]
+    :type soc_wanted: numerical
+    :param vac_low_in: variable artificial costs that apply (in) if the capacity
+        level is below the wanted capacity level [EUR/Wh]
+    :type vac_low_in: numerical
+    :param vac_low_out: variable artificial costs that apply (in) if the capacity
+        level is below the wanted capacity level [EUR/Wh]
+    :type vac_low_out: numerical
+    :param set_parameters(params): updates parameter default values
+        (see generic Component class)
+    :type set_parameters(params): function
+    :param soc: state of charge [-]
+    :type soc: numerical
+    :param p_in_max: max. chargeable power [W]
+    :type p_in_max: numerical
+    :param p_out_max: max. dischargeable power [W]
+    :type p_out_max: numerical
+    :param loss_rate: adjusted loss rate to chosen timestep [%/timestep]
+    :type loss_rate: numerical
+    :param current_vac: current artificial costs for input and output [EUR/Wh]
+    :type current_vac: list
+    """
 
     def __init__(self, params):
-
+        """Constructor method
+        """
         # Call the init function of the mother class.
         Component.__init__(self)
 
         # ------------------- PARAMETERS -------------------
         self.name = "Battery_default_name"
 
-        # Define the electric bus the battery is connected to.
         self.bus_in_and_out = None
-        # Battery capacity (assuming all the capacity can be used) [Wh].
         self.battery_capacity = 5000
-        # Initial State of charge [-].
         self.soc_init = 0.5
         # ToDo: set default value for efficiency
-        # Efficiency charge [-].
         self.efficiency_charge = 0.95
-        # Efficiency discharge [-].
         self.efficiency_discharge = 0.95
         # ToDo: set default value loss rate
-        # Loss rate [%/day]
         self.loss_rate = None
         # ToDo: set default value for c-rate
-        # C-Rate [-/h].
         self.c_rate_charge = 1
         self.c_rate_discharge = 1
         # ToDo: set default value for depth of discharge
-        # Depth of discharge [-].
         self.dod = None
         # ToDo: set default value life time. Per cycle or time
-        # Life time [a].
         self.life_time = 20
         # ToDo: set default value for degradation over lifetime
         # Degradation over lifetime [%]
@@ -44,16 +149,12 @@ class Battery(Component):
 
         # ------------------- PARAMETERS (VARIABLE ARTIFICIAL COSTS - VAC) -------------------
         # Normal var. art. costs for charging (in) and discharging (out) the
-        # battery [EUR/Wh]. vac_out should be set to a minimal value to ensure,
+        # battery [EUR/Wh]. vac_out should be set to a minimal value to ensure
         # that the supply for the demand is first satisfied by the renewables
-        # (costs are 0), second satisfied by the battery and last by the grid.
+        # (costs are 0), and second satisfied by the battery and last by the grid.
         self.vac_in = None
         self.vac_out = None
-        # If a soc level is set as wanted, the vac_low costs apply if the
-        # capacity is below that level [Wh].
         self.soc_wanted = None
-        # Var. art. costs that apply if the capacity level is below the wanted
-        # capacity level [EUR/Wh].
         self.vac_low_in = 0
         self.vac_low_out = 0
 
@@ -66,21 +167,23 @@ class Battery(Component):
                 'Please adjust soc_init or dod.')
 
         # ------------------- STATES -------------------
-        # State of charge [%]
         self.soc = self.soc_init
-
-        # Initialize max. chargeable or dischargeable energy [Wh].
-        self.e_in_max = None
-
-        # Adjust loss rate to chosen timestep [%/timestep].
+        self.p_in_max = None
+        self.p_out_max = None
         self.loss_rate = (self.loss_rate / 24) * (self.sim_params.interval_time / 60)
 
         # ------------------- VARIABLE ARTIFICIAL COSTS -------------------
-        # Store the current artificial costs for input and output [EUR/Wh].
         self.current_vac = [0, 0]
 
     def prepare_simulation(self, components):
-        """ Prepare simulation """
+        """Prepares the simulation by setting the appropriate artificial costs
+        and the maximum chargeable or dischargeable energy into/out of the
+        battery.
+
+        :param components: List containing each component object
+        :type components: list
+        :return: artificial costs and maximum chargeable or dischargeable energy
+        """
         # Set the var. art. costs.
         vac_in = self.vac_in
         vac_out = self.vac_out
@@ -97,30 +200,42 @@ class Battery(Component):
 
         # ToDo: c_rate depending on the soc
 
-        # Max. chargeable or dischargeable energy [Wh] goinge in from the bus
+        # Max. chargeable or dischargeable power [W] going in from the bus
         # due to c_rate depending on the soc. To ensure that the battery can
         # be fully charged in one timestep, the nominal value of the input-flow
         # needs to be higher than what's actually going into the battery.
         # Therefore we need to divide by the efficiency_charge.  Due to the
         # inflow_conversion_factor (in "create oemof model") the battery will
         # then receive right amount.
-        self.e_in_max = min(
-                self.c_rate_charge * self.battery_capacity * self.sim_params.interval_time / 60,
-                self.battery_capacity - self.soc * self.battery_capacity) / \
-            self.efficiency_charge
-        self.e_out_max = min(
-                self.c_rate_discharge * self.battery_capacity * self.sim_params.interval_time / 60,
-                self.soc * self.battery_capacity)
+        # Flows are calculated as Power [W], so the amount of charge- or dischargeable
+        # energy [Wh] has to be divided by the intervaltime [h]  (P = E / t)
+        # The c-rate is given in [W/Wh], multiplication with capacity [Wh] results in power [W]
+
+        self.p_in_max = min(
+            self.c_rate_charge * self.battery_capacity,
+            (self.battery_capacity - self.soc * self.battery_capacity) /
+            (self.sim_params.interval_time/60)
+            ) / self.efficiency_charge
+        self.p_out_max = min(
+            self.c_rate_discharge * self.battery_capacity,
+            (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60)
+            )
 
     def create_oemof_model(self, busses, _):
-        """ Create oemof model """
-        storage = solph.components.GenericStorage(
+        """Creates an oemof Generic Storage component from the information given in
+        the Battery class, to be used in the oemof model.
+
+        :param busses: List of the virtual buses used in the energy system
+        :type busses: list
+        :return: The 'battery' oemof component
+        """
+        battery = solph.components.GenericStorage(
             label=self.name,
             inputs={busses[self.bus_in_and_out]: solph.Flow(
-                    nominal_value=self.e_in_max, variable_costs=self.current_vac[0])
+                    nominal_value=self.p_in_max, variable_costs=self.current_vac[0])
                     },
             outputs={busses[self.bus_in_and_out]: solph.Flow(
-                nominal_value=self.e_out_max, variable_costs=self.current_vac[1])
+                nominal_value=self.p_out_max, variable_costs=self.current_vac[1])
             },
             loss_rate=self.loss_rate,
             initial_storage_level=self.soc,
@@ -130,10 +245,17 @@ class Battery(Component):
             outflow_conversion_factor=self.efficiency_discharge,
             balanced=False,
         )
-        return storage
+        return battery
 
     def update_states(self, results, sim_params):
-        """ Update states """
+        """Updates the states of the battery component for each time step
+
+        :param results: oemof results for the given time step
+        :type results: object
+        :param sim_params: simulation parameters for the energy system (defined by user)
+        :type sim_params: object
+        :return: updated state values for each state in the 'state' dict
+        """
         data_storage = views.node(results, self.name)
         df_storage = data_storage["sequences"]
 
