@@ -210,20 +210,17 @@ class Battery(Component):
         # ToDo: c_rate depending on the soc
 
         # Max. chargeable or dischargeable power [W] going in from the bus
-        # due to c_rate depending on the soc. To ensure that the battery can
-        # be charged with the power indicated by the c-rate
+        # due to c_rate depending on the capacity. To ensure that the battery can be charged
+        # within the time frame inherently defined by the c-rate (1C : Full capacity can be charged
+        # within one hour) which is attained by a charging power [W] of
         # (p_charge_max = battery_capacity * c_rate_charge), the nominal value of the input-flow
-        # needs to be higher than what's actually going into the battery
+        # needs to include the energy lost during the charging process
         # (p_in_max = p_charge_max / efficiency_charge).
-        # Therefore we need to divide by the efficiency_charge.  Due to the
-        # inflow_conversion_factor (in "create oemof model") the battery will
+        # Due to the inflow_conversion_factor (in "create oemof model") the battery will
         # then receive right amount.
-        # Flows are calculated as Power [W], so the amount of charge- or dischargeable
-        # energy [Wh] has to be divided by the intervaltime [h]  (P = E / t)
-        # The c-rate is given in [W/Wh], multiplication with capacity [Wh] results in power [W]
 
         self.p_in_max = self.c_rate_charge * self.battery_capacity / self.efficiency_charge
-        self.p_out_max = self.c_rate_discharge * self.battery_capacity
+        self.p_out_max = self.c_rate_discharge * self.battery_capacity * self.efficiency_discharge
 
     def create_oemof_model(self, busses, _):
         """Creates an oemof Generic Storage component from the information given in
@@ -270,7 +267,5 @@ class Battery(Component):
                     # Initialize a.n array that tracks the state SoC
                     self.states["soc"] = [None] * sim_params.n_intervals
                 # Check if this result is the state of charge.
-                # todo: Remove hack + 0.005 and find better solution
-                # self.soc = df_storage[i_result][0] / self.battery_capacity
-                self.soc = (df_storage[i_result][0]+0.005) / self.battery_capacity
+                self.soc = df_storage[i_result][0] / self.battery_capacity
                 self.states["soc"][sim_params.i_interval] = self.soc
