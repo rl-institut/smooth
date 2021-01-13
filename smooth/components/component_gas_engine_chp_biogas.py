@@ -222,7 +222,7 @@ class GasEngineChpBiogas(Component):
         # the LHV of CH4
         self.heating_value_bg = ((self.ch4_share * self.mol_mass_ch4) /
                                  ((self.ch4_share * self.mol_mass_ch4) +
-                                  (self.co2_share*self.mol_mass_co2))) * self.heating_value_ch4
+                                  (self.co2_share * self.mol_mass_co2))) * self.heating_value_ch4
 
         # The CHP an electrical efficiency and a thermal efficiency
         # Source: 2G Energy AG Technical specification agenitor 206 BG,
@@ -328,7 +328,7 @@ class GasEngineChpBiogas(Component):
 
         # First create the electrical oemof component.
         gas_engine_chp_biogas_electric = solph.custom.PiecewiseLinearTransformer(
-            label=self.name+'_electric',
+            label=self.name + '_electric',
             inputs={busses[self.bus_bg]: flow_electric},
             outputs={busses[self.bus_el]: solph.Flow()},
             in_breakpoints=self.bp_bg_consumed_el_half,
@@ -337,7 +337,7 @@ class GasEngineChpBiogas(Component):
 
         # Then create the thermal oemof component.
         gas_engine_chp_biogas_thermal = solph.custom.PiecewiseLinearTransformer(
-            label=self.name+'_thermal',
+            label=self.name + '_thermal',
             inputs={busses[self.bus_bg]: flow_thermal},
             outputs={busses[self.bus_th]: solph.Flow()},
             in_breakpoints=self.bp_bg_consumed_th_half,
@@ -385,7 +385,7 @@ class GasEngineChpBiogas(Component):
                 po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule_methane)
                 )
 
-    def update_flows(self, results, sim_params):
+    def update_flows(self, results):
         """Updates the flows of the biogas CHP components for each time step.
 
         :param results: The oemof results for the given time step
@@ -395,5 +395,5 @@ class GasEngineChpBiogas(Component):
         :return: updated flow values for each flow in the 'flows' dict
         """
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
-        Component.update_flows(self, results, sim_params, self.name + '_electric')
-        Component.update_flows(self, results, sim_params, self.name + '_thermal')
+        Component.update_flows(self, results, self.name + '_electric')
+        Component.update_flows(self, results, self.name + '_thermal')

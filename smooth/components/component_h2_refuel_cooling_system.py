@@ -105,7 +105,7 @@ class H2RefuelCoolingSystem(Component):
                                         self.csv_separator, self.column_title)
 
         self.electrical_energy = \
-            (self.data*self.cool_spec_energy + self.standby_energy) / 3.6
+            (self.data * self.cool_spec_energy + self.standby_energy) / 3.6
 
     def create_oemof_model(self, busses, _):
         """Creates an oemof Sink component from information given in

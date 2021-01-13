@@ -236,7 +236,7 @@ class CompressorH2(Component):
         # Convert specific compression work into electrical energy needed per kg H2 [Wh]
         self.spec_compression_energy = float(spec_compression_work / 3.6)
 
-    def update_states(self, results, sim_params):
+    def update_states(self, results):
         """Updates the states in the compressor component
 
         :param results: oemof results object for the given time step
@@ -249,7 +249,7 @@ class CompressorH2(Component):
 
         # If the states dict of this object wasn't created yet, it's done here.
         if 'specific_compression_work' not in self.states:
-            self.states['specific_compression_work'] = [None] * sim_params.n_intervals
+            self.states['specific_compression_work'] = [None] * self.sim_params.n_intervals
 
-        self.states['specific_compression_work'][sim_params.i_interval] \
+        self.states['specific_compression_work'][self.sim_params.i_interval] \
             = self.spec_compression_energy

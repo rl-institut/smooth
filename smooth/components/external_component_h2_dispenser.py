@@ -110,8 +110,8 @@ class H2Dispenser(ExternalComponent):
 
         # ------------------- CALCULATED PARAMETERS -------------------
         self.max_hourly_h2_demand = self.data.values.max()
-        self.number_of_refuels_per_hour = 60/self.refuelling_time
-        self.max_number_of_vehicles = self.max_hourly_h2_demand/self.vehicle_tank_size
+        self.number_of_refuels_per_hour = 60 / self.refuelling_time
+        self.max_number_of_vehicles = self.max_hourly_h2_demand / self.vehicle_tank_size
         self.number_of_units =\
-            ceil(self.max_number_of_vehicles/(self.number_of_hoses *
-                                              self.number_of_refuels_per_hour))
+            ceil(self.max_number_of_vehicles / (self.number_of_hoses *
+                                                self.number_of_refuels_per_hour))

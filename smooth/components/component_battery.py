@@ -214,12 +214,12 @@ class Battery(Component):
         self.p_in_max = min(
             self.c_rate_charge * self.battery_capacity,
             (self.battery_capacity - self.soc * self.battery_capacity) /
-            (self.sim_params.interval_time/60)
-            ) / self.efficiency_charge
+            (self.sim_params.interval_time / 60)
+        ) / self.efficiency_charge
         self.p_out_max = min(
             self.c_rate_discharge * self.battery_capacity,
-            (self.soc * self.battery_capacity) / (self.sim_params.interval_time/60)
-            )
+            (self.soc * self.battery_capacity) / (self.sim_params.interval_time / 60)
+        )
 
     def create_oemof_model(self, busses, _):
         """Creates an oemof Generic Storage component from the information given in
@@ -247,7 +247,7 @@ class Battery(Component):
         )
         return battery
 
-    def update_states(self, results, sim_params):
+    def update_states(self, results):
         """Updates the states of the battery component for each time step
 
         :param results: oemof results for the given time step
@@ -264,7 +264,7 @@ class Battery(Component):
             if i_result[1] == "capacity":
                 if "soc" not in self.states:
                     # Initialize a.n array that tracks the state SoC
-                    self.states["soc"] = [None] * sim_params.n_intervals
+                    self.states["soc"] = [None] * self.sim_params.n_intervals
                 # Check if this result is the state of charge.
                 self.soc = df_storage[i_result][0] / self.battery_capacity
-                self.states["soc"][sim_params.i_interval] = self.soc
+                self.states["soc"][self.sim_params.i_interval] = self.soc
