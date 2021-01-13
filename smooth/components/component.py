@@ -17,6 +17,8 @@ class Component:
     :type name: str
     :param life_time: lifetime of the component [a]
     :type life_time: numerical
+    :param sim_params: simulation parameters such as the interval time and interest rate
+    :type sim_params: object
     :param results: dictionary containing the main results for the component
     :type results: dict
     :param states: dictionary containing the varying states for the component
