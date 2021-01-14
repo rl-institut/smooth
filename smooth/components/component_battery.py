@@ -41,9 +41,9 @@ The maximum chargeable or dischargeable power [W] going in to or out of the batt
 on the C-rate and the capacity:
 
 .. math::
-    P_{charge,max} = E_{battery,max} \\cdot c_{r,charge}
+    P_{charge,max} = E_{cap} \\cdot C_{r,charge}
 
-    P_{discharge,max} = E_{battery,max} \\cdot c_{r,discharge}
+    P_{discharge,max} = E_{cap} \\cdot C_{r,discharge}
 To ensure that the battery can be charged and discharged within the time frame inherently defined
 by the C-rate (1C : Full capacity can be (dis-)charged within one hour), the nominal value of
 the input-flow/output-flow between bus and battery needs to include the energy losses during the
@@ -58,10 +58,10 @@ Due to the inflow_conversion_factor / outflow_conversion_factor
 the battery will then receive right amount.
 
 * :math:`P_{charge,max}` = maximum chargeable power at the battery [W]
-* :math:`E_{battery,max}` = battery capacity [Wh]
-* :math:`C_{rate,charge}` = C-Rate for charging [-/h]
+* :math:`E_{cap}` = battery capacity [Wh]
+* :math:`C_{r,charge}` = C-Rate for charging [-/h]
 * :math:`P_{discharge,max}` = maximum dischargeable power at the battery [W]
-* :math:`C_{rate,discharge}` = C-Rate for discharging [-/h]
+* :math:`C_{r,discharge}` = C-Rate for discharging [-/h]
 * :math:`P_{in,max}` = maximum nominal power flowing from bus to battery [W]
 * :math:`\\mu_{charge}` = charging efficiency [-]
 * :math:`P_{out,max}` = maximum nominal power flowing from battery to bus [W]
