@@ -1,12 +1,57 @@
-""" DEFINE THE MODEL YOU WANT TO SIMULATE """
+"""
+This example is similar to the Example Model but with the inclusion of
+external components that are not included in the simulation/optimization,
+although the costs should still be considered.
+
+The only changes in this example are the creation of external components
+in a list. The 'H2 Dispenser' external component is used here, which
+calculates the needed number of dispenser units to fulfill the hydrogen
+load (specified in a given CSV file). External components can be
+included in the model definition in the following way:
+
+.. code:: bash
+
+    external_components = list()
+
+    external_components.append({
+        'external_component': 'h2_dispenser',
+        'name': 'test',
+        'life_time': 20,
+        # Financials
+        'capex': {
+            'key': 'spec',
+            'fitting_value': 107000,
+            'dependant_value': 'number_of_units'
+        },
+        'opex': {
+            'key': 'spec',
+            'fitting_value': 0.05,
+            'dependant_value': 'capex'
+        },
+        'csv_filename': 'ts_demand_h2.csv',
+        'nominal_value': 1,
+        'column_title': 'Hydrogen load',
+        'path': my_path
+    })
+
+And now the model includes the external components too:
+
+.. code:: bash
+
+    mymodel = {
+        'busses': busses,
+        'components': components,
+        'sim_params': sim_params,
+        'external_components': external_components
+    }
+"""
 import os
 
 # Define where Python should look for csv files
 my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
-""" Create busses """
-# create hydrogen bus
-busses = ['bel', 'bh2_lp', 'bh2_hp']
+# Create busses
+busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
 
 
 """ Define components """
@@ -66,14 +111,14 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'input_max': 5000000,
+    'output_max': 5000000,
     'variable_costs': 0.00016,
-    'dependency_flow_costs': 'flow: from_grid-->bel',
     'fs_component_name': 'h2_storage',
     'fs_attribute_name': 'storage_level',
     'fs_threshold': 200,
     'fs_low_art_cost': -0.001,
-    'fs_high_art_cost': 50
+    'fs_high_art_cost': 50,
+    'dependency_flow_costs': ('from_grid', 'bel'),
 })
 
 components.append({
@@ -81,17 +126,17 @@ components.append({
     'name': 'to_grid',
     'bus_in': 'bel',
     'artificial_costs': 10,
-    'dependency_flow_costs': 'flow: bel-->to_grid'
+    'dependency_flow_costs': ('bel', 'to_grid'),
 })
 
 components.append({
     'component': 'storage_h2',
     'name': 'h2_storage',
-    'bus_in_and_out': 'bh2_lp',
+    'bus_in': 'bh2_lp',
+    'bus_out': 'bh2_lp',
     'p_min': 5,
     'p_max': 450,
     'storage_capacity': 500,
-    'storage_level_init': 300,
     'life_time': 30,
     'capex': {
         'key': ['poly', 'spec'],
@@ -132,7 +177,7 @@ components.append({
 
 })
 
-"""Define any external components that should not be considered in the simulation/optimization"""
+# Define any external components that should not be considered in the simulation/optimization
 external_components = list()
 
 external_components.append({

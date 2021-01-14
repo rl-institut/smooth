@@ -1,7 +1,14 @@
+from smooth.framework.functions.functions import choose_valid_dict
+
+
 def update_annuities(component):
-    # Convert the CAPEX and variable costs to annuities.
-    # Parameter:
-    #  component: object of one component.
+    """Compute the annual CAPEX, variable costs and emissions.
+
+    Annuities are written into the *results* dictionary of the component.
+
+    :param component: object of this component
+    :type component: :class:`~smooth.components.component.Component`
+    """
 
     # First calculate the annuities for the CAPEX in EUR/a.
     # If there are no CAPEX (dict is empty), the annuity is 0 EUR/a,
@@ -11,6 +18,9 @@ def update_annuities(component):
     if not component.opex:
         opex = 0
     else:
+        # Check if 'variable' opex are beeing used, if so decide which opex is valid
+        if component.opex['key'] == 'variable':
+            component.opex = choose_valid_dict(component, component.opex)
         opex = component.opex['cost']
 
     # Calculate the annual emissions for the installation in kg/a.
@@ -21,6 +31,10 @@ def update_annuities(component):
     if not component.op_emissions:
         op_emissions = 0
     else:
+        # Check if 'variable' op_emissions are being used, if so decide which
+        # op_emissions are valid
+        if component.op_emissions['key'] == 'variable':
+            component.op_emissions = choose_valid_dict(component, component.op_emissions)
         op_emissions = component.op_emissions['cost']
 
     # Then calculate the annuity of the variable costs. This is only needed if
@@ -55,28 +69,61 @@ def update_annuities(component):
 
 
 def calc_annuity(component, target):
+    """Calculate annuity
+
+    :param component: object of this component
+    :type component: :class:`~smooth.components.component.Component`
+    :param target: dictionary with *cost* key, e.g. component.capex
+    :type target: dict
+    :return: annuity of target [EUR/a]
+    :rtype: number
+    """
+
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
     if not target:
         # There are no target entries, so the annuity is 0 in [target]/a.
+        target_annuity = 0
+    elif component.life_time == 0:
+        # no lifetime in component: no annuity (avoid div0)
         target_annuity = 0
     else:
         # Interest rate [-].
         interest_rate = component.sim_params.interest_rate
         # Calculate the capital recovery factor [-].
-        capital_recovery_factor = (interest_rate * (1 + interest_rate) ** component.life_time) / \
-                                  (((1 + interest_rate) ** component.life_time) - 1)
+        cap_nominator = interest_rate * (1 + interest_rate) ** component.life_time
+        cap_denominator = ((1 + interest_rate) ** component.life_time) - 1
+        capital_recovery_factor = cap_nominator / cap_denominator
         # Calculate the annuity of the target in [target]/a.
+
+        # Check if 'variable' capex are being used, if so decide which capex is valid
+        if target['key'] == 'variable':
+            target = choose_valid_dict(component, target)
         target_annuity = target['cost'] * capital_recovery_factor
 
     return target_annuity
 
 
 def calc_annual_emissions(component, target):
+    """Calculate annual emissions.
+
+    :param component: object of this component
+    :type component: :class:`~smooth.components.component.Component`
+    :param target: dictionary with *cost* key, e.g. component.fix_emissions
+    :type target: dict
+    :return: annual emissions of target [kg/a]
+    :rtype: number
+    """
     # When the target dict is empty, the annuity is zero, otherwise it has to be calculated.
     if not target:
         # There are no target entries, so the annuity is 0 in [target]/a.
         target_annuity = 0
+    elif component.life_time == 0:
+        # no lifetime in component: no annuity (avoid div0)
+        target_annuity = 0
     else:
+
+        if target['key'] == 'variable':
+            target = choose_valid_dict(component, target)
         # Calculate the annuity of the target in [target]/a.
         target_annuity = target['cost'] / component.life_time
 
@@ -84,9 +131,15 @@ def calc_annual_emissions(component, target):
 
 
 def update_external_annuities(component):
-    # Convert the CAPEX to annuities - MAYBE CHANGE THE NAME?
-    # Parameter:
-    #  component: object of one component.
+    """Convert the CAPEX to annuities
+
+    Annuities are written into the *results* dictionary of the component.
+
+    :param component: object of this component
+    :type component: :class:`~smooth.components.component.Component`
+    """
+
+    # TODO: MAYBE CHANGE THE NAME?
 
     # First calculate the annuities for the CAPEX in EUR/a.
     # If there are no CAPEX (dict is empty), the annuity is 0 EUR/a,
@@ -115,5 +168,4 @@ def update_external_annuities(component):
 
     component.results['annual_fix_emissions'] = fix_emissions_annual
     component.results['annual_op_emissions'] = op_emissions
-    component.results['annual_total_emissions'] = \
-        fix_emissions_annual + op_emissions
+    component.results['annual_total_emissions'] = fix_emissions_annual + op_emissions

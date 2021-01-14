@@ -1,11 +1,49 @@
-""" DEFINE THE MODEL YOU WANT TO SIMULATE """
+"""
+This example represents a simple hydrogen energy system with the
+inclusion of emissions as well as costs.
+
+The only difference between this example and the Example Model is that
+additional parameters are added to the components with relation to
+emissions. For example, the electrolyzer component is now defined as follows:
+
+.. code:: bash
+
+    components.append({
+        'component': 'electrolyzer',
+        'name': 'this_ely',
+        # Busses
+        'bus_el': 'bel',
+        'bus_h2': 'bh2_lp',
+        # Parameters
+        'power_max': 100e3,
+        'temp_init': 293.15,
+        'life_time': 20,
+        # Foreign states
+        # Financials
+        'capex': {
+            'key': ['free', 'spec'],
+            'fitting_value': [[193, -0.366], 'cost'],
+            'dependant_value': ['power_max', 'power_max']
+        },
+        'opex': {
+            'key': 'spec',
+            'fitting_value': 0.04,
+            'dependant_value': 'capex',
+        },
+        # Emissions
+        'fix_emissions': {
+            'key': ['free', 'spec'],
+            'fitting_value': [[193, -0.366], 'cost'],
+            'dependant_value': ['power_max', 'power_max']
+        },
+    })
+"""
 import os
 
 # Define where Python should look for csv files
 my_path = os.path.join(os.path.dirname(__file__), 'example_timeseries')
 
-""" Create busses """
-# create hydrogen bus
+# Create busses
 busses = ['bel', 'bh2_lp', 'bh2_hp', 'bth']
 
 
@@ -20,6 +58,7 @@ components = list()
 #     # Financials
 #     # Emissions
 # })
+
 # Grid
 components.append({
     'component': 'supply',
@@ -49,7 +88,7 @@ components.append({
 # Electicity generators
 components.append({
     'component': 'energy_source_from_csv',
-    'name': 'solar_output',
+    'name': 'pv_output',
     # Busses
     'bus_out': 'bel',
     # Parameters
@@ -74,6 +113,7 @@ components.append({
     'name': 'wind_output',
     'bus_out': 'bel',
     'csv_filename': 'ts_wind.csv',
+    'csv_separator': ';',
     'nominal_value': 1/4,
     'column_title': 'Power output',
     'path': my_path,
@@ -202,17 +242,6 @@ components.append({
 })
 
 # Energy demand
-"""
-components.append({
-    'component': 'energy_demand_from_csv',
-    'name': 'h2_demand',
-    'bus_in': 'bh2_hp',
-    'csv_filename': 'ts_demand_h2.csv',
-    'nominal_value': 1,
-    'column_title': 'Hydrogen load',
-    'path': my_path,
-})
-"""
 components.append({
     'component': 'energy_demand_from_csv',
     'name': 'el_demand',

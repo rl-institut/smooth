@@ -25,7 +25,7 @@ components.append({
     'component': 'supply',
     'name': 'from_grid',
     'bus_out': 'bel',
-    'input_max': 400000,
+    'output_max': 400000,
     'variable_costs': 0.00016,
     'dependency_flow_costs': ('from_grid', 'bel'),
     'variable_emissions': 0.341,
@@ -49,7 +49,7 @@ components.append({
 # Electicity generators
 components.append({
     'component': 'energy_source_from_csv',
-    'name': 'solar_output',
+    'name': 'pv_output',
     # Busses
     'bus_out': 'bel',
     # Parameters
@@ -74,6 +74,7 @@ components.append({
     'name': 'wind_output',
     'bus_out': 'bel',
     'csv_filename': 'ts_wind.csv',
+    'csv_separator': ';',
     'nominal_value': 1/8,
     'column_title': 'Power output',
     'path': my_path,

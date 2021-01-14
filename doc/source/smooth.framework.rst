@@ -12,7 +12,7 @@ Subpackages
 Submodules
 ----------
 
-smooth.framework.run\_smooth module
+Run SMOOTH
 -----------------------------------
 
 .. automodule:: smooth.framework.run_smooth
@@ -20,7 +20,7 @@ smooth.framework.run\_smooth module
    :undoc-members:
    :show-inheritance:
 
-smooth.framework.simulation\_parameters module
+Simulation Parameters
 ----------------------------------------------
 
 .. automodule:: smooth.framework.simulation_parameters
