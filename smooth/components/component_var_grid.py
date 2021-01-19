@@ -44,20 +44,32 @@ class VarGrid(Supply):
         self.grid_l6_output_max = 100 * 1e6
 
         # Capex for each grid level (e.g grid connection costs)
-        self.capex_l1 = {'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
-        self.capex_l2 = {'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
-        self.capex_l3 = {'key': ['poly'], 'fitting_value': [[120000, 0.02]], 'dependant_value': ['output_max']}
-        self.capex_l4 = {'key': ['poly'], 'fitting_value': [[500000, 0.02]], 'dependant_value': ['output_max']}
-        self.capex_l5 = {'key': ['poly'], 'fitting_value': [[1000000, 0.01]], 'dependant_value': ['output_max']}
-        self.capex_l6 = {'key': ['poly'], 'fitting_value': [[10000000, 0.01]], 'dependant_value': ['output_max']}
+        self.capex_l1 = {
+            'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
+        self.capex_l2 = {
+            'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
+        self.capex_l3 = {
+            'key': ['poly'], 'fitting_value': [[120000, 0.02]], 'dependant_value': ['output_max']}
+        self.capex_l4 = {
+            'key': ['poly'], 'fitting_value': [[500000, 0.02]], 'dependant_value': ['output_max']}
+        self.capex_l5 = {
+            'key': ['poly'], 'fitting_value': [[1000000, 0.01]], 'dependant_value': ['output_max']}
+        self.capex_l6 = {
+            'key': ['poly'], 'fitting_value': [[10000000, 0.01]], 'dependant_value': ['output_max']}
 
         # Capex for each grid level (e.g grid connection costs)
-        self.opex_l1 = {'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
-        self.opex_l2 = {'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
-        self.opex_l3 = {'key': ['poly'], 'fitting_value': [[120000, 0.02]], 'dependant_value': ['output_max']}
-        self.opex_l4 = {'key': ['poly'], 'fitting_value': [[500000, 0.02]], 'dependant_value': ['output_max']}
-        self.opex_l5 = {'key': ['poly'], 'fitting_value': [[1000000, 0.01]], 'dependant_value': ['output_max']}
-        self.opex_l6 = {'key': ['poly'], 'fitting_value': [[10000000, 0.01]], 'dependant_value': ['output_max']}
+        self.opex_l1 = {
+            'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
+        self.opex_l2 = {
+            'key': ['poly'], 'fitting_value': [[700, 0.018]], 'dependant_value': ['output_max']}
+        self.opex_l3 = {
+            'key': ['poly'], 'fitting_value': [[120000, 0.02]], 'dependant_value': ['output_max']}
+        self.opex_l4 = {
+            'key': ['poly'], 'fitting_value': [[500000, 0.02]], 'dependant_value': ['output_max']}
+        self.opex_l5 = {
+            'key': ['poly'], 'fitting_value': [[1000000, 0.01]], 'dependant_value': ['output_max']}
+        self.opex_l6 = {
+            'key': ['poly'], 'fitting_value': [[10000000, 0.01]], 'dependant_value': ['output_max']}
 
         # Variable costs in each grid level
         # e.g. for the electricity grid [€/kW]
