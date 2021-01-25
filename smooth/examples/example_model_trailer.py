@@ -210,7 +210,7 @@ components.append({
     }
 })
 
-# # PRODUCTION SITE 1 GATE H2
+# PRODUCTION SITE 1 GATE H2
 # For hydrogen that is produced and directly sent to delivery
 components.append({
     'component': 'gate',
@@ -222,7 +222,7 @@ components.append({
     'dependency_flow_costs': ('bh2_300_prod_site_1', 'storage_gate_prod_site_1'),
 })
 
-# # SINK H2 PRODUCTION SITE 1
+# SINK H2 PRODUCTION SITE 1
 # If too much hydrogen is produced which cannot fit in the storage/be delivered
 components.append({
     'component': 'sink',
@@ -234,7 +234,7 @@ components.append({
     'variable_costs': 0
 })
 
-# # SINK EL PRODUCTION SITE 1
+# SINK EL PRODUCTION SITE 1
 # For excess electricity that is not used to produced hydrogen/power the compressor
 components.append({
     'component': 'sink',
@@ -332,7 +332,7 @@ components.append({
     }
 })
 
-# # PRODUCTION SITE 2 GATE H2
+# PRODUCTION SITE 2 GATE H2
 # For hydrogen that is produced and directly sent to delivery
 components.append({
     'component': 'gate',
@@ -344,7 +344,7 @@ components.append({
     'dependency_flow_costs': ('bh2_300_prod_site_2', 'storage_gate_prod_site_2'),
 })
 
-# # SINK H2 PRODUCTION SITE 2
+# SINK H2 PRODUCTION SITE 2
 # If too much hydrogen is produced which cannot fit in the storage/be delivered
 components.append({
     'component': 'sink',
@@ -356,7 +356,7 @@ components.append({
     'variable_costs': 0
 })
 
-# # SINK EL PRODUCTION SITE 2
+# SINK EL PRODUCTION SITE 2
 # For excess electricity that is not used to produced hydrogen/power the compressor
 components.append({
     'component': 'sink',
@@ -455,7 +455,7 @@ components.append({
     }
 })
 
-# # PRODUCTION SITE 3 GATE H2
+# PRODUCTION SITE 3 GATE H2
 # For hydrogen that is produced and directly sent to delivery
 components.append({
     'component': 'gate',
@@ -467,7 +467,7 @@ components.append({
     'dependency_flow_costs': ('bh2_300_prod_site_3', 'storage_gate_prod_site_3'),
 })
 
-# # SINK H2 PRODUCTION SITE 3
+# SINK H2 PRODUCTION SITE 3
 # If too much hydrogen is produced which cannot fit in the storage/be delivered
 components.append({
     'component': 'sink',
@@ -479,7 +479,7 @@ components.append({
     'variable_costs': 0
 })
 
-# # SINK EL PRODUCTION SITE 3
+# SINK EL PRODUCTION SITE 3
 # For excess electricity that is not used to produced hydrogen/power the compressor
 components.append({
     'component': 'sink',
@@ -493,7 +493,7 @@ components.append({
 
 # ------------------ DELIVERY FROM PRODUCTION SITE 1 TO HRS 1 ------------------
 
-# # PROD SITE 1 TRAILER GATE H2 FOR DELIVERY TO HRS 1
+# PROD SITE 1 TRAILER GATE H2 FOR DELIVERY TO HRS 1
 components.append({
     'component': 'trailer_gate',
     'name': 'h2_gate_dlvry_to_HRS_1',
@@ -531,7 +531,7 @@ components.append({
 
 # ------------------ DELIVERY FROM PRODUCTION SITES 2&3 TO HRS 2 ------------------
 
-# # PROD SITE 2 TRAILER GATE H2 FOR DELIVERY TO HRS 2
+# PROD SITE 2 TRAILER GATE H2 FOR DELIVERY TO HRS 2
 components.append({
     'component': 'trailer_gate',
     'name': 'h2_gate_wind_dlvry_to_HRS_2',
@@ -551,7 +551,7 @@ components.append({
                           'fs_destination_storage_threshold'],
 })
 
-# # PROD SITE 3 TRAILER GATE H2 FOR DELIVERY TO HRS 2
+# PROD SITE 3 TRAILER GATE H2 FOR DELIVERY TO HRS 2
 components.append({
     'component': 'trailer_gate',
     'name': 'h2_gate_pv_dlvry_to_HRS_2',
