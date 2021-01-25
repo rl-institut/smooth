@@ -158,12 +158,12 @@ class TrailerH2Delivery(Component):
                 fs_origin_storage_levels.append(this_origin_storage_level)
 
             # Obtains a list of the origin minimum storage levels for n sites
-            for i in index_list[n:2*n]:
+            for i in index_list[n:2 * n]:
                 this_min_storage_level = self.get_foreign_state_value(components, index=i)
                 fs_origin_min_storage_levels.append(this_min_storage_level)
 
             # Obtains a list of the origin capacity levels for n sites
-            for i in index_list[2*n:3*n]:
+            for i in index_list[2 * n:3 * n]:
                 this_capacity = self.get_foreign_state_value(components, index=i)
                 fs_origin_capacities.append(this_capacity)
 

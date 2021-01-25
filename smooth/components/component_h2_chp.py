@@ -186,7 +186,7 @@ class H2Chp(Component):
 
         # First create the electrical oemof component.
         h2_chp_electric = solph.custom.PiecewiseLinearTransformer(
-            label=self.name+'_electric',
+            label=self.name + '_electric',
             inputs={busses[self.bus_h2]: flow_electric},
             outputs={busses[self.bus_el]: solph.Flow()},
             in_breakpoints=self.bp_h2_consumed_electric_half,
@@ -195,7 +195,7 @@ class H2Chp(Component):
 
         # Then create the thermal oemof component.
         h2_chp_thermal = solph.custom.PiecewiseLinearTransformer(
-            label=self.name+'_thermal',
+            label=self.name + '_thermal',
             inputs={busses[self.bus_h2]: flow_thermal},
             outputs={busses[self.bus_th]: solph.Flow()},
             in_breakpoints=self.bp_h2_consumed_thermal_half,
@@ -241,7 +241,7 @@ class H2Chp(Component):
                 po.Constraint(model_to_solve.TIMESTEPS, rule=chp_ratio_rule)
                 )
 
-    def update_flows(self, results, sim_params):
+    def update_flows(self, results):
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
-        Component.update_flows(self, results, sim_params, self.name + '_electric')
-        Component.update_flows(self, results, sim_params, self.name + '_thermal')
+        Component.update_flows(self, results, self.name + '_electric')
+        Component.update_flows(self, results, self.name + '_thermal')

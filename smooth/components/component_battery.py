@@ -254,13 +254,11 @@ class Battery(Component):
         )
         return battery
 
-    def update_states(self, results, sim_params):
+    def update_states(self, results):
         """Updates the states of the battery component for each time step
 
         :param results: oemof results for the given time step
         :type results: object
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: updated state values for each state in the 'state' dict
         """
         data_storage = views.node(results, self.name)
@@ -271,7 +269,7 @@ class Battery(Component):
             if i_result[1] == "capacity":
                 if "soc" not in self.states:
                     # Initialize a.n array that tracks the state SoC
-                    self.states["soc"] = [None] * sim_params.n_intervals
+                    self.states["soc"] = [None] * self.sim_params.n_intervals
                 # Check if this result is the state of charge.
                 self.soc = df_storage[i_result][0] / self.battery_capacity
-                self.states["soc"][sim_params.i_interval] = self.soc
+                self.states["soc"][self.sim_params.i_interval] = self.soc

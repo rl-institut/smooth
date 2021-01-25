@@ -195,7 +195,7 @@ class Electrolyzer (Component):
         # Interval time [min].
         self.interval_time = self.sim_params.interval_time
         # Calculate the max. energy the electrolyzer can use in one time step [Wh].
-        self.energy_max = self.power_max * self.interval_time/60
+        self.energy_max = self.power_max * self.interval_time / 60
 
         # ------------------- CONSTANT PARAMETERS (PHYSICS) -------------------
         # Faraday constant F [As/mol].
@@ -222,7 +222,7 @@ class Electrolyzer (Component):
         self.z_cell = 1
         is_z_cell_found = False
         while not is_z_cell_found:
-            this_curr_den = self.get_electricity_by_power(self.power_max/1000, self.temp_max)
+            this_curr_den = self.get_electricity_by_power(self.power_max / 1000, self.temp_max)
 
             if this_curr_den is not None and this_curr_den < self.cur_dens_max:
                 is_z_cell_found = True
@@ -370,7 +370,7 @@ class Electrolyzer (Component):
         # Calculate the new temperature of the electrolyzer by Newtons law of
         # cooling. The exponent (-t[s]/2310) was parameterized such that the 98 %
         # of the temperature change are reached after 2.5 hours.
-        temp_new = temp_aim + (temp_before - temp_aim) * math.exp(-self.interval_time*60 / 2310)
+        temp_new = temp_aim + (temp_before - temp_aim) * math.exp(-self.interval_time * 60 / 2310)
         # Return the new electrolyzer temperature [K].
         return temp_new
 
@@ -557,20 +557,18 @@ class Electrolyzer (Component):
 
         return voltage_reversible
 
-    def update_states(self, results, sim_params):
+    def update_states(self, results):
         """Updates the states of the electrolyser component for each time step
 
         :param results: oemof results for the given time step
         :type results: object
-        :param sim_params: simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: updated state values for each state in the 'state' dict
         """
         # If the states dict of this object wasn't created yet, it's done here.
         if 'temperature' not in self.states:
-            self.states['temperature'] = [None] * sim_params.n_intervals
+            self.states['temperature'] = [None] * self.sim_params.n_intervals
         if 'water_consumption' not in self.states:
-            self.states['water_consumption'] = [None] * sim_params.n_intervals
+            self.states['water_consumption'] = [None] * self.sim_params.n_intervals
 
         # Get the flows of the electrolyzer for this time step.
         data_electrolyzer = views.node(results, self.name)
@@ -595,6 +593,6 @@ class Electrolyzer (Component):
 
         # Update the current temperature and the temperature state for this time step.
         self.temperature = this_temp
-        self.states['temperature'][sim_params.i_interval] = this_temp
+        self.states['temperature'][self.sim_params.i_interval] = this_temp
         # Update the water consumption state for this time step.
-        self.states['water_consumption'][sim_params.i_interval] = this_water_consumption
+        self.states['water_consumption'][self.sim_params.i_interval] = this_water_consumption
