@@ -62,7 +62,7 @@ class EnergySourceFromCsv (Component):
         self.nominal_value = 1
         self.reference_value = 1
         self.csv_filename = None
-        self.csv_separator = ';'
+        self.csv_separator = ','
         self.column_title = 0
         self.path = os.path.dirname(__file__)
         self.bus_out = None

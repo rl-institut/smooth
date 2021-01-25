@@ -324,15 +324,13 @@ class PemElectrolyzer(Component):
                 po.Constraint(model_to_solve.TIMESTEPS, rule=electrolyzer_ratio_rule)
                 )
 
-    def update_flows(self, results, sim_params):
+    def update_flows(self, results):
         """Updates the flows of the electrolyzer components for each time step.
 
         ::param results: The oemof results for the given time step
         :type results: object
-        :param sim_params: The simulation parameters for the energy system (defined by user)
-        :type sim_params: object
         :return: updated flow values for each flow in the 'flows' dict
         """
         # Check if the component has an attribute 'flows', if not, create it as an empty dict.
-        Component.update_flows(self, results, sim_params, self.name + '_h2_prod')
-        Component.update_flows(self, results, sim_params, self.name + '_waste_heat')
+        Component.update_flows(self, results, self.name + '_h2_prod')
+        Component.update_flows(self, results, self.name + '_waste_heat')

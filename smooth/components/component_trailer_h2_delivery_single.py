@@ -142,7 +142,7 @@ class TrailerH2DeliverySingle(Component):
             # Obtains the available mass that can be taken from the origin storage [kg]
             fs_origin_available_kg_1 = min((fs_origin_storage_level_kg_1 -
                                             fs_origin_min_storage_level_1),
-                                           fs_origin_capacity_1/2)
+                                           fs_origin_capacity_1 / 2)
 
             # Get the availability mass of hydrogen of the fullest origin storage
             self.fs_origin_available_kg = fs_origin_available_kg_1
